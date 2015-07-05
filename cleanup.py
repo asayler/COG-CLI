@@ -5,27 +5,11 @@ import sys
 import requests
 import click
 
-SITE = "https://api-cog.cs.colorado.edu"
+def _cleanup_objects(site, endpoint, auth=None):
 
-def _delete_object(endpoint, object_uuid, auth=None):
+    list_path = "{:s}/{:s}/".format(site, endpoint)
 
-    object_path = "{:s}/{:s}/{:s}/".format(SITE, endpoint, object_uuid)
-
-    print("Deleting {:s} '{:s}'...".format(endpoint, object_uuid))
-    r = requests.delete(object_path, auth=auth)
-    try:
-        r.raise_for_status()
-    except requests.exceptions.HTTPError as e:
-        print(e)
-        raise
-    else:
-        print("Deleted {:s} '{:s}'".format(endpoint, r.json().keys()[0]))
-
-def _cleanup_objects(endpoint, auth=None):
-
-    path = "{:s}/{:s}/".format(SITE, endpoint)
-
-    r = requests.get(path, auth=auth)
+    r = requests.get(list_path, auth=auth)
     r.raise_for_status()
 
     object_uuids = r.json()[endpoint]
@@ -43,18 +27,26 @@ def _cleanup_objects(endpoint, auth=None):
 
     if (i < len(object_uuids)):
         object_uuid = object_uuids[i]
-        _delete_object(endpoint, object_uuid, auth=auth)
+        object_path = "{:s}/{:s}/{:s}/".format(site, endpoint, object_uuid)
+        r = requests.delete(object_path, auth=auth)
+        r.raise_for_status()
     elif (i == len(object_uuids)):
-        for object_uuid in object_uuids:
-            _delete_object(endpoint, object_uuid, auth=auth)
+        with click.progressbar(object_uuids,
+                               label='Deleting {:s}'.format(endpoint),
+                               item_show_func=str) as bar:
+            for object_uuid in bar:
+                object_path = "{:s}/{:s}/{:s}/".format(site, endpoint, object_uuid)
+                r = requests.delete(object_path, auth=auth)
+                r.raise_for_status()
     else:
         raise Exception("Selection out of range")
 
 @click.command()
+@click.argument('url')
 @click.option('--username', default=None, help='API Username')
 @click.option('--password', default=None, help='API Password')
 @click.option('--token', default=None, help='API Token')
-def cleanup(username, password, token):
+def cleanup(url, username, password, token):
     """COG CLI"""
 
     if token:
@@ -66,12 +58,12 @@ def cleanup(username, password, token):
     else:
         auth = None
 
-    _cleanup_objects('assignments', auth)
-    _cleanup_objects('tests', auth)
-    _cleanup_objects('submissions', auth)
-    _cleanup_objects('runs', auth)
-    _cleanup_objects('reporters', auth)
-    _cleanup_objects('files', auth)
+    _cleanup_objects(url, 'assignments', auth)
+    _cleanup_objects(url, 'tests', auth)
+    _cleanup_objects(url, 'submissions', auth)
+    _cleanup_objects(url, 'runs', auth)
+    _cleanup_objects(url, 'reporters', auth)
+    _cleanup_objects(url, 'files', auth)
 
 if __name__ == '__main__':
     sys.exit(cleanup())
