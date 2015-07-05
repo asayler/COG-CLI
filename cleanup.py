@@ -30,14 +30,24 @@ def _cleanup_objects(site, endpoint, auth=None):
         object_path = "{:s}/{:s}/{:s}/".format(site, endpoint, object_uuid)
         r = requests.delete(object_path, auth=auth)
         r.raise_for_status()
+
     elif (i == len(object_uuids)):
+        errors = []
         with click.progressbar(object_uuids,
                                label='Deleting {:s}'.format(endpoint),
                                item_show_func=str) as bar:
             for object_uuid in bar:
                 object_path = "{:s}/{:s}/{:s}/".format(site, endpoint, object_uuid)
                 r = requests.delete(object_path, auth=auth)
-                r.raise_for_status()
+                try:
+                    r.raise_for_status()
+                except requests.exceptions.HTTPError as e:
+                    errors.append([object_uuid, e])
+        if errors:
+            print("Errors:")
+            for error in errors:
+                print("{:s}: {:s}".format(error[0], str(error[1])))
+
     else:
         raise Exception("Selection out of range")
 
