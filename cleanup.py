@@ -41,16 +41,24 @@ def _cleanup_objects(site, endpoint, auth=None):
                 r = requests.delete(object_path, auth=auth)
                 try:
                     r.raise_for_status()
-                except requests.exceptions.HTTPError as e:
-                    errors.append([object_uuid, e, r.json()])
+                except requests.exceptions.HTTPError as error:
+                    try:
+                        output = r.json()
+                    except ValueError:
+                        output = r.text
+                    errors.append([object_uuid, error, output])
         if errors:
             print("Errors:")
-            for error in errors:
+            for object_uuid, error, output in errors:
                 msg = None
-                if error[2]:
-                    if 'message' in error[2]:
-                        msg = error[2]['message']
-                print("{:s}: {:s}: {:s}".format(error[0], str(error[1]), str(msg)))
+                if type(output) is dict:
+                    if 'message' in output:
+                        msg = output['message']
+                    else:
+                        msg = str(output)
+                else:
+                    msg = str(output)
+                print("{:s}: {:s}: {:s}".format(object_uuid, str(error), msg))
 
     else:
         raise Exception("Selection out of range")
