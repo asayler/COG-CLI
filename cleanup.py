@@ -42,11 +42,15 @@ def _cleanup_objects(site, endpoint, auth=None):
                 try:
                     r.raise_for_status()
                 except requests.exceptions.HTTPError as e:
-                    errors.append([object_uuid, e])
+                    errors.append([object_uuid, e, r.json()])
         if errors:
             print("Errors:")
             for error in errors:
-                print("{:s}: {:s}".format(error[0], str(error[1])))
+                msg = None
+                if error[2]:
+                    if 'message' in error[2]:
+                        msg = error[2]['message']
+                print("{:s}: {:s}: {:s}".format(error[0], str(error[1]), str(msg)))
 
     else:
         raise Exception("Selection out of range")
