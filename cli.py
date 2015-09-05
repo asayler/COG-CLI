@@ -127,9 +127,12 @@ def _file_create(url, auth, path, extract=False):
     fle_list = r.json()[_KEY_FILES]
     return fle_list
 
-def _file_list(url, auth):
+def _file_list(url, auth, tst_uid=None):
 
-    endpoint = "{:s}/{:s}/".format(url, _EP_FILES)
+    if tst_uid:
+        endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_TESTS, tst_uid, _EP_FILES)
+    else:
+        endpoint = "{:s}/{:s}/".format(url, _EP_FILES)
     r = requests.get(endpoint, auth=auth)
     r.raise_for_status()
     fle_list = r.json()[_KEY_FILES]
@@ -218,14 +221,15 @@ def file_create(obj, path, extract):
     click.echo("Files:\n {}".format(fle_list))
 
 @file.command(name='list')
+@click.option('--tst_uid', default=None, help='Only Show Files from Test with UUID tst_uid')
 @click.pass_obj
-def file_list(obj):
+def file_list(obj, tst_uid):
 
     if not obj['auth']:
         obj['auth'] = _auth(obj)
 
     click.echo("Listing files...")
-    fle_list = _file_list(obj['url'], obj['auth'])
+    fle_list = _file_list(obj['url'], obj['auth'], tst_uid=tst_uid)
     click.echo("Files:\n {}".format(fle_list))
 
 @file.command(name='show')
