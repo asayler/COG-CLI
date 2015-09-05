@@ -212,6 +212,25 @@ def assignment_show(obj, uid):
     click.echo("Assignment '{}':\n {}".format(uid, asn))
 
 @cli.group()
+def test():
+    pass
+
+@test.command(name='create')
+@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--name', default=None, prompt=True, help='Test Name')
+@click.option('--tester', default=None, prompt=True, help='Test Module')
+@click.option('--maxscore', default=None, prompt=True, help='Max Score')
+@click.pass_obj
+def test_create(obj, asn_uid, name, tester, maxscore):
+
+    if not obj['auth']:
+        obj['auth'] = _auth(obj)
+
+    click.echo("Creating test...")
+    tst_list = _assignment_test_create(obj['url'], obj['auth'], asn_uid, name, tester, maxscore)
+    click.echo("Created tests:\n {}".format(tst_list))
+
+@cli.group()
 def file():
     pass
 
