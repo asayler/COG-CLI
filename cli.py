@@ -55,10 +55,10 @@ def _auth(obj):
 
     return auth
 
-def _assignment_create(url, auth, assn_name, assn_env):
+def _assignment_create(url, auth, asn_name, asn_env):
 
     endpoint = "{:s}/{:s}/".format(url, _EP_ASSIGNMENTS)
-    d = {'name': assn_name, 'env': assn_env}
+    d = {'name': asn_name, 'env': asn_env}
     dj = json.dumps(d)
     r = requests.post(endpoint, auth=auth, data=dj)
     r.raise_for_status()
