@@ -6,9 +6,54 @@ import json
 import requests
 import click
 
+_EP_TOKENS = 'tokens'
 _EP_ASSIGNMENTS = 'assignments'
 _KEY_ASSIGNMENTS = 'assignments'
-_EP_TOKENS = 'tokens'
+_EP_FILES = 'files'
+_KEY_FILES = 'files'
+
+def _debug_dump(r):
+
+    click.echo('Request:\n{}\n{}\n{}\n\n{}\n{}'.format(
+        '-----------START-----------',
+        r.request.method + ' ' + r.request.url,
+        '\n'.join('{}: {}'.format(k, v) for k, v in r.request.headers.items()),
+        r.request.body,
+        '------------END------------'
+    )
+    )
+    click.echo('Response:\n{}'.format(r.text))
+
+def _auth(url, username=None, password=None, token=None):
+
+    # Handle Auth
+    endpoint = "{:s}/{:s}/".format(url, _EP_TOKENS)
+
+    if token:
+
+        # Verify Token
+        auth = requests.auth.HTTPBasicAuth(token, '')
+        r = requests.get(endpoint, auth=auth)
+        r.raise_for_status()
+        token = r.json()['token']
+        auth = requests.auth.HTTPBasicAuth(token, '')
+
+    else:
+
+        # Get Username:Password
+        if not username:
+            username = click.prompt("Username", hide_input=False)
+        if not password:
+            password = click.prompt("Password", hide_input=True)
+
+        # Get Token
+        auth = requests.auth.HTTPBasicAuth(username, password)
+        r = requests.get(endpoint, auth=auth)
+        r.raise_for_status()
+        token = r.json()['token']
+        auth = requests.auth.HTTPBasicAuth(token, '')
+
+    return auth
 
 def _assignment_create(url, auth, assn_name, assn_env):
 
@@ -36,36 +81,35 @@ def _assignment_show(url, auth, uid):
     asn = r.json()[uid]
     return asn
 
-def _auth(url, username=None, password=None, token=None):
+def _file_create(url, auth, path, extract=False):
 
-    # Handle Auth
-    endpoint = "{:s}/{:s}".format(url, _EP_TOKENS)
-
-    if token:
-
-        # Verify Token
-        auth = requests.auth.HTTPBasicAuth(username, password)
-        r = requests.get(endpoint, auth=auth)
-        r.raise_for_status()
-        token = r.json()['token']
-        auth = requests.auth.HTTPBasicAuth(token, '')
-
+    if extract:
+        key = 'extract'
     else:
+        key = 'file'
 
-        # Get Username:Password
-        if not username:
-            username = click.prompt("Username", hide_input=False)
-        if not password:
-            password = click.prompt("Password", hide_input=True)
+    endpoint = "{:s}/{:s}/".format(url, _EP_FILES)
+    files = {key: path}
+    r = requests.post(endpoint, files=files, auth=auth)
+    r.raise_for_status()
+    fle_list = r.json()[_KEY_FILES]
+    return fle_list
 
-        # Get Token
-        auth = requests.auth.HTTPBasicAuth(username, password)
-        r = requests.get(endpoint, auth=auth)
-        r.raise_for_status()
-        token = r.json()['token']
-        auth = requests.auth.HTTPBasicAuth(token, '')
+def _file_list(url, auth):
 
-    return auth
+    endpoint = "{:s}/{:s}/".format(url, _EP_FILES)
+    r = requests.get(endpoint, auth=auth)
+    r.raise_for_status()
+    fle_list = r.json()[_KEY_FILES]
+    return fle_list
+
+def _file_show(url, auth):
+
+    endpoint = "{:s}/{:s}/{:s}/".format(url, _EP_FILES, uid)
+    r = requests.get(endpoint, auth=auth)
+    r.raise_for_status()
+    fle = r.json()[uid]
+    return fle
 
 @click.group()
 @click.option('--url', default=None, prompt=True, help='API URL')
@@ -97,6 +141,7 @@ def assignment_create(obj, name, env):
     if not obj['auth']:
         obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
 
+    click.echo("Creating assignment...")
     asn_list = _assignment_create(obj['url'], obj['auth'], name, env)
     click.echo("Assignments:\n {}".format(asn_list))
 
@@ -107,6 +152,7 @@ def assignment_list(obj):
     if not obj['auth']:
         obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
 
+    click.echo("Listing assignments")
     asn_list = _assignment_list(obj['url'], obj['auth'])
     click.echo("Assignments:\n {}".format(asn_list))
 
@@ -118,8 +164,50 @@ def assignment_show(obj, uid):
     if not obj['auth']:
         obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
 
+    click.echo("Showing assignment...")
     asn = _assignment_show(obj['url'], obj['auth'], uid)
     click.echo("Assignment '{}':\n {}".format(uid, asn))
+
+@cli.group()
+def file():
+    pass
+
+@file.command(name='create')
+@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.pass_obj
+def file_create(obj, path, extract):
+
+    if not obj['auth']:
+        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+
+    click.echo("Creating file...")
+    fle_list = _file_create(obj['url'], obj['auth'], path, extract)
+    click.echo("Files:\n {}".format(fle_list))
+
+@file.command(name='list')
+@click.pass_obj
+def file_list(obj):
+
+    if not obj['auth']:
+        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+
+    click.echo("Listing files...")
+    asn_list = _file_list(obj['url'], obj['auth'])
+    click.echo("Files:\n {}".format(asn_list))
+
+@file.command(name='show')
+@click.option('--uid', default=None, prompt=True, help='File UUID')
+@click.pass_obj
+def file_show(obj, uid):
+
+    if not obj['auth']:
+        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+
+    click.echo("Showing file...")
+    asn = _file_show(obj['url'], obj['auth'], uid)
+    click.echo("File '{}':\n {}".format(uid, asn))
+
 
 if __name__ == '__main__':
     sys.exit(cli())
