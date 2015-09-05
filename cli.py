@@ -9,6 +9,8 @@ import click
 _EP_TOKENS = 'tokens'
 _EP_ASSIGNMENTS = 'assignments'
 _KEY_ASSIGNMENTS = 'assignments'
+_EP_TESTS = 'tests'
+_KEY_TESTS = 'tests'
 _EP_FILES = 'files'
 _KEY_FILES = 'files'
 
@@ -81,12 +83,32 @@ def _assignment_show(url, auth, uid):
     asn = r.json()[uid]
     return asn
 
-def _assignment_file_add(url, auth, asn_uid, fle_uids):
+def _assignment_test_create(url, auth, asn_uid, tst_name, tst_tester, tst_maxscore):
 
-    endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_ASSIGNMENTS, uid. _EP_FILES)
+    endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
+    d = {"name": tst_name, "tester": tst_tester, "maxscore": tst_maxscore}
+    dj = json.dumps(d)
+    r = requests.post(endpoint, auth=auth, data=dj)
+    r.raise_for_status()
+    tst_list = r.json()[_KEY_TESTS]
+    return tst_list
+
+def _test_file_add(url, auth, tst_uid, fle_uids):
+
+    endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_TESTS, tst_uid, _EP_FILES)
     d = {_KEY_FILES: fle_uids}
     dj = json.dumps(d)
     r = requests.put(endpoint, auth=auth, data=dj)
+    r.raise_for_status()
+    fle_list = r.json()[_KEY_FILES]
+    return fle_list
+
+def _test_file_remove(url, auth, tst_uid, fle_uids):
+
+    endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_TESTS, tst_uid, _EP_FILES)
+    d = {_KEY_FILES: fle_uids}
+    dj = json.dumps(d)
+    r = requests.delete(endpoint, auth=auth, data=dj)
     r.raise_for_status()
     fle_list = r.json()[_KEY_FILES]
     return fle_list
