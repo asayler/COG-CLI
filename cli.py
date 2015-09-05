@@ -146,6 +146,14 @@ def _file_show(url, auth, uid):
     fle = r.json()[uid]
     return fle
 
+def _file_delete(url, auth, uid):
+
+    endpoint = "{:s}/{:s}/{:s}/".format(url, _EP_FILES, uid)
+    r = requests.delete(endpoint, auth=auth)
+    r.raise_for_status()
+    fle = r.json()[uid]
+    return fle
+
 @click.group()
 @click.option('--url', default=None, prompt=True, help='API URL')
 @click.option('--username', default=None, help='API Username')
