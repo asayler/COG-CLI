@@ -24,34 +24,34 @@ def _debug_dump(r):
     )
     click.echo('Response:\n{}'.format(r.text))
 
-def _auth(url, username=None, password=None, token=None):
+def _auth(obj):
 
     # Handle Auth
-    endpoint = "{:s}/{:s}/".format(url, _EP_TOKENS)
+    endpoint = "{:s}/{:s}/".format(obj['url'], _EP_TOKENS)
 
-    if token:
+    if obj['token']:
 
         # Verify Token
-        auth = requests.auth.HTTPBasicAuth(token, '')
+        auth = requests.auth.HTTPBasicAuth(obj['token'], '')
         r = requests.get(endpoint, auth=auth)
         r.raise_for_status()
-        token = r.json()['token']
-        auth = requests.auth.HTTPBasicAuth(token, '')
+        obj['token'] = r.json()['token']
+        auth = requests.auth.HTTPBasicAuth(obj['token'], '')
 
     else:
 
         # Get Username:Password
-        if not username:
-            username = click.prompt("Username", hide_input=False)
-        if not password:
-            password = click.prompt("Password", hide_input=True)
+        if not obj['username']:
+            obj['username'] = click.prompt("Username", hide_input=False)
+        if not obj['password']:
+            obj['password'] = click.prompt("Password", hide_input=True)
 
         # Get Token
-        auth = requests.auth.HTTPBasicAuth(username, password)
+        auth = requests.auth.HTTPBasicAuth(obj['username'], obj['password'])
         r = requests.get(endpoint, auth=auth)
         r.raise_for_status()
-        token = r.json()['token']
-        auth = requests.auth.HTTPBasicAuth(token, '')
+        obj['token'] = r.json()['token']
+        auth = requests.auth.HTTPBasicAuth(obj['token'], '')
 
     return auth
 
@@ -139,7 +139,7 @@ def assignment():
 def assignment_create(obj, name, env):
 
     if not obj['auth']:
-        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+        obj['auth'] = _auth(obj)
 
     click.echo("Creating assignment...")
     asn_list = _assignment_create(obj['url'], obj['auth'], name, env)
@@ -150,7 +150,7 @@ def assignment_create(obj, name, env):
 def assignment_list(obj):
 
     if not obj['auth']:
-        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+        obj['auth'] = _auth(obj)
 
     click.echo("Listing assignments")
     asn_list = _assignment_list(obj['url'], obj['auth'])
@@ -162,7 +162,7 @@ def assignment_list(obj):
 def assignment_show(obj, uid):
 
     if not obj['auth']:
-        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+        obj['auth'] = _auth(obj)
 
     click.echo("Showing assignment...")
     asn = _assignment_show(obj['url'], obj['auth'], uid)
@@ -179,7 +179,7 @@ def file():
 def file_create(obj, path, extract):
 
     if not obj['auth']:
-        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+        obj['auth'] = _auth(obj)
 
     click.echo("Creating file...")
     fle_list = _file_create(obj['url'], obj['auth'], path, extract)
@@ -190,7 +190,7 @@ def file_create(obj, path, extract):
 def file_list(obj):
 
     if not obj['auth']:
-        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+        obj['auth'] = _auth(obj)
 
     click.echo("Listing files...")
     asn_list = _file_list(obj['url'], obj['auth'])
@@ -202,7 +202,7 @@ def file_list(obj):
 def file_show(obj, uid):
 
     if not obj['auth']:
-        obj['auth'] = _auth(obj['url'], obj['username'], obj['password'], obj['token'])
+        obj['auth'] = _auth(obj)
 
     click.echo("Showing file...")
     asn = _file_show(obj['url'], obj['auth'], uid)
