@@ -193,8 +193,8 @@ def file_list(obj):
         obj['auth'] = _auth(obj)
 
     click.echo("Listing files...")
-    asn_list = _file_list(obj['url'], obj['auth'])
-    click.echo("Files:\n {}".format(asn_list))
+    fle_list = _file_list(obj['url'], obj['auth'])
+    click.echo("Files:\n {}".format(fle_list))
 
 @file.command(name='show')
 @click.option('--uid', default=None, prompt=True, help='File UUID')
@@ -205,8 +205,6 @@ def file_show(obj, uid):
         obj['auth'] = _auth(obj)
 
     click.echo("Showing file...")
-    asn = _file_show(obj['url'], obj['auth'], uid)
-    click.echo("File '{}':\n {}".format(uid, asn))
 
 
 if __name__ == '__main__':
