@@ -271,27 +271,52 @@ def file_show(obj, uid):
     fle = _file_show(obj['url'], obj['auth'], uid)
     click.echo("File '{}':\n {}".format(uid, fle))
 
-@cli.group()
-def util():
-    pass
-
-@util.command(name='replace_files')
-@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
-@click.option('--extract', is_flag=True, help='Control whether file is extracted')
-@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
+@file.command(name='show')
+@click.option('--uid', default=None, prompt=True, help='File UUID')
 @click.pass_obj
-def util_repalce_files(obj, path, extract, asn_uid):
+def file_delete(obj, uid):
 
     if not obj['auth']:
         obj['auth'] = _auth(obj)
 
-    click.echo("Creating files...")
-    fle_list = _file_create(obj['url'], obj['auth'], path, extract)
-    click.echo("Created Files:\n {}".format(fle_list))
+    click.echo("Deleting file...")
+    fle = _file_delete(obj['url'], obj['auth'], uid)
+    click.echo("Deleted File '{}':\n {}".format(uid, fle))
+
+@cli.group()
+def util():
+    pass
+
+@util.command(name='replace-files')
+@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
+@click.pass_obj
+def util_replace_files(obj, path, extract, tst_uid):
+
+    if not obj['auth']:
+        obj['auth'] = _auth(obj)
+
+    click.echo("Listing old files...")
+    old_fle_list = _file_list(obj['url'], obj['auth'], tst_uid=tst_uid)
+    click.echo("Old files:\n {}".format(old_fle_list))
+
+    click.echo("Removing old files...")
+    rem_fle_list = _test_file_remove(obj['url'], obj['auth'], tst_uid, fle_list)
+    click.echo("Attached files:\n {}".format(rem_fle_list))
+
+    click.echo("Deleting old files...")
+    for fle_uid in old_fle_list:
+        click.echo("Deleting file '{}'...".format(fle_uid))
+        fle = _file_delete(obj['url'], obj['auth'], fle_uid)
+
+    click.echo("Creating new files...")
+    new_fle_list = _file_create(obj['url'], obj['auth'], path, extract)
+    click.echo("New files:\n {}".format(new_fle_list))
 
     click.echo("Attaching files...")
-    asn_fle_list = _assignment_file_add(obj['url'], obj['auth'], asn_uid, fle_list)
-    click.echo("Attached Files:\n {}".format(asn_fle_list))
+    tst_fle_list = _test_file_add(obj['url'], obj['auth'], tst_uid, fle_list)
+    click.echo("Attached files:\n {}".format(tst_fle_list))
 
 @util.command(name='token-show')
 @click.pass_obj
