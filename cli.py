@@ -138,7 +138,7 @@ def _file_list(url, auth, tst_uid=None):
     fle_list = r.json()[_KEY_FILES]
     return fle_list
 
-def _file_show(url, auth):
+def _file_show(url, auth, uid):
 
     endpoint = "{:s}/{:s}/{:s}/".format(url, _EP_FILES, uid)
     r = requests.get(endpoint, auth=auth)
