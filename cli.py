@@ -240,6 +240,14 @@ def util_repalce_files(obj, path, extract, asn_uid):
     asn_fle_list = _assignment_file_add(obj['url'], obj['auth'], asn_uid, fle_list)
     click.echo("Attached Files:\n {}".format(asn_fle_list))
 
+@util.command(name='token-show')
+@click.pass_obj
+def util_token_show(obj):
+
+    if not obj['auth']:
+        obj['auth'] = _auth(obj)
+
+    click.echo("{} Token: '{}'".format(obj['username'], obj['token']))
 
 if __name__ == '__main__':
     sys.exit(cli())
