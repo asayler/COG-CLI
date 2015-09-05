@@ -81,6 +81,16 @@ def _assignment_show(url, auth, uid):
     asn = r.json()[uid]
     return asn
 
+def _assignment_file_add(url, auth, asn_uid, fle_uids):
+
+    endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_ASSIGNMENTS, uid. _EP_FILES)
+    d = {_KEY_FILES: fle_uids}
+    dj = json.dumps(d)
+    r = requests.put(endpoint, auth=auth, data=dj)
+    r.raise_for_status()
+    fle_list = r.json()[_KEY_FILES]
+    return fle_list
+
 def _file_create(url, auth, path, extract=False):
 
     if extract:
@@ -205,6 +215,30 @@ def file_show(obj, uid):
         obj['auth'] = _auth(obj)
 
     click.echo("Showing file...")
+    fle = _file_show(obj['url'], obj['auth'], uid)
+    click.echo("File '{}':\n {}".format(uid, fle))
+
+@cli.group()
+def util():
+    pass
+
+@util.command(name='replace_files')
+@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
+@click.pass_obj
+def util_repalce_files(obj, path, extract, asn_uid):
+
+    if not obj['auth']:
+        obj['auth'] = _auth(obj)
+
+    click.echo("Creating files...")
+    fle_list = _file_create(obj['url'], obj['auth'], path, extract)
+    click.echo("Created Files:\n {}".format(fle_list))
+
+    click.echo("Attaching files...")
+    asn_fle_list = _assignment_file_add(obj['url'], obj['auth'], asn_uid, fle_list)
+    click.echo("Attached Files:\n {}".format(asn_fle_list))
 
 
 if __name__ == '__main__':
