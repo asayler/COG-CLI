@@ -315,7 +315,7 @@ def util_replace_files(obj, path, extract, tst_uid):
     click.echo("New files:\n {}".format(new_fle_list))
 
     click.echo("Attaching files...")
-    tst_fle_list = _test_file_add(obj['url'], obj['auth'], tst_uid, fle_list)
+    tst_fle_list = _test_file_add(obj['url'], obj['auth'], tst_uid, new_fle_list)
     click.echo("Attached files:\n {}".format(tst_fle_list))
 
 @util.command(name='token-show')
