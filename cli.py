@@ -186,7 +186,7 @@ def assignment_create(obj, name, env):
 
     click.echo("Creating assignment...")
     asn_list = _assignment_create(obj['url'], obj['auth'], name, env)
-    click.echo("Assignments:\n {}".format(asn_list))
+    click.echo("Created assignments:\n {}".format(asn_list))
 
 @assignment.command(name='list')
 @click.pass_obj
@@ -281,7 +281,7 @@ def file_delete(obj, uid):
 
     click.echo("Deleting file...")
     fle = _file_delete(obj['url'], obj['auth'], uid)
-    click.echo("Deleted File '{}':\n {}".format(uid, fle))
+    click.echo("Deleted file '{}':\n {}".format(uid, fle))
 
 @cli.group()
 def util():
