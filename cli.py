@@ -327,5 +327,37 @@ def util_token_show(obj):
 
     click.echo("{} Token: '{}'".format(obj['username'], obj['token']))
 
+@util.command(name='setup-assignment')
+@click.option('--asn_name', default=None, prompt=True, help='Assignment Name')
+@click.option('--env', default=None, prompt=True, help='Assignemnt Environment')
+@click.option('--tst_name', default=None, prompt=True, help='Test Name')
+@click.option('--tester', default=None, prompt=True, help='Test Module')
+@click.option('--maxscore', default=None, prompt=True, help='Max Score')
+@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.pass_obj
+def setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, extract):
+
+    if not obj['auth']:
+        obj['auth'] = _auth(obj)
+
+    click.echo("Creating assignment...")
+    asn_list = _assignment_create(obj['url'], obj['auth'], asn_name, env)
+    click.echo("Created assignments:\n {}".format(asn_list))
+    asn_uid = asn_list[0]
+
+    click.echo("Creating test...")
+    tst_list = _assignment_test_create(obj['url'], obj['auth'], asn_uid, tst_name, tester, maxscore)
+    click.echo("Created tests:\n {}".format(tst_list))
+    tst_uid = tst_list[0]
+
+    click.echo("Creating files...")
+    new_fle_list = _file_create(obj['url'], obj['auth'], path, extract)
+    click.echo("Created files:\n {}".format(new_fle_list))
+
+    click.echo("Attaching files...")
+    tst_fle_list = _test_file_add(obj['url'], obj['auth'], tst_uid, new_fle_list)
+    click.echo("Attached files:\n {}".format(tst_fle_list))
+
 if __name__ == '__main__':
     sys.exit(cli())
