@@ -302,7 +302,7 @@ def util_replace_files(obj, path, extract, tst_uid):
     click.echo("Old files:\n {}".format(old_fle_list))
 
     click.echo("Removing old files...")
-    rem_fle_list = _test_file_remove(obj['url'], obj['auth'], tst_uid, fle_list)
+    rem_fle_list = _test_file_remove(obj['url'], obj['auth'], tst_uid, old_fle_list)
     click.echo("Attached files:\n {}".format(rem_fle_list))
 
     click.echo("Deleting old files...")
