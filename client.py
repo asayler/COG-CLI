@@ -69,31 +69,53 @@ class Connection(object):
     def get_token(self):
         return self._token
 
-def assignment_create(url, auth, asn_name, asn_env):
+    def http_post(endpoint, json=None):
+        url = "{:s}/{:s}/".format(self._url, endpoint)
+        res = requests.post(url, auth=self._auth, json=json)
+        res.raise_for_status()
+        return r.json()
 
-    endpoint = "{:s}/{:s}/".format(url, _EP_ASSIGNMENTS)
-    d = {'name': asn_name, 'env': asn_env}
-    dj = json.dumps(d)
-    r = requests.post(endpoint, auth=auth, data=dj)
-    r.raise_for_status()
-    asn_list = r.json()[_KEY_ASSIGNMENTS]
-    return asn_list
+    def http_get(endpoint):
+        url = "{:s}/{:s}/".format(self._url, endpoint)
+        res = requests.get(url, auth=self._auth)
+        res.raise_for_status()
+        return res.json()
 
-def assignment_list(url, auth):
+    def http_delete(endpoint):
+        url = "{:s}/{:s}/".format(self._url, endpoint)
+        res = requests.delete(url, auth=self._auth,)
+        res.raise_for_status()
+        return res.json()
 
-    endpoint = "{:s}/{:s}/".format(url, _EP_ASSIGNMENTS)
-    r = requests.get(endpoint, auth=auth)
-    r.raise_for_status()
-    asn_list = r.json()[_KEY_ASSIGNMENTS]
-    return asn_list
+class Assignments(object):
 
-def assignment_show(url, auth, uid):
+    def __init__(self, connection):
+        self._conn = connection
+        self._ep = _EP_ASSIGNMENTS
+        self._key = _KEY_ASSIGNMENTS
 
-    endpoint = "{:s}/{:s}/{:s}/".format(url, _EP_ASSIGNMENTS, uid)
-    r = requests.get(endpoint, auth=auth)
-    r.raise_for_status()
-    asn = r.json()[uid]
-    return asn
+    def create(name, env):
+        data = {'name': name, 'env': env}
+        res = self._conn.http_post(self._ep, json=data)
+        uuid_list = res[self._key]
+        return uuid_list
+
+    def list():
+        res = self._conn.http_get(self._ep)
+        uuid_list = res[self._key]
+        return uuid_list
+
+    def show(uid):
+        ep = "{:s}/{:s}".format(self._ep, uid)
+        res = self._conn.http_get(ep)
+        obj = res[uid]
+        return obj
+
+    def delete(uid):
+        ep = "{:s}/{:s}".format(self._ep, uid)
+        res = self._conn.http_delete(ep)
+        obj = res[uid]
+        return obj
 
 def assignment_test_create(url, auth, asn_uid, tst_name, tst_tester, tst_maxscore):
 
