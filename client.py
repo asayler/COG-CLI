@@ -8,12 +8,66 @@ import json
 
 import requests
 
+_EP_TOKENS = 'tokens'
 _EP_ASSIGNMENTS = 'assignments'
 _KEY_ASSIGNMENTS = 'assignments'
 _EP_TESTS = 'tests'
 _KEY_TESTS = 'tests'
 _EP_FILES = 'files'
 _KEY_FILES = 'files'
+
+class Connection(object):
+
+    def __init__(self, url, username=None, password=None, token=None):
+
+        # Set vars
+        self._url = url
+        self._token = token
+        self._auth = None
+
+        # Authenticate (if able)
+        if token:
+            self.authenticate(token=token)
+        elif username and password:
+            self.authenticate(username=username, password=password)
+
+    def authenticate(self, username=None, password=None, token=None):
+
+        endpoint = "{:s}/{:s}/".format(obj['url'], _EP_TOKENS)
+
+        if token:
+
+            # Verify Token
+            auth = requests.auth.HTTPBasicAuth(obj['token'], '')
+            r = requests.get(endpoint, auth=auth)
+            r.raise_for_status()
+            self.token = r.json()['token']
+
+        else:
+
+            # Check Username/Password
+            if not username or not password:
+                raise TypeError("username and password required")
+
+            # Get Token
+            auth = requests.auth.HTTPBasicAuth(username, password)
+            r = requests.get(endpoint, auth=auth)
+            r.raise_for_status()
+            self.token = r.json()['token']
+
+        self.auth = requests.auth.HTTPBasicAuth(self.token, '')
+
+    def is_authenticated(self):
+        if self._auth:
+            return True
+        else:
+            return False
+
+    def get_url(self):
+        return self._url
+
+    def get_token(self):
+        return self._token
 
 def assignment_create(url, auth, asn_name, asn_env):
 
