@@ -2,6 +2,7 @@
 
 import sys
 import json
+import functools
 
 import requests
 import click
@@ -10,19 +11,29 @@ import client
 
 _EP_TOKENS = 'tokens'
 
-def _auth(obj):
+def auth_required(func):
 
-    # Token
-    if obj['token']:
-        obj['connection'].authenticate(token=obj['token'])
+    @functools.wraps(func)
+    def _wrapper(obj, *args, **kwargs):
 
-    # Username:Password
-    else:
-        if not obj['username']:
-            obj['username'] = click.prompt("Username", hide_input=False)
-        if not obj['password']:
-            obj['password'] = click.prompt("Password", hide_input=True)
-        obj['connection'].authenticate(username=obj['username'], password=obj['password'])
+        if not obj['connection'].is_authenticated():
+
+            # Token
+            if obj['token']:
+                obj['connection'].authenticate(token=obj['token'])
+
+            # Username:Password
+            else:
+                if not obj['username']:
+                    obj['username'] = click.prompt("Username", hide_input=False)
+                if not obj['password']:
+                    obj['password'] = click.prompt("Password", hide_input=True)
+                obj['connection'].authenticate(username=obj['username'], password=obj['password'])
+
+        # Call Function
+        return func(obj, *args, **kwargs)
+
+    return _wrapper
 
 @click.group()
 @click.option('--url', default=None, prompt=True, help='API URL')
@@ -52,20 +63,16 @@ def assignment(ctx):
 @click.option('--name', default=None, prompt=True, help='Assignment Name')
 @click.option('--env', default=None, prompt=True, help='Assignment Environment')
 @click.pass_obj
+@auth_required
 def assignment_create(obj, name, env):
-
-    if not obj['connection'].is_authenticated():
-        _auth(obj)
 
     asn_list = obj['assignments'].create(name, env)
     click.echo("{}".format(asn_list))
 
 @assignment.command(name='list')
 @click.pass_obj
+@auth_required
 def assignment_list(obj):
-
-    if not obj['connection'].is_authenticated():
-        _auth(obj)
 
     asn_list = obj['assignments'].list()
     click.echo("{}".format(asn_list))
