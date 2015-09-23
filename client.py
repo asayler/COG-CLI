@@ -5,6 +5,7 @@
 
 import sys
 import json
+import abc
 
 import requests
 
@@ -97,66 +98,87 @@ class Connection(object):
         res.raise_for_status()
         return res.json()
 
-class Assignments(object):
+class COGObject(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def __init__(self, connection):
+        """ Constructor"""
+
+        self._conn = connection
+        self._ep = None
+        self._key = None
+
+    @abc.abstractmethod
+    def create(self, data, endpoint=None):
+
+        if endpoint is None:
+            endpoint = self._ep
+
+        res = self._conn.http_post(endpoint, json=data)
+        uuid_list = res[self._key]
+        return uuid_list
+
+    def list(self):
+        res = self._conn.http_get(self._ep)
+        uuid_list = res[self._key]
+        return uuid_list
+
+    def show(self, uid):
+        ep = "{:s}/{:s}".format(self._ep, uid)
+        res = self._conn.http_get(ep)
+        obj = res[uid]
+        return obj
+
+    def delete(self, uid):
+        ep = "{:s}/{:s}".format(self._ep, uid)
+        res = self._conn.http_delete(ep)
+        obj = res[uid]
+        return obj
+
+class Assignments(COGObject):
 
     def __init__(self, connection):
-        self._conn = connection
+        """ Constructor"""
+
+        # Call Parent
+        super(Assignments, self).__init__(connection)
+
+        #Set Base Key and Endpoint
         self._ep = _EP_ASSIGNMENTS
         self._key = _KEY_ASSIGNMENTS
 
     def create(self, name, env):
+
+        # Setup Data
         data = {'name': name, 'env': env}
-        res = self._conn.http_post(self._ep, json=data)
-        uuid_list = res[self._key]
-        return uuid_list
 
-    def list(self):
-        res = self._conn.http_get(self._ep)
-        uuid_list = res[self._key]
-        return uuid_list
+        # Call Parent
+        return super(Assignments, self).create(data)
 
-    def show(self, uid):
-        ep = "{:s}/{:s}".format(self._ep, uid)
-        res = self._conn.http_get(ep)
-        obj = res[uid]
-        return obj
-
-    def delete(self, uid):
-        ep = "{:s}/{:s}".format(self._ep, uid)
-        res = self._conn.http_delete(ep)
-        obj = res[uid]
-        return obj
-
-class Tests(object):
+class Tests(COGObject):
 
     def __init__(self, connection):
-        self._conn = connection
+        """ Constructor"""
+
+        # Call Parent
+        super(Tests, self).__init__(connection)
+
+        #Set Base Key and Endpoint
         self._ep = _EP_TESTS
         self._key = _KEY_TESTS
 
     def create(self, asn_uid, name, tester, maxscore):
-        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
+
+        # Setup Data
         data = {"name": name, "tester": tester, "maxscore": maxscore}
-        res = self._conn.http_post(ep, json=data)
-        uuid_list = res[self._key]
-        return uuid_list
 
-    def list(self):
-        res = self._conn.http_get(self._ep)
-        uuid_list = res[self._key]
-        return uuid_list
+        # Setup Endpoint
+        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
 
-    def show(self, uid):
-        ep = "{:s}/{:s}".format(self._ep, uid)
-        res = self._conn.http_get(ep)
-        obj = res[uid]
-        return obj
-
-    def delete(self, uid):
-        ep = "{:s}/{:s}".format(self._ep, uid)
-        res = self._conn.http_delete(ep)
-        obj = res[uid]
-        return obj
+        # Call Parent
+        return super(Tests, self).create(data, endpoint=ep)
 
 # def test_file_add(url, auth, tst_uid, fle_uids):
 
