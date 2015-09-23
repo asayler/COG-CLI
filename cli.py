@@ -70,11 +70,13 @@ def fle_create(obj, path, extract):
     click.echo("{}".format(fle_list))
 
 @fle.command(name='list')
+@click.option('--tst_uid', default=None, help='Only list files attached to a specific test')
+@click.option('--sub_uid', default=None, help='Only list files attached to a specific submission')
 @click.pass_obj
 @auth_required
-def fle_list(obj):
+def fle_list(obj, tst_uid, sub_uid):
 
-    fle_list = obj['files'].list()
+    fle_list = obj['files'].list(tst_uid=tst_uid, sub_uid=sub_uid)
     click.echo("{}".format(fle_list))
 
 @fle.command(name='show')
