@@ -95,24 +95,50 @@ def assignment_delete(obj, uid):
     asn = obj['assignments'].delete(uid)
     click.echo("{}".format(asn))
 
-# @cli.group()
-# def test():
-#     pass
+@cli.group()
+@click.pass_obj
+def test(obj):
 
-# @test.command(name='create')
-# @click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
-# @click.option('--name', default=None, prompt=True, help='Test Name')
-# @click.option('--tester', default=None, prompt=True, help='Test Module')
-# @click.option('--maxscore', default=None, prompt=True, help='Max Score')
-# @click.pass_obj
-# def test_create(obj, asn_uid, name, tester, maxscore):
+    # Setup Client Class
+    obj['tests'] = client.Tests(obj['connection'])
 
-#     if not obj['connection']:
-#         obj['connection'] = _connect(obj)
+@test.command(name='create')
+@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--name', default=None, prompt=True, help='Test Name')
+@click.option('--tester', default=None, prompt=True, help='Test Module')
+@click.option('--maxscore', default=None, prompt=True, help='Max Score')
+@click.pass_obj
+@auth_required
+def test_create(obj, asn_uid, name, tester, maxscore):
 
-#     click.echo("Creating test...")
-#     tst_list = client.assignment_test_create(obj['url'], obj['connection'], asn_uid, name, tester, maxscore)
-#     click.echo("Created tests:\n {}".format(tst_list))
+    tst_list = obj['tests'].create(asn_uid, name, tester, maxscore)
+    click.echo("{}".format(tst_list))
+
+@test.command(name='list')
+@click.pass_obj
+@auth_required
+def test_list(obj):
+
+    tst_list = obj['tests'].list()
+    click.echo("{}".format(tst_list))
+
+@test.command(name='show')
+@click.option('--uid', default=None, prompt=True, help='Test UUID')
+@click.pass_obj
+@auth_required
+def test_show(obj, uid):
+
+    tst = obj['tests'].show(uid)
+    click.echo("{}".format(tst))
+
+@test.command(name='delete')
+@click.option('--uid', default=None, prompt=True, help='Test UUID')
+@click.pass_obj
+@auth_required
+def test_delete(obj, uid):
+
+    tst = obj['tests'].delete(uid)
+    click.echo("{}".format(tst))
 
 # @cli.group()
 # def file():

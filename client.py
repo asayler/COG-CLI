@@ -127,15 +127,36 @@ class Assignments(object):
         obj = res[uid]
         return obj
 
-# def assignment_test_create(url, auth, asn_uid, tst_name, tst_tester, tst_maxscore):
+class Tests(object):
 
-#     endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
-#     d = {"name": tst_name, "tester": tst_tester, "maxscore": tst_maxscore}
-#     dj = json.dumps(d)
-#     r = requests.post(endpoint, auth=auth, data=dj)
-#     r.raise_for_status()
-#     tst_list = r.json()[_KEY_TESTS]
-#     return tst_list
+    def __init__(self, connection):
+        self._conn = connection
+        self._ep = _EP_TESTS
+        self._key = _KEY_TESTS
+
+    def create(self, asn_uid, name, tester, maxscore):
+        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
+        data = {"name": name, "tester": tester, "maxscore": maxscore}
+        res = self._conn.http_post(ep, json=data)
+        uuid_list = res[self._key]
+        return uuid_list
+
+    def list(self):
+        res = self._conn.http_get(self._ep)
+        uuid_list = res[self._key]
+        return uuid_list
+
+    def show(self, uid):
+        ep = "{:s}/{:s}".format(self._ep, uid)
+        res = self._conn.http_get(ep)
+        obj = res[uid]
+        return obj
+
+    def delete(self, uid):
+        ep = "{:s}/{:s}".format(self._ep, uid)
+        res = self._conn.http_delete(ep)
+        obj = res[uid]
+        return obj
 
 # def test_file_add(url, auth, tst_uid, fle_uids):
 
