@@ -52,6 +52,49 @@ def cli(ctx, url, username, password, token):
     ctx.obj['token'] = token
     ctx.obj['connection'] = client.Connection(ctx.obj['url'])
 
+@cli.group(name='file')
+@click.pass_obj
+def fle(obj):
+
+    # Setup Client Class
+    obj['files'] = client.Files(obj['connection'])
+
+@fle.command(name='create')
+@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.pass_obj
+@auth_required
+def fle_create(obj, path, extract):
+
+    fle_list = obj['files'].create(path, extract)
+    click.echo("{}".format(fle_list))
+
+@fle.command(name='list')
+@click.pass_obj
+@auth_required
+def fle_list(obj):
+
+    fle_list = obj['files'].list()
+    click.echo("{}".format(fle_list))
+
+@fle.command(name='show')
+@click.option('--uid', default=None, prompt=True, help='File UUID')
+@click.pass_obj
+@auth_required
+def fle_show(obj, uid):
+
+    fle = obj['files'].show(uid)
+    click.echo("{}".format(fle))
+
+@fle.command(name='delete')
+@click.option('--uid', default=None, prompt=True, help='File UUID')
+@click.pass_obj
+@auth_required
+def fle_delete(obj, uid):
+
+    fle = obj['files'].delete(uid)
+    click.echo("{}".format(fle))
+
 @cli.group()
 @click.pass_context
 def assignment(ctx):
