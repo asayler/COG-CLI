@@ -12,34 +12,17 @@ _EP_TOKENS = 'tokens'
 
 def _auth(obj):
 
-    # Handle Auth
-    endpoint = "{:s}/{:s}/".format(obj['url'], _EP_TOKENS)
-
+    # Token
     if obj['token']:
+        obj['connection'].authenticate(token=obj['token'])
 
-        # Verify Token
-        auth = requests.auth.HTTPBasicAuth(obj['token'], '')
-        r = requests.get(endpoint, auth=auth)
-        r.raise_for_status()
-        obj['token'] = r.json()['token']
-        auth = requests.auth.HTTPBasicAuth(obj['token'], '')
-
+    # Username:Password
     else:
-
-        # Get Username:Password
         if not obj['username']:
             obj['username'] = click.prompt("Username", hide_input=False)
         if not obj['password']:
             obj['password'] = click.prompt("Password", hide_input=True)
-
-        # Get Token
-        auth = requests.auth.HTTPBasicAuth(obj['username'], obj['password'])
-        r = requests.get(endpoint, auth=auth)
-        r.raise_for_status()
-        obj['token'] = r.json()['token']
-        auth = requests.auth.HTTPBasicAuth(obj['token'], '')
-
-    return auth
+        obj['connection'].authenticate(username=obj['username'], password=obj['password'])
 
 @click.group()
 @click.option('--url', default=None, prompt=True, help='API URL')
@@ -56,7 +39,7 @@ def cli(ctx, url, username, password, token):
     ctx.obj['username'] = username
     ctx.obj['password'] = password
     ctx.obj['token'] = token
-    ctx.obj['auth'] = None
+    ctx.obj['connection'] = client.Connection(ctx.obj['url'])
 
 @cli.group()
 def assignment():
