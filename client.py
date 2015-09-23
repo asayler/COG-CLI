@@ -17,6 +17,8 @@ _EP_FILES = 'files'
 _EP_FILES_CONTENTS = 'contents'
 _KEY_FILES = 'files'
 _EP_ASSIGNMENTS = 'assignments'
+_EP_ASSIGNMENTS_SUBMITABLE = 'submitable'
+_EP_ASSIGNMENTS_RUNABLE = 'runable'
 _KEY_ASSIGNMENTS = 'assignments'
 _EP_TESTS = 'tests'
 _KEY_TESTS = 'tests'
@@ -228,6 +230,36 @@ class Assignments(COGObject):
 
         # Call Parent
         return super(Assignments, self).create(json=data)
+
+    def list(self, submitable=False, runable=False):
+
+        # Limted Cases
+        if submitable or runable:
+
+            submittable_set = set([])
+            if submitable:
+                ep = "{:s}/{:s}".format(_EP_ASSIGNMENTS, _EP_ASSIGNMENTS_SUBMITABLE)
+                submittable_set = set(super(Assignments, self).list(endpoint=ep))
+
+            runable_set = set([])
+            if runable:
+                ep = "{:s}/{:s}".format(_EP_ASSIGNMENTS, _EP_ASSIGNMENTS_SUBMITABLE)
+                runable_set = set(super(Assignments, self).list(endpoint=ep))
+
+            # Combine
+            if submitable and runable:
+                asn_list = list(submittable_set.intersection(runable_set))
+            else:
+                asn_list = list(submittable_set.union(runable_set))
+
+        # Open Case
+        else:
+
+            ep = self._ep
+            asn_list = super(Assignments, self).list(endpoint=ep)
+
+        # Call Parent
+        return asn_list
 
 class Tests(COGObject):
 

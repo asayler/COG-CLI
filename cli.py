@@ -131,11 +131,13 @@ def assignment_create(obj, name, env):
     click.echo("{}".format(asn_list))
 
 @assignment.command(name='list')
+@click.option('--submitable', is_flag=True, help='Limit to submitable assignments')
+@click.option('--runable', is_flag=True, help='Limit to runable assignments')
 @click.pass_obj
 @auth_required
-def assignment_list(obj):
+def assignment_list(obj, submitable, runable):
 
-    asn_list = obj['assignments'].list()
+    asn_list = obj['assignments'].list(submitable=submitable, runable=runable)
     click.echo("{}".format(asn_list))
 
 @assignment.command(name='show')
