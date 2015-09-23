@@ -16,6 +16,19 @@ _KEY_TESTS = 'tests'
 _EP_FILES = 'files'
 _KEY_FILES = 'files'
 
+def _debug_dump(r):
+
+    print(
+        'Request:\n{}\n{}\n{}\n\n{}\n{}'.format(
+            '-----------START-----------',
+            r.request.method + ' ' + r.request.url,
+            '\n'.join('{}: {}'.format(k, v) for k, v in r.request.headers.items()),
+            r.request.body,
+            '------------END------------'
+        )
+    )
+    print('Response:\n{}'.format(r.text))
+
 class Connection(object):
 
     def __init__(self, url, username=None, password=None, token=None):

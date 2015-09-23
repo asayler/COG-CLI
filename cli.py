@@ -10,18 +10,6 @@ import client
 
 _EP_TOKENS = 'tokens'
 
-def _debug_dump(r):
-
-    click.echo('Request:\n{}\n{}\n{}\n\n{}\n{}'.format(
-        '-----------START-----------',
-        r.request.method + ' ' + r.request.url,
-        '\n'.join('{}: {}'.format(k, v) for k, v in r.request.headers.items()),
-        r.request.body,
-        '------------END------------'
-    )
-    )
-    click.echo('Response:\n{}'.format(r.text))
-
 def _auth(obj):
 
     # Handle Auth
