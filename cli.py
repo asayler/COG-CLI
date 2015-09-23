@@ -52,6 +52,8 @@ def cli(ctx, url, username, password, token):
     ctx.obj['token'] = token
     ctx.obj['connection'] = client.Connection(ctx.obj['url'])
 
+### File Commands ###
+
 @cli.group(name='file')
 @click.pass_obj
 def fle(obj):
@@ -97,6 +99,8 @@ def fle_delete(obj, uid):
     fle = obj['files'].delete(uid)
     click.echo("{}".format(fle))
 
+### Assignment Commands ###
+
 @cli.group()
 @click.pass_obj
 def assignment(obj):
@@ -139,6 +143,8 @@ def assignment_delete(obj, uid):
 
     asn = obj['assignments'].delete(uid)
     click.echo("{}".format(asn))
+
+### Test Commands ###
 
 @cli.group()
 @click.pass_obj
