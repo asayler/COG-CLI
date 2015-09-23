@@ -80,9 +80,9 @@ class Connection(object):
     def get_url(self):
         return self._url
 
-    def http_post(self, endpoint, json=None):
+    def http_post(self, endpoint, json=None, files=None):
         url = "{:s}/{:s}/".format(self._url, endpoint)
-        res = requests.post(url, auth=self._auth, json=json)
+        res = requests.post(url, auth=self._auth, json=json, files=files)
         res.raise_for_status()
         return res.json()
 
@@ -111,12 +111,12 @@ class COGObject(object):
         self._key = None
 
     @abc.abstractmethod
-    def create(self, data, endpoint=None):
+    def create(self, endpoint=None, json=None, files=None):
 
         if endpoint is None:
             endpoint = self._ep
 
-        res = self._conn.http_post(endpoint, json=data)
+        res = self._conn.http_post(endpoint, json=json, files=files)
         uuid_list = res[self._key]
         return uuid_list
 
@@ -155,7 +155,7 @@ class Assignments(COGObject):
         data = {'name': name, 'env': env}
 
         # Call Parent
-        return super(Assignments, self).create(data)
+        return super(Assignments, self).create(json=data)
 
 class Tests(COGObject):
 
@@ -178,7 +178,7 @@ class Tests(COGObject):
         ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
 
         # Call Parent
-        return super(Tests, self).create(data, endpoint=ep)
+        return super(Tests, self).create(endpoint=ep, json=data)
 
 # def test_file_add(url, auth, tst_uid, fle_uids):
 
