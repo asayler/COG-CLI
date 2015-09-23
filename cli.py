@@ -192,59 +192,6 @@ def test_delete(obj, uid):
     click.echo("{}".format(tst))
 
 # @cli.group()
-# def file():
-#     pass
-
-# @file.command(name='create')
-# @click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
-# @click.option('--extract', is_flag=True, help='Control whether file is extracted')
-# @click.pass_obj
-# def file_create(obj, path, extract):
-
-#     if not obj['connection']:
-#         obj['connection'] = _connect(obj)
-
-#     click.echo("Creating file...")
-#     fle_list = client.file_create(obj['url'], obj['connection'], path, extract)
-#     click.echo("Files:\n {}".format(fle_list))
-
-# @file.command(name='list')
-# @click.option('--tst_uid', default=None, help='Only Show Files from Test with UUID tst_uid')
-# @click.pass_obj
-# def file_list(obj, tst_uid):
-
-#     if not obj['connection']:
-#         obj['connection'] = _connect(obj)
-
-#     click.echo("Listing files...")
-#     fle_list = client.file_list(obj['url'], obj['connection'], tst_uid=tst_uid)
-#     click.echo("Files:\n {}".format(fle_list))
-
-# @file.command(name='show')
-# @click.option('--uid', default=None, prompt=True, help='File UUID')
-# @click.pass_obj
-# def file_show(obj, uid):
-
-#     if not obj['connection']:
-#         obj['connection'] = _connect(obj)
-
-#     click.echo("Showing file...")
-#     fle = client.file_show(obj['url'], obj['connection'], uid)
-#     click.echo("File '{}':\n {}".format(uid, fle))
-
-# @file.command(name='show')
-# @click.option('--uid', default=None, prompt=True, help='File UUID')
-# @click.pass_obj
-# def file_delete(obj, uid):
-
-#     if not obj['connection']:
-#         obj['connection'] = _connect(obj)
-
-#     click.echo("Deleting file...")
-#     fle = client.file_delete(obj['url'], obj['connection'], uid)
-#     click.echo("Deleted file '{}':\n {}".format(uid, fle))
-
-# @cli.group()
 # def util():
 #     pass
 
