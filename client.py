@@ -6,6 +6,8 @@
 import sys
 import json
 import abc
+import os
+import os.path
 
 import requests
 
@@ -194,6 +196,15 @@ class Files(COGObject):
 
     def download(self, uid, path):
 
+        # Process Directory Path
+        if os.path.isdir(path):
+            fle_obj = self.show(uid)
+            fle_name = os.path.basename(fle_obj["name"])
+            path = os.path.join(path, fle_name)
+        elif not os.path.basename(path):
+            raise FileNotFoundError(path)
+
+        # Download File
         ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
         path = self._conn.http_download(ep, path)
         return path
