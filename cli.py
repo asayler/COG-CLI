@@ -99,6 +99,18 @@ def fle_delete(obj, uid):
     fle = obj['files'].delete(uid)
     click.echo("{}".format(fle))
 
+@fle.command(name='download')
+@click.option('--uid', default=None, prompt=True, help='File UUID')
+@click.option('--path', default=None, prompt=True,
+              type=click.Path(writable=True, resolve_path=True),
+              help='Destination Path')
+@click.pass_obj
+@auth_required
+def fle_download(obj, uid, path):
+
+    path = obj['files'].download(uid, path)
+    click.echo("{}".format(path))
+
 ### Assignment Commands ###
 
 @cli.group()
