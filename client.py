@@ -11,12 +11,12 @@ import requests
 
 _EP_TOKENS = 'tokens'
 _KEY_TOKENS = 'token'
+_EP_FILES = 'files'
+_KEY_FILES = 'files'
 _EP_ASSIGNMENTS = 'assignments'
 _KEY_ASSIGNMENTS = 'assignments'
 _EP_TESTS = 'tests'
 _KEY_TESTS = 'tests'
-_EP_FILES = 'files'
-_KEY_FILES = 'files'
 
 def _debug_dump(r):
 
@@ -137,6 +137,43 @@ class COGObject(object):
         obj = res[uid]
         return obj
 
+class Files(COGObject):
+
+    def __init__(self, connection):
+        """ Constructor"""
+
+        # Call Parent
+        super(Files, self).__init__(connection)
+
+        #Set Base Key and Endpoint
+        self._ep = _EP_FILES
+        self._key = _KEY_FILES
+
+    def create(self, path, extract=False):
+
+        # Process Args
+        if extract:
+            key = 'extract'
+        else:
+            key = 'file'
+
+        # Setup Files
+        files = {key: path}
+
+        # Call Parent
+        return super(Files, self).create(files=files)
+
+# def file_list(url, auth, tst_uid=None):
+
+#     if tst_uid:
+#         endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_TESTS, tst_uid, _EP_FILES)
+#     else:
+#         endpoint = "{:s}/{:s}/".format(url, _EP_FILES)
+#     r = requests.get(endpoint, auth=auth)
+#     r.raise_for_status()
+#     fle_list = r.json()[_KEY_FILES]
+#     return fle_list
+
 class Assignments(COGObject):
 
     def __init__(self, connection):
@@ -199,44 +236,3 @@ class Tests(COGObject):
 #     r.raise_for_status()
 #     fle_list = r.json()[_KEY_FILES]
 #     return fle_list
-
-# def file_create(url, auth, path, extract=False):
-
-#     if extract:
-#         key = 'extract'
-#     else:
-#         key = 'file'
-
-#     endpoint = "{:s}/{:s}/".format(url, _EP_FILES)
-#     files = {key: path}
-#     r = requests.post(endpoint, files=files, auth=auth)
-#     r.raise_for_status()
-#     fle_list = r.json()[_KEY_FILES]
-#     return fle_list
-
-# def file_list(url, auth, tst_uid=None):
-
-#     if tst_uid:
-#         endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_TESTS, tst_uid, _EP_FILES)
-#     else:
-#         endpoint = "{:s}/{:s}/".format(url, _EP_FILES)
-#     r = requests.get(endpoint, auth=auth)
-#     r.raise_for_status()
-#     fle_list = r.json()[_KEY_FILES]
-#     return fle_list
-
-# def file_show(url, auth, uid):
-
-#     endpoint = "{:s}/{:s}/{:s}/".format(url, _EP_FILES, uid)
-#     r = requests.get(endpoint, auth=auth)
-#     r.raise_for_status()
-#     fle = r.json()[uid]
-#     return fle
-
-# def file_delete(url, auth, uid):
-
-#     endpoint = "{:s}/{:s}/{:s}/".format(url, _EP_FILES, uid)
-#     r = requests.delete(endpoint, auth=auth)
-#     r.raise_for_status()
-#     fle = r.json()[uid]
-#     return fle
