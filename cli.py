@@ -180,11 +180,12 @@ def test_create(obj, asn_uid, name, tester, maxscore):
     click.echo("{}".format(tst_list))
 
 @test.command(name='list')
+@click.option('--asn_uid', default=None, help='Assignment UUID')
 @click.pass_obj
 @auth_required
-def test_list(obj):
+def test_list(obj, asn_uid):
 
-    tst_list = obj['tests'].list()
+    tst_list = obj['tests'].list(asn_uid=asn_uid)
     click.echo("{}".format(tst_list))
 
 @test.command(name='show')

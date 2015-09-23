@@ -284,6 +284,17 @@ class Tests(COGObject):
         # Call Parent
         return super(Tests, self).create(endpoint=ep, json=data)
 
+    def list(self, asn_uid=None):
+
+        # Setup Endpoint
+        if asn_uid:
+            ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
+        else:
+            ep = self._ep
+
+        # Call Parent
+        return super(Tests, self).list(endpoint=ep)
+
 # def test_file_add(url, auth, tst_uid, fle_uids):
 
 #     endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_TESTS, tst_uid, _EP_FILES)
