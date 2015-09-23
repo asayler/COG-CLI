@@ -120,8 +120,12 @@ class COGObject(object):
         uuid_list = res[self._key]
         return uuid_list
 
-    def list(self):
-        res = self._conn.http_get(self._ep)
+    def list(self, endpoint=None):
+
+        if endpoint is None:
+            endpoint = self._ep
+
+        res = self._conn.http_get(endpoint)
         uuid_list = res[self._key]
         return uuid_list
 
@@ -163,16 +167,18 @@ class Files(COGObject):
         # Call Parent
         return super(Files, self).create(files=files)
 
-# def file_list(url, auth, tst_uid=None):
+    def list(self, tst_uid=None, sub_uid=None):
 
-#     if tst_uid:
-#         endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_TESTS, tst_uid, _EP_FILES)
-#     else:
-#         endpoint = "{:s}/{:s}/".format(url, _EP_FILES)
-#     r = requests.get(endpoint, auth=auth)
-#     r.raise_for_status()
-#     fle_list = r.json()[_KEY_FILES]
-#     return fle_list
+        # Setup Endpoint
+        if tst_uid:
+            ep = "{:s}/{:s}/{:s}".format(_EP_TESTS, tst_uid, _EP_FILES)
+        elif sub_uid:
+            ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, tst_uid, _EP_FILES)
+        else:
+            ep = self._ep
+
+        # Call Parent
+        return super(Files, self).list(endpoint=ep)
 
 class Assignments(COGObject):
 
