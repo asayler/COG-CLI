@@ -12,11 +12,14 @@ import requests
 _EP_TOKENS = 'tokens'
 _KEY_TOKENS = 'token'
 _EP_FILES = 'files'
+_EP_FILES_CONTENTS = 'contents'
 _KEY_FILES = 'files'
 _EP_ASSIGNMENTS = 'assignments'
 _KEY_ASSIGNMENTS = 'assignments'
 _EP_TESTS = 'tests'
 _KEY_TESTS = 'tests'
+
+_BLOCK_SIZE = 1024
 
 def _debug_dump(r):
 
@@ -97,6 +100,15 @@ class Connection(object):
         res = requests.delete(url, auth=self._auth)
         res.raise_for_status()
         return res.json()
+
+    def http_download(self, endpoint, path):
+        url = "{:s}/{:s}/".format(self._url, endpoint)
+        res = requests.get(url, auth=self._auth)
+        res.raise_for_status()
+        with open(path, 'wb') as fd:
+            for chunk in res.iter_content(chunk_size=_BLOCK_SIZE):
+                fd.write(chunk)
+        return path
 
 class COGObject(object):
 
