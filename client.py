@@ -82,21 +82,21 @@ class Connection(object):
     def get_token(self):
         return self._token
 
-    def http_post(endpoint, json=None):
+    def http_post(self, endpoint, json=None):
         url = "{:s}/{:s}/".format(self._url, endpoint)
         res = requests.post(url, auth=self._auth, json=json)
         res.raise_for_status()
-        return r.json()
+        return res.json()
 
-    def http_get(endpoint):
+    def http_get(self, endpoint):
         url = "{:s}/{:s}/".format(self._url, endpoint)
         res = requests.get(url, auth=self._auth)
         res.raise_for_status()
         return res.json()
 
-    def http_delete(endpoint):
+    def http_delete(self, endpoint):
         url = "{:s}/{:s}/".format(self._url, endpoint)
-        res = requests.delete(url, auth=self._auth,)
+        res = requests.delete(url, auth=self._auth)
         res.raise_for_status()
         return res.json()
 
@@ -107,24 +107,24 @@ class Assignments(object):
         self._ep = _EP_ASSIGNMENTS
         self._key = _KEY_ASSIGNMENTS
 
-    def create(name, env):
+    def create(self, name, env):
         data = {'name': name, 'env': env}
         res = self._conn.http_post(self._ep, json=data)
         uuid_list = res[self._key]
         return uuid_list
 
-    def list():
+    def list(self):
         res = self._conn.http_get(self._ep)
         uuid_list = res[self._key]
         return uuid_list
 
-    def show(uid):
+    def show(self, uid):
         ep = "{:s}/{:s}".format(self._ep, uid)
         res = self._conn.http_get(ep)
         obj = res[uid]
         return obj
 
-    def delete(uid):
+    def delete(self, uid):
         ep = "{:s}/{:s}".format(self._ep, uid)
         res = self._conn.http_delete(ep)
         obj = res[uid]
