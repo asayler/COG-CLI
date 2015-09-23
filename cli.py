@@ -42,8 +42,11 @@ def cli(ctx, url, username, password, token):
     ctx.obj['connection'] = client.Connection(ctx.obj['url'])
 
 @cli.group()
-def assignment():
-    pass
+@click.pass_context
+def assignment(ctx):
+
+    # Setup Context
+    ctx.obj['assignments'] = client.Assignments(ctx.obj['connection'])
 
 @assignment.command(name='create')
 @click.option('--name', default=None, prompt=True, help='Assignment Name')
@@ -51,50 +54,21 @@ def assignment():
 @click.pass_obj
 def assignment_create(obj, name, env):
 
-    if not obj['auth']:
-        obj['auth'] = _auth(obj)
+    if not obj['connection'].is_authenticated():
+        _auth(obj)
 
-    click.echo("Creating assignment...")
-    asn_list = client.assignment_create(obj['url'], obj['auth'], name, env)
-    click.echo("Created assignments:\n {}".format(asn_list))
+    asn_list = obj['assignments'].create(name, env)
+    click.echo("{}".format(asn_list))
 
 @assignment.command(name='list')
 @click.pass_obj
 def assignment_list(obj):
 
-    if not obj['auth']:
-        obj['auth'] = _auth(obj)
+    if not obj['connection'].is_authenticated():
+        _auth(obj)
 
-    click.echo("Listing assignments")
-    asn_list = client.assignment_list(obj['url'], obj['auth'])
-    click.echo("Assignments:\n {}".format(asn_list))
-
-@assignment.command(name='show')
-@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
-@click.pass_obj
-def assignment_show(obj, uid):
-
-    if not obj['auth']:
-        obj['auth'] = _auth(obj)
-
-    click.echo("Showing assignment...")
-    asn = client.assignment_show(obj['url'], obj['auth'], uid)
-    click.echo("Assignment '{}':\n {}".format(uid, asn))
-
-@cli.group()
-def test():
-    pass
-
-@test.command(name='create')
-@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
-@click.option('--name', default=None, prompt=True, help='Test Name')
-@click.option('--tester', default=None, prompt=True, help='Test Module')
-@click.option('--maxscore', default=None, prompt=True, help='Max Score')
-@click.pass_obj
-def test_create(obj, asn_uid, name, tester, maxscore):
-
-    if not obj['auth']:
-        obj['auth'] = _auth(obj)
+    asn_list = obj['assignments'].list()
+    click.echo("{}".format(asn_list))
 
     click.echo("Creating test...")
     tst_list = client.assignment_test_create(obj['url'], obj['auth'], asn_uid, name, tester, maxscore)
