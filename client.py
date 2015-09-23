@@ -9,6 +9,7 @@ import json
 import requests
 
 _EP_TOKENS = 'tokens'
+_KEY_TOKENS = 'token'
 _EP_ASSIGNMENTS = 'assignments'
 _KEY_ASSIGNMENTS = 'assignments'
 _EP_TESTS = 'tests'
@@ -35,7 +36,6 @@ class Connection(object):
 
         # Set vars
         self._url = url
-        self._token = token
         self._auth = None
 
         # Authenticate (if able)
@@ -46,15 +46,15 @@ class Connection(object):
 
     def authenticate(self, username=None, password=None, token=None):
 
-        endpoint = "{:s}/{:s}/".format(obj['url'], _EP_TOKENS)
+        endpoint = "{:s}/{:s}/".format(self._url, _EP_TOKENS)
 
         if token:
 
             # Verify Token
-            auth = requests.auth.HTTPBasicAuth(obj['token'], '')
+            auth = requests.auth.HTTPBasicAuth(token, '')
             r = requests.get(endpoint, auth=auth)
             r.raise_for_status()
-            self.token = r.json()['token']
+            token = r.json()[_KEY_TOKENS]
 
         else:
 
@@ -66,9 +66,9 @@ class Connection(object):
             auth = requests.auth.HTTPBasicAuth(username, password)
             r = requests.get(endpoint, auth=auth)
             r.raise_for_status()
-            self.token = r.json()['token']
+            token = r.json()[_KEY_TOKENS]
 
-        self.auth = requests.auth.HTTPBasicAuth(self.token, '')
+        self._auth = requests.auth.HTTPBasicAuth(token, '')
 
     def is_authenticated(self):
         if self._auth:
