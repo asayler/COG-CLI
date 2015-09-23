@@ -86,9 +86,14 @@ def assignment_show(obj, uid):
     asn = obj['assignments'].show(uid)
     click.echo("{}".format(asn))
 
-#     click.echo("Showing assignment...")
-#     asn = client.assignment_show(obj['url'], obj['connection'], uid)
-#     click.echo("Assignment '{}':\n {}".format(uid, asn))
+@assignment.command(name='delete')
+@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def assignment_delete(obj, uid):
+
+    asn = obj['assignments'].delete(uid)
+    click.echo("{}".format(asn))
 
 # @cli.group()
 # def test():
