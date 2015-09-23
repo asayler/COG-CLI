@@ -79,9 +79,6 @@ class Connection(object):
     def get_url(self):
         return self._url
 
-    def get_token(self):
-        return self._token
-
     def http_post(self, endpoint, json=None):
         url = "{:s}/{:s}/".format(self._url, endpoint)
         res = requests.post(url, auth=self._auth, json=json)
