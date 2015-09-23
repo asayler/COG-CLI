@@ -192,6 +192,12 @@ class Files(COGObject):
         # Call Parent
         return super(Files, self).list(endpoint=ep)
 
+    def download(self, uid, path):
+
+        ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
+        path = self._conn.http_download(ep, path)
+        return path
+
 class Assignments(COGObject):
 
     def __init__(self, connection):
