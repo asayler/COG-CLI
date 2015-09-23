@@ -206,6 +206,16 @@ def test_delete(obj, uid):
     tst = obj['tests'].delete(uid)
     click.echo("{}".format(tst))
 
+@test.command(name='attach_files')
+@click.option('--uid', default=None, prompt=True, help='Test UUID')
+@click.option('--fle_uid', default=None, multiple=True, help='File UUID')
+@click.pass_obj
+@auth_required
+def test_attach_files(obj, uid, fle_uid):
+
+    tst = obj['tests'].attach_files(uid, fle_uid)
+    click.echo("{}".format(tst))
+
 # @cli.group()
 # def util():
 #     pass

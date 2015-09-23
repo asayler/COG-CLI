@@ -93,6 +93,12 @@ class Connection(object):
         res.raise_for_status()
         return res.json()
 
+    def http_put(self, endpoint, json=None):
+        url = "{:s}/{:s}/".format(self._url, endpoint)
+        res = requests.put(url, auth=self._auth, json=json)
+        res.raise_for_status()
+        return res.json()
+
     def http_get(self, endpoint):
         url = "{:s}/{:s}/".format(self._url, endpoint)
         res = requests.get(url, auth=self._auth)
@@ -295,15 +301,22 @@ class Tests(COGObject):
         # Call Parent
         return super(Tests, self).list(endpoint=ep)
 
-# def test_file_add(url, auth, tst_uid, fle_uids):
+    def attach_files(self, uid, fle_uids):
 
-#     endpoint = "{:s}/{:s}/{:s}/{:s}/".format(url, _EP_TESTS, tst_uid, _EP_FILES)
-#     d = {_KEY_FILES: fle_uids}
-#     dj = json.dumps(d)
-#     r = requests.put(endpoint, auth=auth, data=dj)
-#     r.raise_for_status()
-#     fle_list = r.json()[_KEY_FILES]
-#     return fle_list
+        # Check Args
+        if not fle_uids:
+            raise TypeError("fle_uids must not be empty")
+
+        # Setup Endpoint
+        ep = "{:s}/{:s}/{:s}".format(self._ep, uid, _EP_FILES)
+
+        # Setup Data
+        data = {_KEY_FILES: fle_uids}
+
+        # HTTP Call
+        res = self._conn.http_put(endpoint=ep, json=data)
+        lst = res[_KEY_FILES]
+        return lst
 
 # def test_file_remove(url, auth, tst_uid, fle_uids):
 
