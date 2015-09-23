@@ -96,11 +96,11 @@ def fle_delete(obj, uid):
     click.echo("{}".format(fle))
 
 @cli.group()
-@click.pass_context
-def assignment(ctx):
+@click.pass_obj
+def assignment(obj):
 
-    # Setup Context
-    ctx.obj['assignments'] = client.Assignments(ctx.obj['connection'])
+    # Setup Client Class
+    obj['assignments'] = client.Assignments(obj['connection'])
 
 @assignment.command(name='create')
 @click.option('--name', default=None, prompt=True, help='Assignment Name')
