@@ -209,7 +209,7 @@ class Files(COGObject):
         """ Constructor"""
 
         # Call Parent
-        super(Files, self).__init__(connection)
+        super().__init__(connection)
 
         #Set Base Key and Endpoint
         self._ep = _EP_FILES
@@ -227,7 +227,7 @@ class Files(COGObject):
         files = {key: path}
 
         # Call Parent
-        return super(Files, self).create(files=files)
+        return super().create(files=files)
 
     def list(self, tst_uid=None, sub_uid=None):
 
@@ -240,7 +240,7 @@ class Files(COGObject):
             ep = self._ep
 
         # Call Parent
-        return super(Files, self).list(endpoint=ep)
+        return super().list(endpoint=ep)
 
     def download(self, uid, path):
 
@@ -263,7 +263,7 @@ class Assignments(COGObject):
         """ Constructor"""
 
         # Call Parent
-        super(Assignments, self).__init__(connection)
+        super().__init__(connection)
 
         #Set Base Key and Endpoint
         self._ep = _EP_ASSIGNMENTS
@@ -275,7 +275,7 @@ class Assignments(COGObject):
         data = {'name': name, 'env': env}
 
         # Call Parent
-        return super(Assignments, self).create(json=data)
+        return super().create(json=data)
 
     def list(self, submitable=False, runable=False):
 
@@ -285,12 +285,12 @@ class Assignments(COGObject):
             submittable_set = set([])
             if submitable:
                 ep = "{:s}/{:s}".format(_EP_ASSIGNMENTS, _EP_ASSIGNMENTS_SUBMITABLE)
-                submittable_set = set(super(Assignments, self).list(endpoint=ep))
+                submittable_set = set(super().list(endpoint=ep))
 
             runable_set = set([])
             if runable:
                 ep = "{:s}/{:s}".format(_EP_ASSIGNMENTS, _EP_ASSIGNMENTS_SUBMITABLE)
-                runable_set = set(super(Assignments, self).list(endpoint=ep))
+                runable_set = set(super().list(endpoint=ep))
 
             # Combine
             if submitable and runable:
@@ -302,7 +302,7 @@ class Assignments(COGObject):
         else:
 
             ep = self._ep
-            asn_list = super(Assignments, self).list(endpoint=ep)
+            asn_list = super().list(endpoint=ep)
 
         # Call Parent
         return asn_list
@@ -313,7 +313,7 @@ class Tests(COGFileAttachedObject):
         """ Constructor"""
 
         # Call Parent
-        super(Tests, self).__init__(connection)
+        super().__init__(connection)
 
         #Set Base Key and Endpoint
         self._ep = _EP_TESTS
@@ -328,7 +328,7 @@ class Tests(COGFileAttachedObject):
         ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
 
         # Call Parent
-        return super(Tests, self).create(endpoint=ep, json=data)
+        return super().create(endpoint=ep, json=data)
 
     def list(self, asn_uid=None):
 
@@ -339,7 +339,7 @@ class Tests(COGFileAttachedObject):
             ep = self._ep
 
         # Call Parent
-        return super(Tests, self).list(endpoint=ep)
+        return super().list(endpoint=ep)
 
 class Submissions(COGFileAttachedObject):
 
@@ -347,7 +347,7 @@ class Submissions(COGFileAttachedObject):
         """ Constructor"""
 
         # Call Parent
-        super(Submissions, self).__init__(connection)
+        super().__init__(connection)
 
         #Set Base Key and Endpoint
         self._ep = _EP_SUBMISSIONS
@@ -362,7 +362,7 @@ class Submissions(COGFileAttachedObject):
         ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_SUBMISSIONS)
 
         # Call Parent
-        return super(Submissions, self).create(endpoint=ep, json=data)
+        return super().create(endpoint=ep, json=data)
 
     def list(self, asn_uid=None):
 
@@ -373,7 +373,7 @@ class Submissions(COGFileAttachedObject):
             ep = self._ep
 
         # Call Parent
-        return super(Submissions, self).list(endpoint=ep)
+        return super().list(endpoint=ep)
 
 class Runs(COGObject):
 
@@ -381,7 +381,7 @@ class Runs(COGObject):
         """ Constructor"""
 
         # Call Parent
-        super(Runs, self).__init__(connection)
+        super().__init__(connection)
 
         #Set Base Key and Endpoint
         self._ep = _EP_RUNS
@@ -396,7 +396,7 @@ class Runs(COGObject):
         ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, sub_uid, _EP_RUNS)
 
         # Call Parent
-        return super(Runs, self).create(endpoint=ep, json=data)
+        return super().create(endpoint=ep, json=data)
 
     def list(self, sub_uid=None):
 
@@ -407,4 +407,4 @@ class Runs(COGObject):
             ep = self._ep
 
         # Call Parent
-        return super(Runs, self).list(endpoint=ep)
+        return super().list(endpoint=ep)
