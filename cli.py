@@ -357,13 +357,13 @@ def util_token_show(obj):
 
     click.echo("'{}'".format(obj['connection'].get_token()))
 
-@util.command(name='replace-files')
+@util.command(name='replace-test-files')
 @click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
 @click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
 @click.pass_obj
 @auth_required
-def util_replace_files(obj, path, extract, tst_uid):
+def util_replace_test_files(obj, path, extract, tst_uid):
 
     click.echo("Listing old files...")
     old_fle_list = obj['files'].list(tst_uid=tst_uid)
