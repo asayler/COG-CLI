@@ -350,6 +350,13 @@ def util(obj):
     obj['submissions'] = client.Submissions(obj['connection'])
     obj['runs'] = client.Runs(obj['connection'])
 
+@util.command(name='token-show')
+@click.pass_obj
+@auth_required
+def util_token_show(obj):
+
+    click.echo("'{}'".format(obj['connection'].get_token()))
+
 @util.command(name='replace-files')
 @click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
@@ -378,15 +385,6 @@ def util_replace_files(obj, path, extract, tst_uid):
     click.echo("Attaching files...")
     tst_fle_list = rem_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
     click.echo("Attached files:\n {}".format(tst_fle_list))
-
-# @util.command(name='token-show')
-# @click.pass_obj
-# def util_token_show(obj):
-
-#     if not obj['connection']:
-#         obj['connection'] = _connect(obj)
-
-#     click.echo("{} Token: '{}'".format(obj['username'], obj['token']))
 
 # @util.command(name='setup-assignment')
 # @click.option('--asn_name', default=None, prompt=True, help='Assignment Name')

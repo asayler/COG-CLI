@@ -91,6 +91,9 @@ class Connection(object):
     def get_url(self):
         return self._url
 
+    def get_token(self):
+        return self.http_get(_EP_TOKENS)[_KEY_TOKENS]
+
     def http_post(self, endpoint, json=None, files=None):
         url = "{:s}/{:s}/".format(self._url, endpoint)
         res = requests.post(url, auth=self._auth, json=json, files=files)
