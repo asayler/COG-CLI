@@ -24,6 +24,8 @@ _EP_TESTS = 'tests'
 _KEY_TESTS = 'tests'
 _EP_SUBMISSIONS = 'submissions'
 _KEY_SUBMISSIONS = 'submissions'
+_EP_RUNS = 'runs'
+_KEY_RUNS = 'runs'
 
 _BLOCK_SIZE = 1024
 
@@ -372,3 +374,37 @@ class Submissions(COGFileAttachedObject):
 
         # Call Parent
         return super(Submissions, self).list(endpoint=ep)
+
+class Runs(COGObject):
+
+    def __init__(self, connection):
+        """ Constructor"""
+
+        # Call Parent
+        super(Runs, self).__init__(connection)
+
+        #Set Base Key and Endpoint
+        self._ep = _EP_RUNS
+        self._key = _KEY_RUNS
+
+    def create(self, sub_uid, tst_uid):
+
+        # Setup Data
+        data = {"test": tst_uid}
+
+        # Setup Endpoint
+        ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, sub_uid, _EP_RUNS)
+
+        # Call Parent
+        return super(Runs, self).create(endpoint=ep, json=data)
+
+    def list(self, sub_uid=None):
+
+        # Setup Endpoint
+        if sub_uid:
+            ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, sub_uid, _EP_RUNS)
+        else:
+            ep = self._ep
+
+        # Call Parent
+        return super(Runs, self).list(endpoint=ep)

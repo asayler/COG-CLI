@@ -291,6 +291,52 @@ def submission_detach_files(obj, uid, fle_uid):
     tst = obj['submissions'].detach_files(uid, fle_uid)
     click.echo("{}".format(tst))
 
+### Run Commands ###
+
+@cli.group()
+@click.pass_obj
+def run(obj):
+
+    # Setup Client Class
+    obj['runs'] = client.Runs(obj['connection'])
+
+@run.command(name='create')
+@click.option('--sub_uid', default=None, prompt=True, help='Submission UUID')
+@click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
+@click.pass_obj
+@auth_required
+def run_create(obj, sub_uid, tst_uid):
+
+    tst_list = obj['runs'].create(sub_uid, tst_uid)
+    click.echo("{}".format(tst_list))
+
+@run.command(name='list')
+@click.option('--sub_uid', default=None, help='Submission UUID')
+@click.pass_obj
+@auth_required
+def run_list(obj, sub_uid):
+
+    tst_list = obj['runs'].list(sub_uid=sub_uid)
+    click.echo("{}".format(tst_list))
+
+@run.command(name='show')
+@click.option('--uid', default=None, prompt=True, help='Run UUID')
+@click.pass_obj
+@auth_required
+def run_show(obj, uid):
+
+    tst = obj['runs'].show(uid)
+    click.echo("{}".format(tst))
+
+@run.command(name='delete')
+@click.option('--uid', default=None, prompt=True, help='Run UUID')
+@click.pass_obj
+@auth_required
+def run_delete(obj, uid):
+
+    tst = obj['runs'].delete(uid)
+    click.echo("{}".format(tst))
+
 # @cli.group()
 # def util():
 #     pass
