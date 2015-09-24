@@ -267,39 +267,7 @@ class Assignments(COGObject):
         # Call Parent
         return asn_list
 
-class Tests(COGObject):
-
-    def __init__(self, connection):
-        """ Constructor"""
-
-        # Call Parent
-        super(Tests, self).__init__(connection)
-
-        #Set Base Key and Endpoint
-        self._ep = _EP_TESTS
-        self._key = _KEY_TESTS
-
-    def create(self, asn_uid, name, tester, maxscore):
-
-        # Setup Data
-        data = {"name": name, "tester": tester, "maxscore": maxscore}
-
-        # Setup Endpoint
-        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
-
-        # Call Parent
-        return super(Tests, self).create(endpoint=ep, json=data)
-
-    def list(self, asn_uid=None):
-
-        # Setup Endpoint
-        if asn_uid:
-            ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
-        else:
-            ep = self._ep
-
-        # Call Parent
-        return super(Tests, self).list(endpoint=ep)
+class COGFileAttachedObject(COGObject):
 
     def attach_files(self, uid, fle_uids):
 
@@ -334,3 +302,37 @@ class Tests(COGObject):
         res = self._conn.http_delete(endpoint=ep, json=data)
         lst = res[_KEY_FILES]
         return lst
+
+class Tests(COGFileAttachedObject):
+
+    def __init__(self, connection):
+        """ Constructor"""
+
+        # Call Parent
+        super(Tests, self).__init__(connection)
+
+        #Set Base Key and Endpoint
+        self._ep = _EP_TESTS
+        self._key = _KEY_TESTS
+
+    def create(self, asn_uid, name, tester, maxscore):
+
+        # Setup Data
+        data = {"name": name, "tester": tester, "maxscore": maxscore}
+
+        # Setup Endpoint
+        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
+
+        # Call Parent
+        return super(Tests, self).create(endpoint=ep, json=data)
+
+    def list(self, asn_uid=None):
+
+        # Setup Endpoint
+        if asn_uid:
+            ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
+        else:
+            ep = self._ep
+
+        # Call Parent
+        return super(Tests, self).list(endpoint=ep)
