@@ -226,6 +226,71 @@ def test_detach_files(obj, uid, fle_uid):
     tst = obj['tests'].detach_files(uid, fle_uid)
     click.echo("{}".format(tst))
 
+### Submission Commands ###
+
+@cli.group()
+@click.pass_obj
+def submission(obj):
+
+    # Setup Client Class
+    obj['submissions'] = client.Submissions(obj['connection'])
+
+@submission.command(name='create')
+@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def submission_create(obj, asn_uid):
+
+    tst_list = obj['submissions'].create(asn_uid)
+    click.echo("{}".format(tst_list))
+
+@submission.command(name='list')
+@click.option('--asn_uid', default=None, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def submission_list(obj, asn_uid):
+
+    tst_list = obj['submissions'].list(asn_uid=asn_uid)
+    click.echo("{}".format(tst_list))
+
+@submission.command(name='show')
+@click.option('--uid', default=None, prompt=True, help='Submission UUID')
+@click.pass_obj
+@auth_required
+def submission_show(obj, uid):
+
+    tst = obj['submissions'].show(uid)
+    click.echo("{}".format(tst))
+
+@submission.command(name='delete')
+@click.option('--uid', default=None, prompt=True, help='Submission UUID')
+@click.pass_obj
+@auth_required
+def submission_delete(obj, uid):
+
+    tst = obj['submissions'].delete(uid)
+    click.echo("{}".format(tst))
+
+@submission.command(name='attach_files')
+@click.option('--uid', default=None, prompt=True, help='Submission UUID')
+@click.option('--fle_uid', default=None, multiple=True, help='File UUID')
+@click.pass_obj
+@auth_required
+def submission_attach_files(obj, uid, fle_uid):
+
+    tst = obj['submissions'].attach_files(uid, fle_uid)
+    click.echo("{}".format(tst))
+
+@submission.command(name='detach_files')
+@click.option('--uid', default=None, prompt=True, help='Submission UUID')
+@click.option('--fle_uid', default=None, multiple=True, help='File UUID')
+@click.pass_obj
+@auth_required
+def submission_detach_files(obj, uid, fle_uid):
+
+    tst = obj['submissions'].detach_files(uid, fle_uid)
+    click.echo("{}".format(tst))
+
 # @cli.group()
 # def util():
 #     pass
