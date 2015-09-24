@@ -165,6 +165,42 @@ class COGObject(object):
         obj = res[uid]
         return obj
 
+class COGFileAttachedObject(COGObject):
+
+    def attach_files(self, uid, fle_uids):
+
+        # Check Args
+        if not fle_uids:
+            raise TypeError("fle_uids must not be empty")
+
+        # Setup Endpoint
+        ep = "{:s}/{:s}/{:s}".format(self._ep, uid, _EP_FILES)
+
+        # Setup Data
+        data = {_KEY_FILES: fle_uids}
+
+        # HTTP Call
+        res = self._conn.http_put(endpoint=ep, json=data)
+        lst = res[_KEY_FILES]
+        return lst
+
+    def detach_files(self, uid, fle_uids):
+
+        # Check Args
+        if not fle_uids:
+            raise TypeError("fle_uids must not be empty")
+
+        # Setup Endpoint
+        ep = "{:s}/{:s}/{:s}".format(self._ep, uid, _EP_FILES)
+
+        # Setup Data
+        data = {_KEY_FILES: fle_uids}
+
+        # HTTP Call
+        res = self._conn.http_delete(endpoint=ep, json=data)
+        lst = res[_KEY_FILES]
+        return lst
+
 class Files(COGObject):
 
     def __init__(self, connection):
@@ -268,42 +304,6 @@ class Assignments(COGObject):
 
         # Call Parent
         return asn_list
-
-class COGFileAttachedObject(COGObject):
-
-    def attach_files(self, uid, fle_uids):
-
-        # Check Args
-        if not fle_uids:
-            raise TypeError("fle_uids must not be empty")
-
-        # Setup Endpoint
-        ep = "{:s}/{:s}/{:s}".format(self._ep, uid, _EP_FILES)
-
-        # Setup Data
-        data = {_KEY_FILES: fle_uids}
-
-        # HTTP Call
-        res = self._conn.http_put(endpoint=ep, json=data)
-        lst = res[_KEY_FILES]
-        return lst
-
-    def detach_files(self, uid, fle_uids):
-
-        # Check Args
-        if not fle_uids:
-            raise TypeError("fle_uids must not be empty")
-
-        # Setup Endpoint
-        ep = "{:s}/{:s}/{:s}".format(self._ep, uid, _EP_FILES)
-
-        # Setup Data
-        data = {_KEY_FILES: fle_uids}
-
-        # HTTP Call
-        res = self._conn.http_delete(endpoint=ep, json=data)
-        lst = res[_KEY_FILES]
-        return lst
 
 class Tests(COGFileAttachedObject):
 
