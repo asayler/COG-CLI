@@ -337,40 +337,47 @@ def run_delete(obj, uid):
     tst = obj['runs'].delete(uid)
     click.echo("{}".format(tst))
 
-# @cli.group()
-# def util():
-#     pass
+### Util Commands ###
 
-# @util.command(name='replace-files')
-# @click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
-# @click.option('--extract', is_flag=True, help='Control whether file is extracted')
-# @click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
-# @click.pass_obj
-# def util_replace_files(obj, path, extract, tst_uid):
+@cli.group()
+@click.pass_obj
+def util(obj):
 
-#     if not obj['connection']:
-#         obj['connection'] = _connect(obj)
+    # Setup Client Class
+    obj['files'] = client.Files(obj['connection'])
+    obj['assignments'] = client.Assignments(obj['connection'])
+    obj['tests'] = client.Tests(obj['connection'])
+    obj['submissions'] = client.Submissions(obj['connection'])
+    obj['runs'] = client.Runs(obj['connection'])
 
-#     click.echo("Listing old files...")
-#     old_fle_list = client.file_list(obj['url'], obj['connection'], tst_uid=tst_uid)
-#     click.echo("Old files:\n {}".format(old_fle_list))
+@util.command(name='replace-files')
+@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
+@click.pass_obj
+@auth_required
+def util_replace_files(obj, path, extract, tst_uid):
 
-#     click.echo("Removing old files...")
-#     rem_fle_list = client.test_file_remove(obj['url'], obj['connection'], tst_uid, old_fle_list)
-#     click.echo("Attached files:\n {}".format(rem_fle_list))
+    click.echo("Listing old files...")
+    old_fle_list = obj['files'].list(tst_uid=tst_uid)
+    click.echo("Old files:\n {}".format(old_fle_list))
 
-#     click.echo("Deleting old files...")
-#     for fle_uid in old_fle_list:
-#         click.echo("Deleting file '{}'...".format(fle_uid))
-#         fle = client.file_delete(obj['url'], obj['connection'], fle_uid)
+    click.echo("Removing old files...")
+    rem_fle_list = obj['tests'].detach_files(tst_uid, old_fle_list)
+    click.echo("Remaining files:\n {}".format(rem_fle_list))
 
-#     click.echo("Creating new files...")
-#     new_fle_list = client.file_create(obj['url'], obj['connection'], path, extract)
-#     click.echo("New files:\n {}".format(new_fle_list))
+    click.echo("Deleting old files...")
+    for fle_uid in old_fle_list:
+        click.echo("Deleting file '{}'...".format(fle_uid))
+        fle = obj['files'].delete(fle_uid)
 
-#     click.echo("Attaching files...")
-#     tst_fle_list = client.test_file_add(obj['url'], obj['connection'], tst_uid, new_fle_list)
-#     click.echo("Attached files:\n {}".format(tst_fle_list))
+    click.echo("Creating new files...")
+    new_fle_list = obj['files'].create(path, extract=extract)
+    click.echo("New files:\n {}".format(new_fle_list))
+
+    click.echo("Attaching files...")
+    tst_fle_list = rem_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
+    click.echo("Attached files:\n {}".format(tst_fle_list))
 
 # @util.command(name='token-show')
 # @click.pass_obj
