@@ -350,10 +350,10 @@ def util(obj):
     obj['submissions'] = client.Submissions(obj['connection'])
     obj['runs'] = client.Runs(obj['connection'])
 
-@util.command(name='token-show')
+@util.command(name='show-token')
 @click.pass_obj
 @auth_required
-def util_token_show(obj):
+def util_show_token(obj):
 
     click.echo("'{}'".format(obj['connection'].get_token()))
 
