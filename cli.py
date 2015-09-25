@@ -3,6 +3,7 @@
 import sys
 import json
 import functools
+import os
 
 import requests
 import click
@@ -422,6 +423,54 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
     click.echo("Attaching files...")
     tst_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
     click.echo("Attached files:\n{}".format(tst_fle_list))
+
+@util.command(name='download-submissions')
+@click.option('--path', default=None, prompt=True,
+              type=click.Path(exists=True, writable=True, resolve_path=True, file_okay=False),
+              help='Destination Directory')
+@click.option('--sub_uid', default=None, help='Submission UUID')
+@click.option('--asn_uid', default=None, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def util_download_submissions(obj, path, sub_uid, asn_uid):
+
+    click.echo("Getting Assignment List...")
+    asn_list = obj['assignments'].list()
+    click.echo("Assignments:\n{}".format(asn_list))
+
+    for asn_uid in asn_list:
+
+        click.echo("Getting Assignment '{}'...".format(asn_uid))
+        asn = obj['assignments'].show(asn_uid)
+        click.echo("Assignment:\n{}".format(asn))
+
+        asn_dir_name = "assignment_{}_{}".format("".join(asn['name'].split()), asn_uid)
+        asn_dir_path = os.path.join(path, asn_dir_name)
+        os.mkdir(asn_dir_path)
+
+        click.echo("Getting Submission List...")
+        sub_list = obj['submissions'].list(asn_uid=asn_uid)
+        click.echo("Submissions:\n{}".format(sub_list))
+
+        for sub_uid in sub_list:
+
+            click.echo("Getting Submission '{}'...".format(sub_uid))
+            sub = obj['submissions'].show(sub_uid)
+            click.echo("Submission:\n{}".format(sub))
+
+            sub_dir_name = "submission_{}".format(sub_uid)
+            sub_dir_path = os.path.join(asn_dir_path, sub_dir_name)
+            os.mkdir(sub_dir_path)
+
+            click.echo("Getting File List...")
+            fle_list = obj['files'].list(sub_uid=sub_uid)
+            click.echo("Files:\n{}".format(fle_list))
+
+            for fle_uid in fle_list:
+
+                click.echo("Downloading File '{}'...".format(fle_uid))
+                fle_list = obj['files'].download(fle_uid, sub_dir_path, orig_path=True)
+
 
 if __name__ == '__main__':
     sys.exit(cli())
