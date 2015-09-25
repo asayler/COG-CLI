@@ -106,11 +106,12 @@ def fle_delete(obj, uid):
 @click.option('--path', default=None, prompt=True,
               type=click.Path(writable=True, resolve_path=True),
               help='Destination Path')
+@click.option('--orig_path', is_flag=True, help='Control whether original path is used')
 @click.pass_obj
 @auth_required
-def fle_download(obj, uid, path):
+def fle_download(obj, uid, path, orig_path):
 
-    path = obj['files'].download(uid, path)
+    path = obj['files'].download(uid, path, orig_path=orig_path)
     click.echo("{}".format(path))
 
 ### Assignment Commands ###
