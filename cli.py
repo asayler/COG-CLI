@@ -488,7 +488,7 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
 
             asn = obj['assignments'].show(auid)
 
-            asn_dir_name = "assignment_{}_{}".format("".join(asn['name'].split()), auid)
+            asn_dir_name = "assignment_{}_{}".format(auid, "".join(asn['name'].split()))
             asn_dir_path = os.path.join(path, asn_dir_name)
             os.makedirs(asn_dir_path, exist_ok=True)
 
