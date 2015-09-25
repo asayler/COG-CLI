@@ -4,6 +4,7 @@ import sys
 import json
 import functools
 import os
+import shelve
 
 import requests
 import click
@@ -434,8 +435,20 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
 @auth_required
 def util_download_submissions(obj, path, asn_uid, sub_uid):
 
-    # Build Lengths
+    # Locals
     subs_cnt = 0
+    files_cnt = 0
+    files_index = {}
+    download_cnt = 0
+    download_index = {}
+    completed_cnt = 0
+    failed_cnt = 0
+    asn_failed = []
+    sub_failed = []
+    fle_failed = []
+
+    # Build Lengths
+    click.echo("Calculating submission count...")
     if asn_uid:
         if sub_uid:
             subs_cnt = 1
@@ -447,9 +460,6 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
     # Generate files_to_download
     label = "Processing  Sub  '{}'".format("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
     with click.progressbar(label=label, length=subs_cnt) as bar:
-
-        files_cnt = 0
-        files_to_download = {}
 
         # Get Assignments
         if asn_uid:
@@ -465,70 +475,99 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                 sub_list = [sub_uid]
             else:
                 sub_list = obj['submissions'].list(asn_uid=auid)
-            files_to_download[auid] = {}
+            files_index[auid] = {}
 
             # Iterate Submissions
             for suid in sub_list:
 
-                bar.label = "Processing  Sub  '{}'".format(suid)
-
                 # Get Files
+                bar.label = "Processing  Sub  '{}'".format(suid)
                 fle_list = obj['files'].list(sub_uid=suid)
                 files_cnt += len(fle_list)
-                files_to_download[auid][suid] = fle_list
-
+                files_index[auid][suid] = fle_list
                 bar.update(1)
 
-    # Process files_to_download
-    asn_failed = []
-    sub_failed = []
-    fle_failed = []
-    label = "Downloading File '{}'".format("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
-    with click.progressbar(label=label, length=files_cnt) as bar:
+    # Setup Status Shelve
+    prog_path = os.path.join(path, ".progress")
+    with shelve.open(prog_path, writeback=True) as prog:
 
-        # Iterate Assignments
-        for auid, sub_files in files_to_download.items():
-
-            try:
-                asn = obj['assignments'].show(auid)
-            except requests.exceptions.HTTPError as err:
-                asn_failed += (auid, err)
-                for suid, fle_list in sub_files.items():
-                    bar.update(len(fle_list))
-                continue
-
-            asn_dir_name = "assignment_{}_{}".format(auid, "".join(asn['name'].split()))
-            asn_dir_path = os.path.join(path, asn_dir_name)
-            os.makedirs(asn_dir_path, exist_ok=True)
-
-            # Iterate Submissions
+        # Filter Out Completed Items
+        click.echo("Loading previous progress...")
+        for auid, sub_files in files_index.items():
+            sub_downloads = {}
             for suid, fle_list in sub_files.items():
+                downloads_list = []
+                for fuid in fle_list:
+                    if fuid not in prog:
+                        downloads_list.append(fuid)
+                if downloads_list:
+                    download_cnt += len(downloads_list)
+                    sub_downloads[suid] = downloads_list
+            if sub_downloads:
+                download_index[auid] = sub_downloads
 
+        # Process files_to_download
+        label = "Downloading File '{}'".format("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+        with click.progressbar(label=label, length=download_cnt) as bar:
+
+            # Iterate Assignments
+            for auid, sub_files in download_index.items():
+
+                # Fetch Assignment
                 try:
-                    sub = obj['submissions'].show(suid)
+                    asn = obj['assignments'].show(auid)
                 except requests.exceptions.HTTPError as err:
-                    sub_failed += (suid, err)
-                    bar.update(len(fle_list))
+                    asn_failed += (auid, err)
+                    for suid, fle_list in sub_files.items():
+                        bar.update(len(fle_list))
                     continue
 
-                ouid = sub['owner']
-                own_dir_name = "user_{}".format(ouid)
-                own_dir_path = os.path.join(asn_dir_path, own_dir_name)
-                sub_dir_name = "submission_{}".format(suid)
-                sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
-                os.makedirs(sub_dir_path, exist_ok=True)
+                # Build Assignment Path
+                asn_dir_name = "assignment_{}_{}".format(auid, "".join(asn['name'].split()))
+                asn_dir_path = os.path.join(path, asn_dir_name)
 
-                # Iterate Files
-                for fuid in fle_list:
+                # Iterate Submissions
+                for suid, fle_list in sub_files.items():
 
-                    bar.label = "Downloading File '{}'".format(fuid)
+                    # Fetch Submission
                     try:
-                        obj['files'].download(fuid, sub_dir_path, orig_path=True, overwrite=False)
+                        sub = obj['submissions'].show(suid)
                     except requests.exceptions.HTTPError as err:
-                        fle_failed += (fuid, err)
+                        sub_failed += (suid, err)
+                        bar.update(len(fle_list))
                         continue
-                    finally:
-                        bar.update(1)
+
+                    # Build Submission Path
+                    ouid = sub['owner']
+                    own_dir_name = "user_{}".format(ouid)
+                    own_dir_path = os.path.join(asn_dir_path, own_dir_name)
+                    sub_dir_name = "submission_{}".format(suid)
+                    sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
+                    os.makedirs(sub_dir_path, exist_ok=True)
+
+                    # Iterate Files
+                    for fuid in fle_list:
+
+                        bar.label = "Downloading File '{}'".format(fuid)
+                        try:
+                            obj['files'].download(fuid, sub_dir_path, orig_path=True, overwrite=False)
+                        except requests.exceptions.HTTPError as err:
+                            fle_failed += (fuid, err)
+                            failed_cnt += 1
+                            continue
+                        else:
+                            prog[fuid] = True
+                            completed_cnt += 1
+                        finally:
+                            bar.update(1)
+
+                    # Sync Progress
+                    prog.sync()
+
+    # Print Status
+    click.echo("Downloaded {} files".format(completed_cnt))
+    click.echo("Skipped {} files".format(files_cnt - download_cnt))
+    click.echo("Failed {} files".format(failed_cnt))
 
     # Print Failures
     if asn_failed:
