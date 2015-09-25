@@ -255,7 +255,7 @@ class Files(COGObject):
         # Call Parent
         return super().list(endpoint=ep)
 
-    def download(self, uid, path, orig_path=False):
+    def download(self, uid, path, orig_path=False, overwrite=False):
 
         # Clean Input
         path = os.path.abspath(path)
@@ -270,13 +270,16 @@ class Files(COGObject):
             else:
                 path = os.path.join(path, fle_name)
 
-        # Create Directory
-        dir_path = os.path.dirname(path)
-        os.makedirs(dir_path, exist_ok=True)
+        if overwrite or not os.path.exists(path):
 
-        # Download File
-        ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
-        path = self._conn.http_download(ep, path)
+            # Create Directory
+            dir_path = os.path.dirname(path)
+            os.makedirs(dir_path, exist_ok=True)
+
+            # Download File
+            ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
+            path = self._conn.http_download(ep, path)
+
         return path
 
 class Assignments(COGObject):
