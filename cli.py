@@ -428,11 +428,14 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
 @click.option('--path', default=None, prompt=True,
               type=click.Path(exists=True, writable=True, resolve_path=True, file_okay=False),
               help='Destination Directory')
-@click.option('--sub_uid', default=None, help='Submission UUID')
 @click.option('--asn_uid', default=None, help='Assignment UUID')
+@click.option('--sub_uid', default=None, help='Submission UUID')
 @click.pass_obj
 @auth_required
-def util_download_submissions(obj, path, sub_uid, asn_uid):
+def util_download_submissions(obj, path, asn_uid, sub_uid):
+
+    print(asn_uid)
+    print(sub_uid)
 
     # Get Assignments
     if asn_uid:
@@ -443,13 +446,13 @@ def util_download_submissions(obj, path, sub_uid, asn_uid):
         click.echo("Assignments:\n{}".format(asn_list))
 
     # Iterate Assignments
-    for asn_uid in asn_list:
+    for auid in asn_list:
 
-        click.echo("Getting Assignment '{}'...".format(asn_uid))
-        asn = obj['assignments'].show(asn_uid)
+        click.echo("Getting Assignment '{}'...".format(auid))
+        asn = obj['assignments'].show(auid)
         click.echo("Assignment:\n{}".format(asn))
 
-        asn_dir_name = "assignment_{}_{}".format("".join(asn['name'].split()), asn_uid)
+        asn_dir_name = "assignment_{}_{}".format("".join(asn['name'].split()), auid)
         asn_dir_path = os.path.join(path, asn_dir_name)
         os.mkdir(asn_dir_path)
 
@@ -458,30 +461,48 @@ def util_download_submissions(obj, path, sub_uid, asn_uid):
             sub_list = [sub_uid]
         else:
             click.echo("Getting Submission List...")
-            sub_list = obj['submissions'].list(asn_uid=asn_uid)
+            sub_list = obj['submissions'].list(asn_uid=auid)
             click.echo("Submissions:\n{}".format(sub_list))
 
-        # Iterate Submissions
-        for sub_uid in sub_list:
+        subs_by_owner = {}
 
-            click.echo("Getting Submission '{}'...".format(sub_uid))
-            sub = obj['submissions'].show(sub_uid)
+        # Iterate Submissions
+        for suid in sub_list:
+
+            click.echo("Getting Submission '{}'...".format(suid))
+            sub = obj['submissions'].show(suid)
             click.echo("Submission:\n{}".format(sub))
 
-            sub_dir_name = "submission_{}".format(sub_uid)
-            sub_dir_path = os.path.join(asn_dir_path, sub_dir_name)
-            os.mkdir(sub_dir_path)
+            ouid = sub['owner']
+            if ouid in subs_by_owner:
+                subs_by_owner[ouid].append((suid, sub))
+            else:
+                subs_by_owner[ouid] = [(suid, sub)]
 
-            # Get Files
-            click.echo("Getting File List...")
-            fle_list = obj['files'].list(sub_uid=sub_uid)
-            click.echo("Files:\n{}".format(fle_list))
+        # Iterate Owners
+        for ouid, subs in subs_by_owner.items():
 
-            # Iterate Files
-            for fle_uid in fle_list:
+            own_dir_name = "user_{}".format(ouid)
+            own_dir_path = os.path.join(asn_dir_path, own_dir_name)
+            os.mkdir(own_dir_path)
 
-                click.echo("Downloading File '{}'...".format(fle_uid))
-                fle_list = obj['files'].download(fle_uid, sub_dir_path, orig_path=True)
+            # Iterate Submissions
+            for suid, sub in subs:
+
+                sub_dir_name = "submission_{}".format(suid)
+                sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
+                os.mkdir(sub_dir_path)
+
+                # Get Files
+                click.echo("Getting File List...")
+                fle_list = obj['files'].list(sub_uid=suid)
+                click.echo("Files:\n{}".format(fle_list))
+
+                # Iterate Files
+                for fle_uid in fle_list:
+
+                    click.echo("Downloading File '{}'...".format(fle_uid))
+                    fle_list = obj['files'].download(fle_uid, sub_dir_path, orig_path=True)
 
 if __name__ == '__main__':
     sys.exit(cli())
