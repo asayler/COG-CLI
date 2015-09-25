@@ -42,6 +42,16 @@ def _debug_dump(r):
     )
     print('Response:\n{}'.format(r.text))
 
+def secure_path(path):
+    """ Normlize and strip out leading recursive path operators """
+
+    root = "/"
+    root_path = os.path.join(root, path)
+    norm_path = os.path.normpath(root_path)
+    comm_path = os.path.commonprefix([root, norm_path])
+    rel_path = os.path.relpath(norm_path, start=comm_path)
+    return rel_path
+
 class Connection(object):
 
     def __init__(self, url, username=None, password=None, token=None):
@@ -245,15 +255,24 @@ class Files(COGObject):
         # Call Parent
         return super().list(endpoint=ep)
 
-    def download(self, uid, path):
+    def download(self, uid, path, orig_path=False):
+
+        # Clean Input
+        path = os.path.abspath(path)
 
         # Process Directory Path
         if os.path.isdir(path):
             fle_obj = self.show(uid)
-            fle_name = os.path.basename(fle_obj["name"])
-            path = os.path.join(path, fle_name)
-        elif not os.path.basename(path):
-            raise FileNotFoundError(path)
+            fle_path = secure_path(fle_obj["name"])
+            fle_name = os.path.basename(fle_path)
+            if orig_path:
+                path = os.path.join(path, fle_path)
+            else:
+                path = os.path.join(path, fle_name)
+
+        # Create Directory
+        dir_path = os.path.dirname(path)
+        os.makedirs(dir_path, exist_ok=True)
 
         # Download File
         ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
