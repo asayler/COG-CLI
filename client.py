@@ -248,7 +248,7 @@ class Files(COGObject):
         if tst_uid:
             ep = "{:s}/{:s}/{:s}".format(_EP_TESTS, tst_uid, _EP_FILES)
         elif sub_uid:
-            ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, tst_uid, _EP_FILES)
+            ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, sub_uid, _EP_FILES)
         else:
             ep = self._ep
 
