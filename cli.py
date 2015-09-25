@@ -434,10 +434,15 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
 @auth_required
 def util_download_submissions(obj, path, sub_uid, asn_uid):
 
-    click.echo("Getting Assignment List...")
-    asn_list = obj['assignments'].list()
-    click.echo("Assignments:\n{}".format(asn_list))
+    # Get Assignments
+    if asn_uid:
+        asn_list = [asn_uid]
+    else:
+        click.echo("Getting Assignment List...")
+        asn_list = obj['assignments'].list()
+        click.echo("Assignments:\n{}".format(asn_list))
 
+    # Iterate Assignments
     for asn_uid in asn_list:
 
         click.echo("Getting Assignment '{}'...".format(asn_uid))
@@ -448,10 +453,15 @@ def util_download_submissions(obj, path, sub_uid, asn_uid):
         asn_dir_path = os.path.join(path, asn_dir_name)
         os.mkdir(asn_dir_path)
 
-        click.echo("Getting Submission List...")
-        sub_list = obj['submissions'].list(asn_uid=asn_uid)
-        click.echo("Submissions:\n{}".format(sub_list))
+        # Get Submissions
+        if sub_uid:
+            sub_list = [sub_uid]
+        else:
+            click.echo("Getting Submission List...")
+            sub_list = obj['submissions'].list(asn_uid=asn_uid)
+            click.echo("Submissions:\n{}".format(sub_list))
 
+        # Iterate Submissions
         for sub_uid in sub_list:
 
             click.echo("Getting Submission '{}'...".format(sub_uid))
@@ -462,15 +472,16 @@ def util_download_submissions(obj, path, sub_uid, asn_uid):
             sub_dir_path = os.path.join(asn_dir_path, sub_dir_name)
             os.mkdir(sub_dir_path)
 
+            # Get Files
             click.echo("Getting File List...")
             fle_list = obj['files'].list(sub_uid=sub_uid)
             click.echo("Files:\n{}".format(fle_list))
 
+            # Iterate Files
             for fle_uid in fle_list:
 
                 click.echo("Downloading File '{}'...".format(fle_uid))
                 fle_list = obj['files'].download(fle_uid, sub_dir_path, orig_path=True)
-
 
 if __name__ == '__main__':
     sys.exit(cli())
