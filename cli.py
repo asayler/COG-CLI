@@ -508,9 +508,7 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                 for fuid in fle_list:
 
                     bar.label = "Downloading File '{}'".format(fuid)
-
-                    fle_list = obj['files'].download(fuid, sub_dir_path, orig_path=True)
-
+                    obj['files'].download(fuid, sub_dir_path, orig_path=True, overwrite=False)
                     bar.update(1)
 
 if __name__ == '__main__':
