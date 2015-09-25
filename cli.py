@@ -372,11 +372,11 @@ def util_replace_test_files(obj, path, extract, tst_uid):
 
     click.echo("Listing old files...")
     old_fle_list = obj['files'].list(tst_uid=tst_uid)
-    click.echo("Old files:\n {}".format(old_fle_list))
+    click.echo("Old files:\n{}".format(old_fle_list))
 
     click.echo("Removing old files...")
     rem_fle_list = obj['tests'].detach_files(tst_uid, old_fle_list)
-    click.echo("Remaining files:\n {}".format(rem_fle_list))
+    click.echo("Remaining files:\n{}".format(rem_fle_list))
 
     click.echo("Deleting old files...")
     for fle_uid in old_fle_list:
@@ -385,11 +385,11 @@ def util_replace_test_files(obj, path, extract, tst_uid):
 
     click.echo("Creating new files...")
     new_fle_list = obj['files'].create(path, extract=extract)
-    click.echo("New files:\n {}".format(new_fle_list))
+    click.echo("New files:\n{}".format(new_fle_list))
 
     click.echo("Attaching files...")
     tst_fle_list = rem_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
-    click.echo("Attached files:\n {}".format(tst_fle_list))
+    click.echo("Attached files:\n{}".format(tst_fle_list))
 
 @util.command(name='setup-assignment')
 @click.option('--asn_name', default=None, prompt=True, help='Assignment Name')
@@ -403,25 +403,25 @@ def util_replace_test_files(obj, path, extract, tst_uid):
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
 @click.pass_obj
 @auth_required
-def setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, extract):
+def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, extract):
 
     click.echo("Creating assignment...")
     asn_list = obj['assignments'].create(asn_name, env)
-    click.echo("Created assignments:\n {}".format(asn_list))
+    click.echo("Created assignments:\n{}".format(asn_list))
     asn_uid = asn_list[0]
 
     click.echo("Creating test...")
     tst_list = obj['tests'].create(asn_uid, tst_name, tester, maxscore)
-    click.echo("Created tests:\n {}".format(tst_list))
+    click.echo("Created tests:\n{}".format(tst_list))
     tst_uid = tst_list[0]
 
     click.echo("Creating files...")
     new_fle_list = obj['files'].create(path, extract)
-    click.echo("Created files:\n {}".format(new_fle_list))
+    click.echo("Created files:\n{}".format(new_fle_list))
 
     click.echo("Attaching files...")
     tst_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
-    click.echo("Attached files:\n {}".format(tst_fle_list))
+    click.echo("Attached files:\n{}".format(tst_fle_list))
 
 if __name__ == '__main__':
     sys.exit(cli())
