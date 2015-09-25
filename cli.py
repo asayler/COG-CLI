@@ -434,67 +434,84 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
 @auth_required
 def util_download_submissions(obj, path, asn_uid, sub_uid):
 
-    # Setup files_to_download
-    files_to_download = {}
-
-    # Get Assignments
+    # Build Lengths
+    subs_cnt = 0
     if asn_uid:
-        asn_list = [asn_uid]
-    else:
-        click.echo("Getting Assignment List...")
-        asn_list = obj['assignments'].list()
-
-    # Iterate Assignments
-    for auid in asn_list:
-
-        # Get Submissions
         if sub_uid:
-            sub_list = [sub_uid]
+            subs_cnt = 1
         else:
-            click.echo("Getting Assignment '{}' Submission List...".format(auid))
-            sub_list = obj['submissions'].list(asn_uid=auid)
+            subs_cnt = len(obj['submissions'].list(asn_uid=asn_uid))
+    else:
+        subs_cnt = len(obj['submissions'].list())
 
-        files_to_download[auid] = {}
+    # Generate files_to_download
+    label = "Processing  Sub  '{}'".format("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+    with click.progressbar(label=label, length=subs_cnt) as bar:
 
-        # Iterate Submissions
-        for suid in sub_list:
+        files_cnt = 0
+        files_to_download = {}
 
-            # Get Files
-            click.echo("Getting Submission '{}' File List...".format(suid))
-            fle_list = obj['files'].list(sub_uid=suid)
+        # Get Assignments
+        if asn_uid:
+            asn_list = [asn_uid]
+        else:
+            asn_list = obj['assignments'].list()
 
-            files_to_download[auid][suid] = fle_list
+        # Iterate Assignments
+        for auid in asn_list:
 
+            # Get Submissions
+            if sub_uid:
+                sub_list = [sub_uid]
+            else:
+                sub_list = obj['submissions'].list(asn_uid=auid)
+            files_to_download[auid] = {}
+
+            # Iterate Submissions
+            for suid in sub_list:
+
+                bar.label = "Processing  Sub  '{}'".format(suid)
+
+                # Get Files
+                fle_list = obj['files'].list(sub_uid=suid)
+                files_cnt += len(fle_list)
+                files_to_download[auid][suid] = fle_list
+
+                bar.update(1)
 
     # Process files_to_download
+    label = "Downloading File '{}'".format("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+    with click.progressbar(label=label, length=files_cnt) as bar:
 
-    for auid, sub_files in files_to_download.items():
+        # Iterate Assignments
+        for auid, sub_files in files_to_download.items():
 
-        click.echo("Getting Assignment '{}'...".format(auid))
-        asn = obj['assignments'].show(auid)
+            asn = obj['assignments'].show(auid)
 
-        asn_dir_name = "assignment_{}_{}".format("".join(asn['name'].split()), auid)
-        asn_dir_path = os.path.join(path, asn_dir_name)
-        os.makedirs(asn_dir_path, exist_ok=True)
+            asn_dir_name = "assignment_{}_{}".format("".join(asn['name'].split()), auid)
+            asn_dir_path = os.path.join(path, asn_dir_name)
+            os.makedirs(asn_dir_path, exist_ok=True)
 
-        # Iterate Submissions
-        for suid, fle_list in sub_files.items():
+            # Iterate Submissions
+            for suid, fle_list in sub_files.items():
 
-            click.echo("Getting Submission '{}'...".format(suid))
-            sub = obj['submissions'].show(suid)
-            ouid = sub['owner']
+                sub = obj['submissions'].show(suid)
+                ouid = sub['owner']
 
-            own_dir_name = "user_{}".format(ouid)
-            own_dir_path = os.path.join(asn_dir_path, own_dir_name)
-            sub_dir_name = "submission_{}".format(suid)
-            sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
-            os.makedirs(sub_dir_path, exist_ok=True)
+                own_dir_name = "user_{}".format(ouid)
+                own_dir_path = os.path.join(asn_dir_path, own_dir_name)
+                sub_dir_name = "submission_{}".format(suid)
+                sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
+                os.makedirs(sub_dir_path, exist_ok=True)
 
-            # Iterate Files
-            for fle_uid in fle_list:
+                # Iterate Files
+                for fuid in fle_list:
 
-                click.echo("Downloading File '{}'...".format(fle_uid))
-                fle_list = obj['files'].download(fle_uid, sub_dir_path, orig_path=True)
+                    bar.label = "Downloading File '{}'".format(fuid)
+
+                    fle_list = obj['files'].download(fuid, sub_dir_path, orig_path=True)
+
+                    bar.update(1)
 
 if __name__ == '__main__':
     sys.exit(cli())
