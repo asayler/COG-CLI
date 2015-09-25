@@ -62,7 +62,9 @@ def fle(obj):
     obj['files'] = client.Files(obj['connection'])
 
 @fle.command(name='create')
-@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--path', default=None, prompt=True,
+              type=click.Path(exists=True, readable=True, resolve_path=True),
+              help='Source Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
 @click.pass_obj
 @auth_required
@@ -358,7 +360,9 @@ def util_show_token(obj):
     click.echo("'{}'".format(obj['connection'].get_token()))
 
 @util.command(name='replace-test-files')
-@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--path', default=None, prompt=True,
+              type=click.Path(exists=True, readable=True, resolve_path=True),
+              help='Source Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
 @click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
 @click.pass_obj
@@ -392,7 +396,9 @@ def util_replace_test_files(obj, path, extract, tst_uid):
 @click.option('--tst_name', default=None, prompt=True, help='Test Name')
 @click.option('--tester', default=None, prompt=True, help='Test Module')
 @click.option('--maxscore', default=None, prompt=True, help='Max Score')
-@click.option('--path', default=None, prompt=True, type=click.File('rb'), help='File Path')
+@click.option('--path', default=None, prompt=True,
+              type=click.Path(exists=True, readable=True, resolve_path=True),
+              help='Source Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
 @click.pass_obj
 @auth_required

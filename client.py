@@ -227,7 +227,7 @@ class Files(COGObject):
             key = 'file'
 
         # Setup Files
-        files = {key: path}
+        files = {key: open(path, 'rb')}
 
         # Call Parent
         return super().create(files=files)
