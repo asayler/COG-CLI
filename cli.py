@@ -434,8 +434,8 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
 @auth_required
 def util_download_submissions(obj, path, asn_uid, sub_uid):
 
-    print(asn_uid)
-    print(sub_uid)
+    # Setup files_to_download
+    files_to_download = {}
 
     # Get Assignments
     if asn_uid:
@@ -443,66 +443,58 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
     else:
         click.echo("Getting Assignment List...")
         asn_list = obj['assignments'].list()
-        click.echo("Assignments:\n{}".format(asn_list))
 
     # Iterate Assignments
     for auid in asn_list:
-
-        click.echo("Getting Assignment '{}'...".format(auid))
-        asn = obj['assignments'].show(auid)
-        click.echo("Assignment:\n{}".format(asn))
-
-        asn_dir_name = "assignment_{}_{}".format("".join(asn['name'].split()), auid)
-        asn_dir_path = os.path.join(path, asn_dir_name)
-        os.mkdir(asn_dir_path)
 
         # Get Submissions
         if sub_uid:
             sub_list = [sub_uid]
         else:
-            click.echo("Getting Submission List...")
+            click.echo("Getting Assignment '{}' Submission List...".format(auid))
             sub_list = obj['submissions'].list(asn_uid=auid)
-            click.echo("Submissions:\n{}".format(sub_list))
 
-        subs_by_owner = {}
+        files_to_download[auid] = {}
 
         # Iterate Submissions
         for suid in sub_list:
 
+            # Get Files
+            click.echo("Getting Submission '{}' File List...".format(suid))
+            fle_list = obj['files'].list(sub_uid=suid)
+
+            files_to_download[auid][suid] = fle_list
+
+
+    # Process files_to_download
+
+    for auid, sub_files in files_to_download.items():
+
+        click.echo("Getting Assignment '{}'...".format(auid))
+        asn = obj['assignments'].show(auid)
+
+        asn_dir_name = "assignment_{}_{}".format("".join(asn['name'].split()), auid)
+        asn_dir_path = os.path.join(path, asn_dir_name)
+        os.makedirs(asn_dir_path, exist_ok=True)
+
+        # Iterate Submissions
+        for suid, fle_list in sub_files.items():
+
             click.echo("Getting Submission '{}'...".format(suid))
             sub = obj['submissions'].show(suid)
-            click.echo("Submission:\n{}".format(sub))
-
             ouid = sub['owner']
-            if ouid in subs_by_owner:
-                subs_by_owner[ouid].append((suid, sub))
-            else:
-                subs_by_owner[ouid] = [(suid, sub)]
-
-        # Iterate Owners
-        for ouid, subs in subs_by_owner.items():
 
             own_dir_name = "user_{}".format(ouid)
             own_dir_path = os.path.join(asn_dir_path, own_dir_name)
-            os.mkdir(own_dir_path)
+            sub_dir_name = "submission_{}".format(suid)
+            sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
+            os.makedirs(sub_dir_path, exist_ok=True)
 
-            # Iterate Submissions
-            for suid, sub in subs:
+            # Iterate Files
+            for fle_uid in fle_list:
 
-                sub_dir_name = "submission_{}".format(suid)
-                sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
-                os.mkdir(sub_dir_path)
-
-                # Get Files
-                click.echo("Getting File List...")
-                fle_list = obj['files'].list(sub_uid=suid)
-                click.echo("Files:\n{}".format(fle_list))
-
-                # Iterate Files
-                for fle_uid in fle_list:
-
-                    click.echo("Downloading File '{}'...".format(fle_uid))
-                    fle_list = obj['files'].download(fle_uid, sub_dir_path, orig_path=True)
+                click.echo("Downloading File '{}'...".format(fle_uid))
+                fle_list = obj['files'].download(fle_uid, sub_dir_path, orig_path=True)
 
 if __name__ == '__main__':
     sys.exit(cli())
