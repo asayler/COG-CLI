@@ -480,13 +480,22 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                 bar.update(1)
 
     # Process files_to_download
+    asn_failed = []
+    sub_failed = []
+    fle_failed = []
     label = "Downloading File '{}'".format("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
     with click.progressbar(label=label, length=files_cnt) as bar:
 
         # Iterate Assignments
         for auid, sub_files in files_to_download.items():
 
-            asn = obj['assignments'].show(auid)
+            try:
+                asn = obj['assignments'].show(auid)
+            except requests.exceptions.HTTPError as err:
+                asn_failed += (auid, err)
+                for suid, fle_list in sub_files.items():
+                    bar.update(len(fle_list))
+                continue
 
             asn_dir_name = "assignment_{}_{}".format(auid, "".join(asn['name'].split()))
             asn_dir_path = os.path.join(path, asn_dir_name)
@@ -495,9 +504,14 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
             # Iterate Submissions
             for suid, fle_list in sub_files.items():
 
-                sub = obj['submissions'].show(suid)
-                ouid = sub['owner']
+                try:
+                    sub = obj['submissions'].show(suid)
+                except requests.exceptions.HTTPError as err:
+                    sub_failed += (suid, err)
+                    bar.update(len(fle_list))
+                    continue
 
+                ouid = sub['owner']
                 own_dir_name = "user_{}".format(ouid)
                 own_dir_path = os.path.join(asn_dir_path, own_dir_name)
                 sub_dir_name = "submission_{}".format(suid)
@@ -508,8 +522,30 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                 for fuid in fle_list:
 
                     bar.label = "Downloading File '{}'".format(fuid)
-                    obj['files'].download(fuid, sub_dir_path, orig_path=True, overwrite=False)
-                    bar.update(1)
+                    try:
+                        obj['files'].download(fuid, sub_dir_path, orig_path=True, overwrite=False)
+                    except requests.exceptions.HTTPError as err:
+                        fle_failed += (fuid, err)
+                        continue
+                    finally:
+                        bar.update(1)
+
+    # Print Failures
+    if asn_failed:
+        click.echo("Failed Assignments:", err=True)
+        for val in asn_failed:
+            auid, err = val
+            click.echo("{:s} - {:s}".format(auid, err), err=True)
+    if sub_failed:
+        click.echo("Failed Submissions:", err=True)
+        for val in sub_failed:
+            suid, err = val
+            click.echo("{:s} - {:s}".format(suid, err), err=True)
+    if fle_failed:
+        click.echo("Failed Files:", err=True)
+        for val in fle_failed:
+            fuid, err = val
+            click.echo("{:s} - {:s}".format(fuid, err), err=True)
 
 if __name__ == '__main__':
     sys.exit(cli())
