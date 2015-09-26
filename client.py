@@ -128,16 +128,12 @@ class Connection(object):
         res.raise_for_status()
         return res.json()
 
-    def http_download(self, endpoint, path, lock=None):
+    def http_download(self, endpoint, path):
         url = "{:s}/{:s}/".format(self._url, endpoint)
         res = requests.get(url, auth=self._auth)
         res.raise_for_status()
         with open(path, 'wb') as fd:
             for chunk in res.iter_content(chunk_size=_BLOCK_SIZE):
-                if lock is not None:
-                    with lock:
-                        fd.write(chunk)
-                else:
                     fd.write(chunk)
         return path
 
@@ -259,7 +255,7 @@ class Files(COGObject):
         # Call Parent
         return super().list(endpoint=ep)
 
-    def download(self, uid, path, orig_path=False, overwrite=False, lock=None):
+    def download(self, uid, path, orig_path=False, overwrite=False):
 
         # Clean Input
         path = os.path.abspath(path)
@@ -278,15 +274,11 @@ class Files(COGObject):
 
             # Create Directory
             dir_path = os.path.dirname(path)
-            if lock is not None:
-                with lock:
-                    os.makedirs(dir_path, exist_ok=True)
-            else:
-                os.makedirs(dir_path, exist_ok=True)
+            os.makedirs(dir_path, exist_ok=True)
 
             # Download File
             ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
-            path = self._conn.http_download(ep, path, lock=lock)
+            path = self._conn.http_download(ep, path)
 
         return path
 

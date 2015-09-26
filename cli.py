@@ -428,15 +428,14 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
     click.echo("Attached files:\n{}".format(tst_fle_list))
 
 
-def download_submission(obj, suid, fle_list, asn_dir_path,
-                        bar, fs_lock, bar_lock):
+def download_submission(obj, suid, fle_list, asn_dir_path):
+
+    print("Starting Download {}".format(suid))
 
     # Fetch Submission
     try:
         sub = obj['submissions'].show(suid)
     except requests.exceptions.HTTPError as err:
-        with bar_lock:
-            bar.update(len(fle_list))
         return (-1, [(suid, err)])
 
     # Build Submission Path
@@ -445,27 +444,22 @@ def download_submission(obj, suid, fle_list, asn_dir_path,
     own_dir_path = os.path.join(asn_dir_path, own_dir_name)
     sub_dir_name = "submission_{}".format(suid)
     sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
-    with fs_lock:
-        os.makedirs(sub_dir_path, exist_ok=True)
+    os.makedirs(sub_dir_path, exist_ok=True)
 
     # Iterate Files
     fle_failed = []
     fle_success = []
     for fuid in fle_list:
 
-        with bar_lock:
-            bar.label = "Downloading File '{}'".format(fuid)
         try:
-            obj['files'].download(fuid, sub_dir_path,
-                                  orig_path=True, overwrite=False, lock=fs_lock)
+            obj['files'].download(fuid, sub_dir_path, orig_path=True, overwrite=False)
         except requests.exceptions.HTTPError as err:
             fle_failed += (fuid, err)
             continue
         else:
             fle_success.append(fuid)
-        finally:
-            with bar_lock:
-                bar.update(1)
+
+    print("Finish Download {}".format(suid))
 
     return (fle_success, fle_failed)
 
@@ -572,30 +566,35 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                 asn_dir_path = os.path.join(path, asn_dir_name)
 
                 # Iterate Submissions
-                fs_lock = threading.Lock()
-                bar_lock = threading.Lock()
                 for suid, fle_list in sub_files.items():
+
+                    bar.label = "Downloading Submission '{}'".format(suid)
 
                     # Spin Threads
                     futures = []
+                    print("Launching Threads")
                     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as exc:
-                        futures.append(exc.submit(download_submission, obj, suid, fle_list,
-                                                  asn_dir_path, bar, fs_lock, bar_lock))
+                        f = exc.submit(download_submission, obj, suid, fle_list, asn_dir_path)
+                        futures.append(f)
 
                     # Collect Results
+                    print("Collecting Results")
                     for f in futures:
                         succ, fail = f.result()
                         if fail:
                             if ret == -1:
                                 sub_failed += fail
                                 failed_cnt += len(fle_list)
+                                bar.update(len(fle_list))
                             else:
                                 fle_failed += fail
                                 failed_cnt += len(fail)
+                                bar.update(len(fail))
                         if succ:
                             for fuid in succ:
                                 prog[fuid] = True
                                 completed_cnt += 1
+                                bar.update(1)
 
                     # Sync Progress
                     prog.sync()
