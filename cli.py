@@ -429,7 +429,7 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
 
 
 def download_submission(obj, suid, fle_list, asn_dir_path,
-                        prog, bar, fs_lock, prog_lock, bar_lock):
+                        bar, fs_lock, bar_lock):
 
     # Fetch Submission
     try:
@@ -449,8 +449,8 @@ def download_submission(obj, suid, fle_list, asn_dir_path,
         os.makedirs(sub_dir_path, exist_ok=True)
 
     # Iterate Files
-    fle_cnt = 0
     fle_failed = []
+    fle_success = []
     for fuid in fle_list:
 
         with bar_lock:
@@ -462,18 +462,12 @@ def download_submission(obj, suid, fle_list, asn_dir_path,
             fle_failed += (fuid, err)
             continue
         else:
-            with prog_lock:
-                prog[fuid] = True
-                fle_cnt += 1
+            fle_success.append(fuid)
         finally:
             with bar_lock:
                 bar.update(1)
 
-    # Sync Progress
-    with prog_lock:
-        prog.sync()
-
-    return (fle_cnt, fle_failed)
+    return (fle_success, fle_failed)
 
 
 @util.command(name='download-submissions')
@@ -579,18 +573,18 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
 
                 # Iterate Submissions
                 fs_lock = threading.Lock()
-                prog_lock = threading.Lock()
                 bar_lock = threading.Lock()
                 for suid, fle_list in sub_files.items():
 
+                    # Spin Threads
                     futures = []
                     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as exc:
                         futures.append(exc.submit(download_submission, obj, suid, fle_list,
-                                                  asn_dir_path, prog, bar, fs_lock, prog_lock,
-                                                  bar_lock))
+                                                  asn_dir_path, bar, fs_lock, bar_lock))
 
+                    # Collect Results
                     for f in futures:
-                        ret, fail = f.result()
+                        succ, fail = f.result()
                         if fail:
                             if ret == -1:
                                 sub_failed += fail
@@ -598,8 +592,13 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                             else:
                                 fle_failed += fail
                                 failed_cnt += len(fail)
-                        else:
-                            completed_cnt += ret
+                        if succ:
+                            for fuid in succ:
+                                prog[fuid] = True
+                                completed_cnt += 1
+
+                    # Sync Progress
+                    prog.sync()
 
     # Print Status
     click.echo("Downloaded {} files".format(completed_cnt))
