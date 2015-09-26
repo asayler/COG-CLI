@@ -5,6 +5,7 @@ import json
 import functools
 import os
 import shelve
+import time
 import threading
 import concurrent.futures
 
@@ -561,31 +562,38 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                 asn_dir_path = os.path.join(path, asn_dir_name)
 
                 # Spin Threads
-                futures = []
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as exc:
 
                     # Iterate Submissions
+                    futures = []
                     for suid, fle_list in sub_files.items():
                         f = exc.submit(download_submission, obj, suid, fle_list, asn_dir_path)
                         futures.append(f)
+                    remaining = futures
 
                     # Collect Results
-                    for f in futures:
-                        succ, fail = f.result()
-                        if fail:
-                            if succ is None:
-                                sub_failed += fail
-                                failed_cnt += len(fle_list)
-                                bar.update(len(fle_list))
+                    while remaining:
+                        remaining = []
+                        for f in futures:
+                            if f.done():
+                                succ, fail = f.result()
+                                if fail:
+                                    if succ is None:
+                                        sub_failed += fail
+                                        failed_cnt += len(fle_list)
+                                        bar.update(len(fle_list))
+                                    else:
+                                        fle_failed += fail
+                                        failed_cnt += len(fail)
+                                        bar.update(len(fail))
+                                if succ:
+                                    for fuid in succ:
+                                        prog[fuid] = True
+                                        completed_cnt += 1
+                                        bar.update(1)
                             else:
-                                fle_failed += fail
-                                failed_cnt += len(fail)
-                                bar.update(len(fail))
-                        if succ:
-                            for fuid in succ:
-                                prog[fuid] = True
-                                completed_cnt += 1
-                                bar.update(1)
+                                remaining.append(f)
+                        time.sleep(0.1)
 
                     # Sync Progress
                     prog.sync()
