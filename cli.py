@@ -430,8 +430,6 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, 
 
 def download_submission(obj, suid, fle_list, asn_dir_path):
 
-    print("Starting Download {}".format(suid))
-
     # Fetch Submission
     try:
         sub = obj['submissions'].show(suid)
@@ -458,8 +456,6 @@ def download_submission(obj, suid, fle_list, asn_dir_path):
             continue
         else:
             fle_success.append(fuid)
-
-    print("Finish Download {}".format(suid))
 
     return (fle_success, fle_failed)
 
@@ -497,7 +493,7 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
         subs_cnt = len(obj['submissions'].list())
 
     # Generate files_to_download
-    label = "Processing  Sub  '{}'".format("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+    label = "Processing  Submissions"
     with click.progressbar(label=label, length=subs_cnt) as bar:
 
         # Get Assignments
@@ -520,7 +516,6 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
             for suid in sub_list:
 
                 # Get Files
-                bar.label = "Processing  Sub  '{}'".format(suid)
                 fle_list = obj['files'].list(sub_uid=suid)
                 files_cnt += len(fle_list)
                 files_index[auid][suid] = fle_list
@@ -546,7 +541,7 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                 download_index[auid] = sub_downloads
 
         # Process files_to_download
-        label = "Downloading File '{}'".format("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+        label = "Downloading Submissions"
         with click.progressbar(label=label, length=download_cnt) as bar:
 
             # Iterate Assignments
@@ -565,20 +560,16 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                 asn_dir_name = "assignment_{}_{}".format(auid, "".join(asn['name'].split()))
                 asn_dir_path = os.path.join(path, asn_dir_name)
 
-                # Iterate Submissions
-                for suid, fle_list in sub_files.items():
+                # Spin Threads
+                futures = []
+                with concurrent.futures.ThreadPoolExecutor(max_workers=10) as exc:
 
-                    bar.label = "Downloading Submission '{}'".format(suid)
-
-                    # Spin Threads
-                    futures = []
-                    print("Launching Threads")
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as exc:
+                    # Iterate Submissions
+                    for suid, fle_list in sub_files.items():
                         f = exc.submit(download_submission, obj, suid, fle_list, asn_dir_path)
                         futures.append(f)
 
                     # Collect Results
-                    print("Collecting Results")
                     for f in futures:
                         succ, fail = f.result()
                         if fail:
