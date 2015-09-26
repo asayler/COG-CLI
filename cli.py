@@ -569,12 +569,12 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                     for suid, fle_list in sub_files.items():
                         f = exc.submit(download_submission, obj, suid, fle_list, asn_dir_path)
                         futures.append(f)
-                    remaining = futures
 
                     # Collect Results
-                    while remaining:
-                        remaining = []
-                        for f in futures:
+                    while futures:
+                        remaining = futures
+                        futures = []
+                        for f in remaining:
                             if f.done():
                                 succ, fail = f.result()
                                 if fail:
@@ -592,7 +592,7 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                                         completed_cnt += 1
                                         bar.update(1)
                             else:
-                                remaining.append(f)
+                                futures.append(f)
                         time.sleep(0.1)
 
                     # Sync Progress
