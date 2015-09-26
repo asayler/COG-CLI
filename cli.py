@@ -434,7 +434,7 @@ def download_submission(obj, suid, fle_list, asn_dir_path):
     try:
         sub = obj['submissions'].show(suid)
     except requests.exceptions.HTTPError as err:
-        return (-1, [(suid, err)])
+        return (None, [(suid, err)])
 
     # Build Submission Path
     ouid = sub['owner']
@@ -573,7 +573,7 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                     for f in futures:
                         succ, fail = f.result()
                         if fail:
-                            if ret == -1:
+                            if succ is None:
                                 sub_failed += fail
                                 failed_cnt += len(fle_list)
                                 bar.update(len(fle_list))
