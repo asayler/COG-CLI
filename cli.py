@@ -453,7 +453,7 @@ def download_submission(obj, suid, fle_list, asn_dir_path):
         try:
             obj['files'].download(fuid, sub_dir_path, orig_path=True, overwrite=False)
         except requests.exceptions.HTTPError as err:
-            fle_failed += (fuid, err)
+            fle_failed.append((fuid, err))
             continue
         else:
             fle_success.append(fuid)
