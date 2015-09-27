@@ -608,17 +608,17 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
         click.echo("Failed Assignments:", err=True)
         for val in asn_failed:
             auid, err = val
-            click.echo("{:s} - {:s}".format(auid, err), err=True)
+            click.echo("{} - {}".format(auid, str(err)), err=True)
     if sub_failed:
         click.echo("Failed Submissions:", err=True)
         for val in sub_failed:
             suid, err = val
-            click.echo("{:s} - {:s}".format(suid, err), err=True)
+            click.echo("{} - {}".format(suid, str(err)), err=True)
     if fle_failed:
         click.echo("Failed Files:", err=True)
         for val in fle_failed:
             fuid, err = val
-            click.echo("{:s} - {:s}".format(fuid, err), err=True)
+            click.echo("{} - {}".format(fuid, str(err)), err=True)
 
 if __name__ == '__main__':
     sys.exit(cli())
