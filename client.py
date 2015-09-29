@@ -11,6 +11,8 @@ import os.path
 
 import requests
 
+import util
+
 _EP_TOKENS = 'tokens'
 _KEY_TOKENS = 'token'
 _EP_FILES = 'files'
@@ -41,16 +43,6 @@ def _debug_dump(r):
         )
     )
     print('Response:\n{}'.format(r.text))
-
-def secure_path(path):
-    """ Normlize and strip out leading recursive path operators """
-
-    root = "/"
-    root_path = os.path.join(root, path)
-    norm_path = os.path.normpath(root_path)
-    comm_path = os.path.commonprefix([root, norm_path])
-    rel_path = os.path.relpath(norm_path, start=comm_path)
-    return rel_path
 
 class Connection(object):
 
@@ -263,7 +255,9 @@ class Files(COGObject):
         # Process Directory Path
         if os.path.isdir(path):
             fle_obj = self.show(uid)
-            fle_path = secure_path(fle_obj["name"])
+            fle_path = fle_obj["name"]
+            fle_path = util.clean_path(fle_path)
+            fle_path = util.secure_path(fle_path)
             fle_name = os.path.basename(fle_path)
             if orig_path:
                 path = os.path.join(path, fle_path)
