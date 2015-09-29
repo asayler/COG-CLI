@@ -638,7 +638,7 @@ def util_show_results(obj, asn_uid, usr_uid, line_limit):
         for ruid in run_list:
             run = obj['runs'].show(ruid)
             date = time.localtime(float(run["created_time"]))
-            date_str = time.strftime("%m/%d/%y %H:%M:%S")
+            date_str = time.strftime("%m/%d/%y %H:%M:%S", date)
             row = [run["owner"], run["submission"], run["test"], ruid,
                    date_str, run["status"], run["score"]]
             table.append(row)
