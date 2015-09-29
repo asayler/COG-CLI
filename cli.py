@@ -13,6 +13,7 @@ import requests
 import click
 
 import client
+import click_util
 
 _EP_TOKENS = 'tokens'
 
@@ -619,6 +620,30 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
         for val in fle_failed:
             fuid, err = val
             click.echo("{} - {}".format(fuid, str(err)), err=True)
+
+@util.command(name='show-results')
+@click.option('--asn_uid', default=None, prompt=True, help='Asn UUID')
+@click.option('--usr_uid', default=None, help='User UUID')
+@click.option('--line_limit', default=None, help='Limit output to line length')
+@click.pass_obj
+@auth_required
+def util_show_results(obj, asn_uid, usr_uid, line_limit):
+
+    headings = ["User", "Submission", "Test", "Run", "Date", "Status", "Score"]
+    table = []
+
+    sub_list = obj['submissions'].list(asn_uid=asn_uid)
+    for suid in sub_list:
+        run_list = obj['runs'].list(sub_uid=suid)
+        for ruid in run_list:
+            run = obj['runs'].show(ruid)
+            date = time.localtime(float(run["created_time"]))
+            date_str = time.strftime("%m/%d/%y %H:%M:%S")
+            row = [run["owner"], run["submission"], run["test"], ruid,
+                   date_str, run["status"], run["score"]]
+            table.append(row)
+
+    click_util.echo_table(table, headings=headings, line_limit=line_limit)
 
 if __name__ == '__main__':
     sys.exit(cli())
