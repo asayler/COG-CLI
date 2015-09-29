@@ -7,7 +7,7 @@ import collections
 import string
 import os.path
 
-VALID_FILENAME_CHARS = "+-_.() {}{}".format(string.letters, string.digits)
+VALID_FILENAME_CHARS = "+-_.() {}{}".format(string.ascii_letters, string.digits)
 
 def split_path(path):
     """ Split a path into a list of components """
