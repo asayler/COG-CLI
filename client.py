@@ -8,6 +8,8 @@ import json
 import abc
 import os
 import os.path
+import multiprocessing
+import concurrent.futures
 
 import requests
 
@@ -30,6 +32,7 @@ _EP_RUNS = 'runs'
 _KEY_RUNS = 'runs'
 
 _BLOCK_SIZE = 1024
+_THREAD_MULTIPLIER = 5
 
 def _debug_dump(r):
 
@@ -129,6 +132,45 @@ class Connection(object):
                     fd.write(chunk)
         return path
 
+class AsyncConnection(Connection):
+
+    def __init__(self, *args, threads=None, connection=None, **kwargs):
+
+        if connection is None:
+            # Call Parent
+            super().__init__(*args, **kwargs)
+        else:
+            super().__init__(connection.get_url(), token=connection.get_token())
+
+        # Handle Args
+        if threads is None:
+            self.threads = multiprocessing.cpu_count() * THREAD_MULTIPLIER
+        elif threads > 0:
+            self.threads = threads
+        else:
+            raise TypeError("Threads must be greater than 0")
+
+        # Setup Vars
+        self.executor = None
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        return False
+
+    def open(self):
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.threads)
+
+    def close(self, wait=True):
+        self.executor.shutdown(wait=wait)
+
+    #ToDo: @RequiresOpen
+    def async_http_get(self, *args, **kwargs):
+        return self.executor.submit(self.http_get, *args, **kwargs)
+
 class COGObject(object):
 
     __metaclass__ = abc.ABCMeta
@@ -171,6 +213,22 @@ class COGObject(object):
         res = self._conn.http_delete(ep)
         obj = res[uid]
         return obj
+
+class AsyncCOGObject(COGObject):
+
+    @abc.abstractmethod
+    def __init__(self, async_connection):
+        """ Constructor"""
+
+        # Check Type
+        if type(async_connetion) is not AsyncConnection:
+            raise TypeError("Connection must be AsyncConnection")
+
+        # Call Parent
+        super().__init__(async_connection)
+
+    def async_show(self, *args, **kwargs):
+        return self.executor.submit(self.show, *args, **kwargs)
 
 class COGFileAttachedObject(COGObject):
 
