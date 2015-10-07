@@ -234,6 +234,9 @@ class AsyncCOGObject(COGObject):
     def async_show(self, *args, **kwargs):
         return self._conn.executor.submit(self.show, *args, **kwargs)
 
+    def async_delete(self, *args, **kwargs):
+        return self._conn.executor.submit(self.delete, *args, **kwargs)
+
 class COGFileAttachedObject(COGObject):
 
     def attach_files(self, uid, fle_uids):
@@ -388,6 +391,9 @@ class Assignments(COGObject):
         # Call Parent
         return asn_list
 
+class AsyncAssignments(Assignments, AsyncCOGObject):
+    pass
+
 class Tests(COGFileAttachedObject):
 
     def __init__(self, connection):
@@ -422,6 +428,9 @@ class Tests(COGFileAttachedObject):
         # Call Parent
         return super().list(endpoint=ep)
 
+class AsyncTests(Tests, AsyncCOGObject):
+    pass
+
 class Submissions(COGFileAttachedObject):
 
     def __init__(self, connection):
@@ -455,7 +464,6 @@ class Submissions(COGFileAttachedObject):
 
         # Call Parent
         return super().list(endpoint=ep)
-
 
 class AsyncSubmissions(Submissions, AsyncCOGObject):
     pass
