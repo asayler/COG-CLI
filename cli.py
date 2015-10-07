@@ -792,11 +792,11 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
             sub_str = str(suid)
             run_str = str(ruid)
         else:
-            usr_str = usid.node
+            usr_str = "{:012X}".format(usid.node)
             asn_str = asn["name"]
             tst_str = tst["name"]
-            sub_str = suid.node
-            run_str = ruid.node
+            sub_str = "{:012X}".format(suid.node)
+            run_str = "{:012X}".format(ruid.node)
 
         # Display Date
         date = time.localtime(float(run["created_time"]))
