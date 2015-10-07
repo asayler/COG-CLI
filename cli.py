@@ -651,12 +651,16 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
     # COG Objects
     asn_list = set()
     asns = {}
+    asns_failed = {}
     tst_list = set()
     tsts = {}
+    tsts_failed = {}
     sub_list = set()
     subs = {}
+    subs_failed = {}
     run_list = set()
     runs = {}
+    runs_failed = {}
 
     # Make Async Calls
     with obj['connection']:
@@ -676,7 +680,10 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         for auid in asn_list:
             asns_f[auid] = obj['assignments'].async_show(auid)
         for auid, asn_f in asns_f.items():
-            asns[auid] = asn_f.result()
+            try:
+                asns[auid] = asn_f.result()
+            except requests.exceptions.HTTPError as err:
+                asns_failed[auid] = err
 
         # Async Get Test Lists
         tst_lists_f = []
@@ -697,7 +704,10 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         for suid in tst_list:
             tsts_f[suid] = obj['tests'].async_show(suid)
         for suid, tst_f in tsts_f.items():
-            tsts[suid] = tst_f.result()
+            try:
+                tsts[suid] = tst_f.result()
+            except requests.exceptions.HTTPError as err:
+                tsts_failed[tuid] = err
 
         # Async Get Submission Lists
         sub_lists_f = []
@@ -718,7 +728,10 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         for suid in sub_list:
             subs_f[suid] = obj['submissions'].async_show(suid)
         for suid, sub_f in subs_f.items():
-            subs[suid] = sub_f.result()
+            try:
+                subs[suid] = sub_f.result()
+            except requests.exceptions.HTTPError as err:
+                subs_failed[suid] = err
 
         # Async Get Run Lists
         run_lists_f = []
@@ -732,7 +745,10 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         for ruid in run_list:
             runs_f[ruid] = obj['runs'].async_show(ruid)
         for ruid, run_f in runs_f.items():
-            runs[ruid] = run_f.result()
+            try:
+                runs[ruid] = run_f.result()
+            except requests.exceptions.HTTPError as err:
+                runs_failed[ruid] = err
 
     # Filter Results
     runs_filtered = {}
@@ -799,6 +815,16 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         if not no_score:
             row.append(score_str)
         table.append(row)
+
+    # Display Errors:
+    for auid in asns_failed:
+        click.echo("Faild to get Assignment '{}'".format(auid))
+    for tuid in tsts_failed:
+        click.echo("Faild to get Test '{}'".format(tuid))
+    for suid in subs_failed:
+        click.echo("Faild to get Submission '{}'".format(suid))
+    for ruid in runs_failed:
+        click.echo("Faild to get Run '{}'".format(ruid))
 
     # Display Table
     click_util.echo_table(table, headings=headings, line_limit=line_limit)
