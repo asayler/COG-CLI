@@ -61,7 +61,7 @@ def echo_table(values, headings=None, line_limit=None):
     for row in values:
         for c in range(len(lengths)):
             if c < len(row):
-                click.echo("{val:>{width}s} | ".format(val=row[c], width=lengths[c]), nl=False)
+                click.echo("{val:<{width}s} | ".format(val=row[c], width=lengths[c]), nl=False)
             else:
-                click.echo("{val:>{width}s} | ".format(val="", width=lengths[c]), nl=False)
+                click.echo("{val:<{width}s} | ".format(val="", width=lengths[c]), nl=False)
         click.echo("")
