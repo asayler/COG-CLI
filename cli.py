@@ -6,6 +6,7 @@ import functools
 import os
 import shelve
 import time
+import uuid
 import threading
 import concurrent.futures
 import queue
@@ -355,8 +356,8 @@ def util(obj):
 
     # Setup Client Class
     obj['files'] = client.Files(obj['connection'])
-    obj['assignments'] = client.Assignments(obj['connection'])
-    obj['tests'] = client.Tests(obj['connection'])
+    obj['assignments'] = client.AsyncAssignments(obj['connection'])
+    obj['tests'] = client.AsyncTests(obj['connection'])
     obj['submissions'] = client.AsyncSubmissions(obj['connection'])
     obj['runs'] = client.AsyncRuns(obj['connection'])
 
@@ -631,41 +632,92 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
 @auth_required
 def util_show_results(obj, asn_uid, sub_uid, usr_uid, line_limit):
 
-    headings = ["User", "Submission", "Test", "Run", "Date", "Status", "Score"]
+    # Table Objects
+    headings = ["User", "Assignment", "Test", "Submission", "Run", "Date", "Status", "Score"]
     table = []
 
-    asn_list = obj['assignments'].list()
+    # COG Objects
+    asn_list = set()
+    asns = {}
+    tst_list = set()
+    tsts = {}
+    sub_list = set()
+    subs = {}
+    run_list = set()
+    runs = {}
 
+    # Make Async Calls
     with obj['connection']:
 
+        # Get Assignment List
+        asn_list.update(set(obj['assignments'].list()))
+
+        # Async Get Assignments
+        asns_f = {}
+        for auid in asn_list:
+            asns_f[auid] = obj['assignments'].async_show(auid)
+        for auid, asn_f in asns_f.items():
+            asns[auid] = asn_f.result()
+
+        # Async Get Test Lists
+        tst_lists_f = []
+        for auid in asn_list:
+            tst_lists_f.append(obj['tests'].async_list(asn_uid=auid))
+        for tst_list_f in tst_lists_f:
+            tst_list.update(set(tst_list_f.result()))
+
+        # Async Get Tests
+        tsts_f = {}
+        for suid in tst_list:
+            tsts_f[suid] = obj['tests'].async_show(suid)
+        for suid, tst_f in tsts_f.items():
+            tsts[suid] = tst_f.result()
+
+        # Async Get Submission Lists
         sub_lists_f = []
         for auid in asn_list:
             sub_lists_f.append(obj['submissions'].async_list(asn_uid=auid))
-
-        sub_list = []
         for sub_list_f in sub_lists_f:
-            sub_list += sub_list_f.result()
+            sub_list.update(set(sub_list_f.result()))
 
+        # Async Get Submissions
+        subs_f = {}
+        for suid in sub_list:
+            subs_f[suid] = obj['submissions'].async_show(suid)
+        for suid, sub_f in subs_f.items():
+            subs[suid] = sub_f.result()
+
+        # Async Get Run Lists
         run_lists_f = []
         for suid in sub_list:
             run_lists_f.append(obj['runs'].async_list(sub_uid=suid))
-
-        run_list = []
         for run_list_f in run_lists_f:
-            run_list += run_list_f.result()
+            run_list.update(set(run_list_f.result()))
 
+        # Async Get Runs
         runs_f = {}
         for ruid in run_list:
             runs_f[ruid] = obj['runs'].async_show(ruid)
-
         for ruid, run_f in runs_f.items():
-            run = run_f.result()
-            date = time.localtime(float(run["created_time"]))
-            date_str = time.strftime("%m/%d/%y %H:%M:%S", date)
-            row = [run["owner"], run["submission"], run["test"], ruid,
-                   date_str, run["status"], run["score"]]
-            table.append(row)
+            runs[ruid] = run_f.result()
 
+    # Build Table Rows
+    for ruid, run in runs.items():
+        ruid = uuid.UUID(ruid)
+        usid = uuid.UUID(run["owner"])
+        suid = uuid.UUID(run["submission"])
+        sub = subs[str(suid)]
+        tuid = uuid.UUID(run["test"])
+        tst = tsts[str(tuid)]
+        auid = uuid.UUID(sub["assignment"])
+        asn = asns[str(auid)]
+        date = time.localtime(float(run["created_time"]))
+        date_str = time.strftime("%m/%d/%y %H:%M:%S", date)
+        row = [usid.node, asn["name"], tst["name"], suid.node, ruid.node,
+               date_str, run["status"], run["score"]]
+        table.append(row)
+
+    # Display Table
     click_util.echo_table(table, headings=headings, line_limit=line_limit)
 
 if __name__ == '__main__':
