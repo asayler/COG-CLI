@@ -8,6 +8,7 @@ import shelve
 import time
 import threading
 import concurrent.futures
+import queue
 
 import requests
 import click
@@ -56,7 +57,7 @@ def cli(ctx, url, username, password, token):
     ctx.obj['username'] = username
     ctx.obj['password'] = password
     ctx.obj['token'] = token
-    ctx.obj['connection'] = client.Connection(ctx.obj['url'])
+    ctx.obj['connection'] = client.AsyncConnection(ctx.obj['url'])
 
 ### File Commands ###
 
@@ -356,8 +357,8 @@ def util(obj):
     obj['files'] = client.Files(obj['connection'])
     obj['assignments'] = client.Assignments(obj['connection'])
     obj['tests'] = client.Tests(obj['connection'])
-    obj['submissions'] = client.Submissions(obj['connection'])
-    obj['runs'] = client.Runs(obj['connection'])
+    obj['submissions'] = client.AsyncSubmissions(obj['connection'])
+    obj['runs'] = client.AsyncRuns(obj['connection'])
 
 @util.command(name='show-token')
 @click.pass_obj
@@ -622,21 +623,43 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
             click.echo("{} - {}".format(fuid, str(err)), err=True)
 
 @util.command(name='show-results')
-@click.option('--asn_uid', default=None, prompt=True, help='Asn UUID')
+@click.option('--asn_uid', default=None, help='Asn UUID')
+@click.option('--sub_uid', default=None, help='Sub UUID')
 @click.option('--usr_uid', default=None, help='User UUID')
 @click.option('--line_limit', default=None, help='Limit output to line length')
 @click.pass_obj
 @auth_required
-def util_show_results(obj, asn_uid, usr_uid, line_limit):
+def util_show_results(obj, asn_uid, sub_uid, usr_uid, line_limit):
 
     headings = ["User", "Submission", "Test", "Run", "Date", "Status", "Score"]
     table = []
 
-    sub_list = obj['submissions'].list(asn_uid=asn_uid)
-    for suid in sub_list:
-        run_list = obj['runs'].list(sub_uid=suid)
+    asn_list = obj['assignments'].list()
+
+    with obj['connection']:
+
+        sub_lists_f = []
+        for auid in asn_list:
+            sub_lists_f.append(obj['submissions'].async_list(asn_uid=auid))
+
+        sub_list = []
+        for sub_list_f in sub_lists_f:
+            sub_list += sub_list_f.result()
+
+        run_lists_f = []
+        for suid in sub_list:
+            run_lists_f.append(obj['runs'].async_list(sub_uid=suid))
+
+        run_list = []
+        for run_list_f in run_lists_f:
+            run_list += run_list_f.result()
+
+        runs_f = {}
         for ruid in run_list:
-            run = obj['runs'].show(ruid)
+            runs_f[ruid] = obj['runs'].async_show(ruid)
+
+        for ruid, run_f in runs_f.items():
+            run = run_f.result()
             date = time.localtime(float(run["created_time"]))
             date_str = time.strftime("%m/%d/%y %H:%M:%S", date)
             row = [run["owner"], run["submission"], run["test"], ruid,
