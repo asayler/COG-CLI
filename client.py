@@ -144,7 +144,7 @@ class AsyncConnection(Connection):
 
         # Handle Args
         if threads is None:
-            self.threads = multiprocessing.cpu_count() * THREAD_MULTIPLIER
+            self.threads = multiprocessing.cpu_count() * _THREAD_MULTIPLIER
         elif threads > 0:
             self.threads = threads
         else:
@@ -166,6 +166,7 @@ class AsyncConnection(Connection):
 
     def close(self, wait=True):
         self.executor.shutdown(wait=wait)
+        self.executor = None
 
     #ToDo: @RequiresOpen
     def async_http_get(self, *args, **kwargs):
@@ -221,14 +222,17 @@ class AsyncCOGObject(COGObject):
         """ Constructor"""
 
         # Check Type
-        if type(async_connetion) is not AsyncConnection:
+        if type(async_connection) is not AsyncConnection:
             raise TypeError("Connection must be AsyncConnection")
 
         # Call Parent
         super().__init__(async_connection)
 
+    def async_list(self, *args, **kwargs):
+        return self._conn.executor.submit(self.list, *args, **kwargs)
+
     def async_show(self, *args, **kwargs):
-        return self.executor.submit(self.show, *args, **kwargs)
+        return self._conn.executor.submit(self.show, *args, **kwargs)
 
 class COGFileAttachedObject(COGObject):
 
@@ -452,6 +456,10 @@ class Submissions(COGFileAttachedObject):
         # Call Parent
         return super().list(endpoint=ep)
 
+
+class AsyncSubmissions(Submissions, AsyncCOGObject):
+    pass
+
 class Runs(COGObject):
 
     def __init__(self, connection):
@@ -485,3 +493,6 @@ class Runs(COGObject):
 
         # Call Parent
         return super().list(endpoint=ep)
+
+class AsyncRuns(Runs, AsyncCOGObject):
+    pass
