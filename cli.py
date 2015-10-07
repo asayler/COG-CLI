@@ -653,7 +653,7 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit):
         # Get Assignment List
         asn_list.update(set(obj['assignments'].list()))
 
-        # Filter Assignment List
+        # Pre-Filter Assignment List
         if asn_uid:
             if asn_uid in asn_list:
                 asn_list = set([asn_uid])
@@ -674,7 +674,7 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit):
         for tst_list_f in tst_lists_f:
             tst_list.update(set(tst_list_f.result()))
 
-        # Filter Test List
+        # Pre-Filter Test List
         if tst_uid:
             if tst_uid in tst_list:
                 tst_list = set([tst_uid])
@@ -695,7 +695,7 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit):
         for sub_list_f in sub_lists_f:
             sub_list.update(set(sub_list_f.result()))
 
-        # Filter Submission List
+        # Pre-Filter Submission List
         if sub_uid:
             if sub_uid in sub_list:
                 sub_list = set([sub_uid])
@@ -723,16 +723,31 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit):
         for ruid, run_f in runs_f.items():
             runs[ruid] = run_f.result()
 
-    # Build Table Rows
+    # Filter Results
+    runs_filtered = {}
     for ruid, run in runs.items():
-        ruid = uuid.UUID(ruid)
-        usid = uuid.UUID(run["owner"])
 
-        # Filter User List
+        # Filter Users
         if usr_uid:
-            if str(usid) == usr_uid:
+            if (usr_uid != run["owner"]):
                 continue
 
+        # Filter Submissions
+        if sub_uid:
+            if (sub_uid != run["submission"]):
+                continue
+
+        # Filter Tests
+        if tst_uid:
+            if (tst_uid != run["test"]):
+                continue
+
+        runs_filtered[ruid] = run
+
+    # Build Table Rows
+    for ruid, run in runs_filtered.items():
+        ruid = uuid.UUID(ruid)
+        usid = uuid.UUID(run["owner"])
         suid = uuid.UUID(run["submission"])
         sub = subs[str(suid)]
         tuid = uuid.UUID(run["test"])
