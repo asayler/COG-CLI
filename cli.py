@@ -625,12 +625,13 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
 
 @util.command(name='show-results')
 @click.option('--asn_uid', default=None, help='Asn UUID')
+@click.option('--tst_uid', default=None, help='Test UUID')
 @click.option('--sub_uid', default=None, help='Sub UUID')
 @click.option('--usr_uid', default=None, help='User UUID')
 @click.option('--line_limit', default=None, help='Limit output to line length')
 @click.pass_obj
 @auth_required
-def util_show_results(obj, asn_uid, sub_uid, usr_uid, line_limit):
+def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit):
 
     # Table Objects
     headings = ["User", "Assignment", "Test", "Submission", "Run", "Date", "Status", "Score"]
@@ -652,6 +653,13 @@ def util_show_results(obj, asn_uid, sub_uid, usr_uid, line_limit):
         # Get Assignment List
         asn_list.update(set(obj['assignments'].list()))
 
+        # Filter Assignment List
+        if asn_uid:
+            if asn_uid in asn_list:
+                asn_list = set([asn_uid])
+            else:
+                raise Exception("Assignment '{}' not found".format(asn_uid))
+
         # Async Get Assignments
         asns_f = {}
         for auid in asn_list:
@@ -666,6 +674,13 @@ def util_show_results(obj, asn_uid, sub_uid, usr_uid, line_limit):
         for tst_list_f in tst_lists_f:
             tst_list.update(set(tst_list_f.result()))
 
+        # Filter Test List
+        if tst_uid:
+            if tst_uid in tst_list:
+                tst_list = set([tst_uid])
+            else:
+                raise Exception("Test '{}' not found".format(tst_uid))
+
         # Async Get Tests
         tsts_f = {}
         for suid in tst_list:
@@ -679,6 +694,13 @@ def util_show_results(obj, asn_uid, sub_uid, usr_uid, line_limit):
             sub_lists_f.append(obj['submissions'].async_list(asn_uid=auid))
         for sub_list_f in sub_lists_f:
             sub_list.update(set(sub_list_f.result()))
+
+        # Filter Submission List
+        if sub_uid:
+            if sub_uid in sub_list:
+                sub_list = set([sub_uid])
+            else:
+                raise Exception("Submission '{}' not found".format(sub_uid))
 
         # Async Get Submissions
         subs_f = {}
@@ -705,6 +727,12 @@ def util_show_results(obj, asn_uid, sub_uid, usr_uid, line_limit):
     for ruid, run in runs.items():
         ruid = uuid.UUID(ruid)
         usid = uuid.UUID(run["owner"])
+
+        # Filter User List
+        if usr_uid:
+            if str(usid) == usr_uid:
+                continue
+
         suid = uuid.UUID(run["submission"])
         sub = subs[str(suid)]
         tuid = uuid.UUID(run["test"])
