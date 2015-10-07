@@ -629,12 +629,23 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
 @click.option('--sub_uid', default=None, help='Sub UUID')
 @click.option('--usr_uid', default=None, help='User UUID')
 @click.option('--line_limit', default=None, help='Limit output to line length')
+@click.option('--show_uuid', is_flag=True, help='Control whether to display names or full UUIDs')
+@click.option('--no_date', is_flag=True, help='Control whether to display run date and time')
+@click.option('--no_status', is_flag=True, help='Control whether to display run status')
+@click.option('--no_score', is_flag=True, help='Control whether to display run score')
 @click.pass_obj
 @auth_required
-def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit):
+def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
+                      show_uuid, no_date, no_status, no_score):
 
     # Table Objects
-    headings = ["User", "Assignment", "Test", "Submission", "Run", "Date", "Status", "Score"]
+    headings = ["User", "Assignment", "Test", "Submission", "Run"]
+    if not no_date:
+        headings.append("Date")
+    if not no_status:
+        headings.append("Status")
+    if not no_score:
+        headings.append("Score")
     table = []
 
     # COG Objects
@@ -746,6 +757,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit):
 
     # Build Table Rows
     for ruid, run in runs_filtered.items():
+
+        # Get Objects
         ruid = uuid.UUID(ruid)
         usid = uuid.UUID(run["owner"])
         suid = uuid.UUID(run["submission"])
@@ -754,10 +767,37 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit):
         tst = tsts[str(tuid)]
         auid = uuid.UUID(sub["assignment"])
         asn = asns[str(auid)]
+
+        # Display Objects
+        if show_uuid:
+            usr_str = str(usid)
+            asn_str = str(auid)
+            tst_str = str(tuid)
+            sub_str = str(suid)
+            run_str = str(ruid)
+        else:
+            usr_str = usid.node
+            asn_str = asn["name"]
+            tst_str = tst["name"]
+            sub_str = suid.node
+            run_str = ruid.node
+
+        # Display Date
         date = time.localtime(float(run["created_time"]))
         date_str = time.strftime("%m/%d/%y %H:%M:%S", date)
-        row = [usid.node, asn["name"], tst["name"], suid.node, ruid.node,
-               date_str, run["status"], run["score"]]
+
+        # Display Results
+        stat_str = run["status"]
+        score_str = run["score"]
+
+        # Add row
+        row = [usr_str, asn_str, tst_str, sub_str, run_str]
+        if not no_date:
+            row.append(date_str)
+        if not no_status:
+            row.append(stat_str)
+        if not no_score:
+            row.append(score_str)
         table.append(row)
 
     # Display Table
