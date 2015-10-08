@@ -654,15 +654,15 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
     asns = {}
     asns_failed = {}
     tst_list = set()
-    tst_list_failed = []
+    tst_list_failed = {}
     tsts = {}
     tsts_failed = {}
     sub_list = set()
-    sub_list_failed = []
+    sub_list_failed = {}
     subs = {}
     subs_failed = {}
     run_list = set()
-    run_list_failed = []
+    run_list_failed = {}
     runs = {}
     runs_failed = {}
 
@@ -684,18 +684,19 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Assignment '{}' not found".format(asn_uid))
 
         # Async Get Assignments
-        asns, asns_failed = async_obj_show(asn_list, obj['assignments'].async_show,
-                                           label="Getting Assignments")
+        async_fun = obj['assignments'].async_show
+        label="Getting Assignments"
+        output, failed = async_obj_map(asn_list, async_fun, label=label)
+        asns.update(output)
+        asns_failed.update(failed)
 
         # Async Get Test Lists
-        tst_lists_f = []
-        for auid in asn_list:
-            tst_lists_f.append(obj['tests'].async_list(asn_uid=auid))
-        for tst_list_f in tst_lists_f:
-            try:
-                tst_list.update(set(tst_list_f.result()))
-            except requests.exceptions.HTTPError as err:
-                tst_list_failed.append(err)
+        def async_fun(uid):
+            return obj['tests'].async_list(asn_uid=uid)
+        label="Listing Tests      "
+        output, failed = async_obj_map(asn_list, async_fun, label=label)
+        tst_list.update(set([tuid for puid, tsts in output.items() for tuid in tsts]))
+        tst_list_failed.update(failed)
 
         # Pre-Filter Test List
         if tst_uid:
@@ -705,18 +706,19 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Test '{}' not found".format(tst_uid))
 
         # Async Get Tests
-        tsts, tsts_failed = async_obj_show(tst_list, obj['tests'].async_show,
-                                           label="Getting Tests      ")
+        async_fun = obj['tests'].async_show
+        label="Getting Tests      "
+        output, failed = async_obj_map(tst_list, async_fun, label=label)
+        tsts.update(output)
+        tsts_failed.update(failed)
 
         # Async Get Submission Lists
-        sub_lists_f = []
-        for auid in asn_list:
-            sub_lists_f.append(obj['submissions'].async_list(asn_uid=auid))
-        for sub_list_f in sub_lists_f:
-            try:
-                sub_list.update(set(sub_list_f.result()))
-            except requests.exceptions.HTTPError as err:
-                sub_list_failed.append(err)
+        def async_fun(uid):
+            return obj['submissions'].async_list(asn_uid=uid)
+        label="Listing Submissions"
+        output, failed = async_obj_map(asn_list, async_fun, label=label)
+        sub_list.update(set([suid for puid, subs in output.items() for suid in subs]))
+        sub_list_failed.update(failed)
 
         # Pre-Filter Submission List
         if sub_uid:
@@ -726,22 +728,26 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Submission '{}' not found".format(sub_uid))
 
         # Async Get Submissions
-        subs, subs_failed = async_obj_show(sub_list, obj['submissions'].async_show,
-                                           label="Getting Submissions")
+        async_fun = obj['submissions'].async_show
+        label="Getting Submissions"
+        output, failed = async_obj_map(sub_list, async_fun, label=label)
+        subs.update(output)
+        subs_failed.update(failed)
 
         # Async Get Run Lists
-        run_lists_f = []
-        for suid in sub_list:
-            run_lists_f.append(obj['runs'].async_list(sub_uid=suid))
-        for run_list_f in run_lists_f:
-            try:
-                run_list.update(set(run_list_f.result()))
-            except requests.exceptions.HTTPError as err:
-                run_list_failed.append(err)
+        def async_fun(uid):
+            return obj['runs'].async_list(sub_uid=uid)
+        label="Listing Runs       "
+        output, failed = async_obj_map(sub_list, async_fun, label=label)
+        run_list.update(set([ruid for puid, runs in output.items() for ruid in runs]))
+        run_list_failed.update(failed)
 
         # Async Get Runs
-        runs, runs_failed = async_obj_show(run_list, obj['runs'].async_show,
-                                           label="Getting Runs       ")
+        async_fun = obj['runs'].async_show
+        label="Getting Runs       "
+        output, failed = async_obj_map(run_list, async_fun, label=label)
+        runs.update(output)
+        runs_failed.update(failed)
 
     # Filter Results
     runs_filtered = {}
@@ -814,30 +820,30 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         click.echo("Faild to list Assignments: {}".format(str(err)))
     for auid, err in asns_failed.items():
         click.echo("Faild to get Assignment '{}': {}".format(auid, str(err)))
-    for err in tst_list_failed:
-        click.echo("Faild to list Tests: {}".format(str(err)))
+    for auid, err in tst_list_failed.items():
+        click.echo("Faild to list Tests for Assignment '{}': {}".format(auid, str(err)))
     for tuid, err in tsts_failed.items():
         click.echo("Faild to get Test '{}': {}".format(tuid, str(err)))
-    for err in sub_list_failed:
-        click.echo("Faild to list Submissions: {}".format(str(err)))
+    for auid, err in sub_list_failed.items():
+        click.echo("Faild to list Submissions for Assignment '{}': {}".format(audi, str(err)))
     for suid, err in subs_failed.items():
         click.echo("Faild to get Submission '{}': {}".format(suid, str(err)))
-    for err in run_list_failed:
-        click.echo("Faild to list Runs: {}".format(str(err)))
+    for suid, err in run_list_failed.items():
+        click.echo("Faild to list Runs for Submission '{}': {}".format(suid, str(err)))
     for ruid, err in runs_failed.items():
         click.echo("Faild to get Run '{}': {}".format(ruid, str(err)))
 
     # Display Table
     click_util.echo_table(table, headings=headings, line_limit=line_limit)
 
-def async_obj_show(obj_list, async_get, label=None, sleep=0.1):
+def async_obj_map(obj_list, async_fun, label=None, sleep=0.1):
 
     output = {}
     failed = {}
     future = {}
 
     for uid in obj_list:
-        future[uid] = async_get(uid)
+        future[uid] = async_fun(uid)
     with click.progressbar(label=label, length=len(future)) as bar:
         while future:
             remain = future
