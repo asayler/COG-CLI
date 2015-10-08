@@ -684,8 +684,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Assignment '{}' not found".format(asn_uid))
 
         # Async Get Assignments
-        asns, asns_failed = async_get_obj(asn_list, obj['assignments'].async_show,
-                                          label="Getting Assignments")
+        asns, asns_failed = async_obj_show(asn_list, obj['assignments'].async_show,
+                                           label="Getting Assignments")
 
         # Async Get Test Lists
         tst_lists_f = []
@@ -705,8 +705,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Test '{}' not found".format(tst_uid))
 
         # Async Get Tests
-        tsts, tsts_failed = async_get_obj(tst_list, obj['tests'].async_show,
-                                          label="Getting Tests      ")
+        tsts, tsts_failed = async_obj_show(tst_list, obj['tests'].async_show,
+                                           label="Getting Tests      ")
 
         # Async Get Submission Lists
         sub_lists_f = []
@@ -726,8 +726,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Submission '{}' not found".format(sub_uid))
 
         # Async Get Submissions
-        subs, subs_failed = async_get_obj(sub_list, obj['submissions'].async_show,
-                                          label="Getting Submissions")
+        subs, subs_failed = async_obj_show(sub_list, obj['submissions'].async_show,
+                                           label="Getting Submissions")
 
         # Async Get Run Lists
         run_lists_f = []
@@ -740,8 +740,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 run_list_failed.append(err)
 
         # Async Get Runs
-        runs, runs_failed = async_get_obj(run_list, obj['runs'].async_show,
-                                          label="Getting Runs       ")
+        runs, runs_failed = async_obj_show(run_list, obj['runs'].async_show,
+                                           label="Getting Runs       ")
 
     # Filter Results
     runs_filtered = {}
@@ -830,7 +830,7 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
     # Display Table
     click_util.echo_table(table, headings=headings, line_limit=line_limit)
 
-def async_get_obj(obj_list, async_get, label=None, sleep=0.1):
+def async_obj_show(obj_list, async_get, label=None, sleep=0.1):
 
     output = {}
     failed = {}
