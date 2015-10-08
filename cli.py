@@ -650,15 +650,19 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
 
     # COG Objects
     asn_list = set()
+    asn_list_failed = []
     asns = {}
     asns_failed = {}
     tst_list = set()
+    tst_list_failed = []
     tsts = {}
     tsts_failed = {}
     sub_list = set()
+    sub_list_failed = []
     subs = {}
     subs_failed = {}
     run_list = set()
+    run_list_failed = []
     runs = {}
     runs_failed = {}
 
@@ -666,7 +670,11 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
     with obj['connection']:
 
         # Get Assignment List
-        asn_list.update(set(obj['assignments'].list()))
+        click.echo("Getting Assignment List...")
+        try:
+            asn_list.update(set(obj['assignments'].list()))
+        except requests.exceptions.HTTPError as err:
+            asn_list_failed.append(err)
 
         # Pre-Filter Assignment List
         if asn_uid:
@@ -690,7 +698,10 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         for auid in asn_list:
             tst_lists_f.append(obj['tests'].async_list(asn_uid=auid))
         for tst_list_f in tst_lists_f:
-            tst_list.update(set(tst_list_f.result()))
+            try:
+                tst_list.update(set(tst_list_f.result()))
+            except requests.exceptions.HTTPError as err:
+                tst_list_failed.append(err)
 
         # Pre-Filter Test List
         if tst_uid:
@@ -714,7 +725,10 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         for auid in asn_list:
             sub_lists_f.append(obj['submissions'].async_list(asn_uid=auid))
         for sub_list_f in sub_lists_f:
-            sub_list.update(set(sub_list_f.result()))
+            try:
+                sub_list.update(set(sub_list_f.result()))
+            except requests.exceptions.HTTPError as err:
+                sub_list_failed.append(err)
 
         # Pre-Filter Submission List
         if sub_uid:
@@ -738,7 +752,10 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         for suid in sub_list:
             run_lists_f.append(obj['runs'].async_list(sub_uid=suid))
         for run_list_f in run_lists_f:
-            run_list.update(set(run_list_f.result()))
+            try:
+                run_list.update(set(run_list_f.result()))
+            except requests.exceptions.HTTPError as err:
+                run_list_failed.append(err)
 
         # Async Get Runs
         runs_f = {}
@@ -817,14 +834,22 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         table.append(row)
 
     # Display Errors:
-    for auid in asns_failed:
-        click.echo("Faild to get Assignment '{}'".format(auid))
-    for tuid in tsts_failed:
-        click.echo("Faild to get Test '{}'".format(tuid))
-    for suid in subs_failed:
-        click.echo("Faild to get Submission '{}'".format(suid))
-    for ruid in runs_failed:
-        click.echo("Faild to get Run '{}'".format(ruid))
+    for err in asn_list_failed:
+        click.echo("Faild to list Assignments: {}".format(str(err)))
+    for auid, err in asns_failed.items():
+        click.echo("Faild to get Assignment '{}': {}".format(auid, str(err)))
+    for err in tst_list_failed:
+        click.echo("Faild to list Tests: {}".format(str(err)))
+    for tuid, err in tsts_failed.items():
+        click.echo("Faild to get Test '{}': {}".format(tuid, str(err)))
+    for err in sub_list_failed:
+        click.echo("Faild to list Submissions: {}".format(str(err)))
+    for suid, err in subs_failed.items():
+        click.echo("Faild to get Submission '{}': {}".format(suid, str(err)))
+    for err in run_list_failed:
+        click.echo("Faild to list Runs: {}".format(str(err)))
+    for ruid, err in runs_failed.items():
+        click.echo("Faild to get Run '{}': {}".format(ruid, str(err)))
 
     # Display Table
     click_util.echo_table(table, headings=headings, line_limit=line_limit)
