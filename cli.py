@@ -684,14 +684,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Assignment '{}' not found".format(asn_uid))
 
         # Async Get Assignments
-        asns_f = {}
-        for auid in asn_list:
-            asns_f[auid] = obj['assignments'].async_show(auid)
-        for auid, asn_f in asns_f.items():
-            try:
-                asns[auid] = asn_f.result()
-            except requests.exceptions.HTTPError as err:
-                asns_failed[auid] = err
+        asns, asns_failed = async_get_obj(asn_list, obj['assignments'].async_show,
+                                          label="Getting Assignments")
 
         # Async Get Test Lists
         tst_lists_f = []
@@ -711,14 +705,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Test '{}' not found".format(tst_uid))
 
         # Async Get Tests
-        tsts_f = {}
-        for suid in tst_list:
-            tsts_f[suid] = obj['tests'].async_show(suid)
-        for suid, tst_f in tsts_f.items():
-            try:
-                tsts[suid] = tst_f.result()
-            except requests.exceptions.HTTPError as err:
-                tsts_failed[tuid] = err
+        tsts, tsts_failed = async_get_obj(tst_list, obj['tests'].async_show,
+                                          label="Getting Tests      ")
 
         # Async Get Submission Lists
         sub_lists_f = []
@@ -738,14 +726,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 raise Exception("Submission '{}' not found".format(sub_uid))
 
         # Async Get Submissions
-        subs_f = {}
-        for suid in sub_list:
-            subs_f[suid] = obj['submissions'].async_show(suid)
-        for suid, sub_f in subs_f.items():
-            try:
-                subs[suid] = sub_f.result()
-            except requests.exceptions.HTTPError as err:
-                subs_failed[suid] = err
+        subs, subs_failed = async_get_obj(sub_list, obj['submissions'].async_show,
+                                          label="Getting Submissions")
 
         # Async Get Run Lists
         run_lists_f = []
@@ -758,14 +740,8 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
                 run_list_failed.append(err)
 
         # Async Get Runs
-        runs_f = {}
-        for ruid in run_list:
-            runs_f[ruid] = obj['runs'].async_show(ruid)
-        for ruid, run_f in runs_f.items():
-            try:
-                runs[ruid] = run_f.result()
-            except requests.exceptions.HTTPError as err:
-                runs_failed[ruid] = err
+        runs, runs_failed = async_get_obj(run_list, obj['runs'].async_show,
+                                          label="Getting Runs       ")
 
     # Filter Results
     runs_filtered = {}
@@ -853,6 +829,32 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
 
     # Display Table
     click_util.echo_table(table, headings=headings, line_limit=line_limit)
+
+def async_get_obj(obj_list, async_get, label=None, sleep=0.1):
+
+    output = {}
+    failed = {}
+    future = {}
+
+    for uid in obj_list:
+        future[uid] = async_get(uid)
+    with click.progressbar(label=label, length=len(future)) as bar:
+        while future:
+            remain = future
+            future = {}
+            for uid, f in remain.items():
+                if f.done():
+                    try:
+                        output[uid] = f.result()
+                    except requests.exceptions.HTTPError as err:
+                        failed[uid] = err
+                    finally:
+                        bar.update(1)
+                else:
+                    future[uid] = f
+            time.sleep(sleep)
+
+    return output, failed
 
 if __name__ == '__main__':
     sys.exit(cli())
