@@ -10,6 +10,7 @@ import os
 import os.path
 import multiprocessing
 import concurrent.futures
+import functools
 
 import requests
 
@@ -61,6 +62,12 @@ class Connection(object):
         elif username and password:
             self.authenticate(username=username, password=password)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+
     def authenticate(self, username=None, password=None, token=None):
 
         endpoint = "{:s}/{:s}/".format(self._url, _EP_TOKENS)
@@ -111,7 +118,7 @@ class Connection(object):
         res.raise_for_status()
         return res.json()
 
-    def http_get(self, endpoint, json=None):
+    def http_get(self, endpoint=None, json=None):
         url = "{:s}/{:s}/".format(self._url, endpoint)
         res = requests.get(url, auth=self._auth, json=json)
         res.raise_for_status()
@@ -151,7 +158,7 @@ class AsyncConnection(Connection):
             raise TypeError("Threads must be greater than 0")
 
         # Setup Vars
-        self.executor = None
+        self._executor = None
 
     def __enter__(self):
         self.open()
@@ -162,15 +169,49 @@ class AsyncConnection(Connection):
         return False
 
     def open(self):
-        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.threads)
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.threads)
 
     def close(self, wait=True):
-        self.executor.shutdown(wait=wait)
-        self.executor = None
+        self._executor.shutdown(wait=wait)
+        self._executor = None
 
-    #ToDo: @RequiresOpen
+    def is_open(self):
+        if self._executor:
+            return True
+        else:
+            return False
+
+    def submit(self, fun, *args, **kwargs):
+
+        # Open if closed
+        opened = False
+        if not self.is_open():
+            self.open()
+            opened = True
+
+        # Call Function
+        ret = self._executor.submit(fun, *args, **kwargs)
+
+        # Close if opened
+        if opened:
+            self.close()
+
+        return ret
+
+    def async_http_post(self, *args, **kwargs):
+        return self.submit(self.http_post, *args, **kwargs)
+
+    def async_http_put(self, *args, **kwargs):
+        return self.submit(self.http_put, *args, **kwargs)
+
     def async_http_get(self, *args, **kwargs):
-        return self.executor.submit(self.http_get, *args, **kwargs)
+        return self.submit(self.http_get, *args, **kwargs)
+
+    def async_http_delete(self, *args, **kwargs):
+        return self.submit(self.http_delete, *args, **kwargs)
+
+    def async_http_download(self, *args, **kwargs):
+        return self.submit(self.http_download, *args, **kwargs)
 
 class COGObject(object):
 
@@ -229,13 +270,13 @@ class AsyncCOGObject(COGObject):
         super().__init__(async_connection)
 
     def async_list(self, *args, **kwargs):
-        return self._conn.executor.submit(self.list, *args, **kwargs)
+        return self._conn.submit(self.list, *args, **kwargs)
 
     def async_show(self, *args, **kwargs):
-        return self._conn.executor.submit(self.show, *args, **kwargs)
+        return self._conn.submit(self.show, *args, **kwargs)
 
     def async_delete(self, *args, **kwargs):
-        return self._conn.executor.submit(self.delete, *args, **kwargs)
+        return self._conn.submit(self.delete, *args, **kwargs)
 
 class COGFileAttachedObject(COGObject):
 
