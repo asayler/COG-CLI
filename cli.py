@@ -623,6 +623,96 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
             fuid, err = val
             click.echo("{} - {}".format(fuid, str(err)), err=True)
 
+@util.command(name='download-submissions2')
+@click.option('--path', default=None, prompt=True,
+              type=click.Path(exists=True, writable=True, resolve_path=True, file_okay=False),
+              help='Destination Directory')
+@click.option('--asn_uid', default=None, help='Asn UUID')
+@click.option('--sub_uid', default=None, help='Sub UUID')
+@click.option('--usr_uid', default=None, help='User UUID')
+@click.pass_obj
+@auth_required
+def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
+
+    # COG Objects
+    asn_set = set()
+    asn_lists_failed = {}
+    asns = {}
+    asns_failed = {}
+    sub_set = set()
+    sub_lists_failed = {}
+    subs = {}
+    subs_failed = {}
+    fle_set = set()
+    fle_lists = {}
+    fle_lists_failed = {}
+    fles = {}
+    fles_failed = {}
+
+    # Make Async Calls
+    with obj['connection']:
+
+        # Async Assignment List
+        def async_fun(uid):
+            return obj['assignments'].async_list()
+        label="Listing Assignments"
+        output, failed = async_obj_map([None], async_fun, label=label)
+        asn_set.update(set([auid for puid, auids in output.items() for auid in auids]))
+        asn_lists_failed.update(failed)
+
+        # Pre-Filter Assignment List
+        if asn_uid:
+            if asn_uid in asn_set:
+                asn_set = set([asn_uid])
+            else:
+                raise Exception("Assignment '{}' not found".format(asn_uid))
+
+        # Async Get Assignments
+        async_fun = obj['assignments'].async_show
+        label="Getting Assignments"
+        output, failed = async_obj_map(asn_set, async_fun, label=label)
+        asns.update(output)
+        asns_failed.update(failed)
+
+        # Async Get Submission Lists
+        def async_fun(uid):
+            return obj['submissions'].async_list(asn_uid=uid)
+        label="Listing Submissions"
+        output, failed = async_obj_map(asn_set, async_fun, label=label)
+        sub_set.update(set([suid for auid, suids in output.items() for suid in suids]))
+        sub_lists_failed.update(failed)
+
+        # Pre-Filter Submission List
+        if sub_uid:
+            if sub_uid in sub_set:
+                sub_set = set([sub_uid])
+            else:
+                raise Exception("Submission '{}' not found".format(sub_uid))
+
+        # Async Get Submissions
+        async_fun = obj['submissions'].async_show
+        label="Getting Submissions"
+        output, failed = async_obj_map(sub_set, async_fun, label=label)
+        subs.update(output)
+        subs_failed.update(failed)
+
+        # Async Get File Lists
+        def async_fun(uid):
+            return obj['files'].async_list(sub_uid=uid)
+        label="Listing Files      "
+        output, failed = async_obj_map(sub_set, async_fun, label=label)
+        fle_set.update(set([fuid for suid, fuids in output.items() for fuid in fuids]))
+        fle_lists.update(output)
+        fle_lists_failed.update(failed)
+
+        # Async Get Files
+        async_fun = obj['files'].async_show
+        label="Getting Files      "
+        output, failed = async_obj_map(fle_set, async_fun, label=label)
+        fles.update(output)
+        fles_failed.update(failed)
+
+
 @util.command(name='show-results')
 @click.option('--asn_uid', default=None, help='Asn UUID')
 @click.option('--tst_uid', default=None, help='Test UUID')
