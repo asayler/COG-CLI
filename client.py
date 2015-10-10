@@ -269,6 +269,9 @@ class AsyncCOGObject(COGObject):
         # Call Parent
         super().__init__(async_connection)
 
+    def async_create(self, *args, **kwargs):
+        return self._conn.submit(self.create, *args, **kwargs)
+
     def async_list(self, *args, **kwargs):
         return self._conn.submit(self.list, *args, **kwargs)
 
@@ -313,6 +316,14 @@ class COGFileAttachedObject(COGObject):
         res = self._conn.http_delete(endpoint=ep, json=data)
         lst = res[_KEY_FILES]
         return lst
+
+class AsyncCOGFileAttachedObject(COGFileAttachedObject, AsyncCOGObject):
+
+    def async_attach_files(self, *args, **kwargs):
+        return self._conn.submit(self.attach_file, *args, **kwargs)
+
+    def async_detach_files(self, *args, **kwargs):
+        return self._conn.submit(self.detach_file, *args, **kwargs)
 
 class Files(COGObject):
 
@@ -381,6 +392,11 @@ class Files(COGObject):
             path = self._conn.http_download(ep, path)
 
         return path
+
+class AsyncFiles(Files, AsyncCOGObject):
+
+    def async_download(self, *args, **kwargs):
+        return self._conn.submit(self.download, *args, **kwargs)
 
 class Assignments(COGObject):
 
@@ -469,7 +485,7 @@ class Tests(COGFileAttachedObject):
         # Call Parent
         return super().list(endpoint=ep)
 
-class AsyncTests(Tests, AsyncCOGObject):
+class AsyncTests(Tests, AsyncCOGFileAttachedObject):
     pass
 
 class Submissions(COGFileAttachedObject):
@@ -506,7 +522,7 @@ class Submissions(COGFileAttachedObject):
         # Call Parent
         return super().list(endpoint=ep)
 
-class AsyncSubmissions(Submissions, AsyncCOGObject):
+class AsyncSubmissions(Submissions, AsyncCOGFileAttachedObject):
     pass
 
 class Runs(COGObject):
