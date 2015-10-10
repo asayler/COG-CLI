@@ -355,7 +355,7 @@ def run_delete(obj, uid):
 def util(obj):
 
     # Setup Client Class
-    obj['files'] = client.Files(obj['connection'])
+    obj['files'] = client.AsyncFiles(obj['connection'])
     obj['assignments'] = client.AsyncAssignments(obj['connection'])
     obj['tests'] = client.AsyncTests(obj['connection'])
     obj['submissions'] = client.AsyncSubmissions(obj['connection'])
@@ -650,7 +650,7 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
 
     # COG Objects
     asn_list = set()
-    asn_list_failed = []
+    asn_list_failed = {}
     asns = {}
     asns_failed = {}
     tst_list = set()
@@ -669,12 +669,13 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
     # Make Async Calls
     with obj['connection']:
 
-        # Get Assignment List
-        click.echo("Getting Assignment List...")
-        try:
-            asn_list.update(set(obj['assignments'].list()))
-        except requests.exceptions.HTTPError as err:
-            asn_list_failed.append(err)
+        # Async Assignment List
+        def async_fun(uid):
+            return obj['assignments'].async_list()
+        label="Listing Assignments"
+        output, failed = async_obj_map([None], async_fun, label=label)
+        asn_list.update(set([auid for puid, asns in output.items() for auid in asns]))
+        asn_list_failed.update(failed)
 
         # Pre-Filter Assignment List
         if asn_uid:
@@ -816,22 +817,22 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         table.append(row)
 
     # Display Errors:
-    for err in asn_list_failed:
-        click.echo("Faild to list Assignments: {}".format(str(err)))
+    for puid, err in asn_list_failed:
+        click.echo("Failed to list Assignments: {}".format(str(err)))
     for auid, err in asns_failed.items():
-        click.echo("Faild to get Assignment '{}': {}".format(auid, str(err)))
+        click.echo("Failed to get Assignment '{}': {}".format(auid, str(err)))
     for auid, err in tst_list_failed.items():
-        click.echo("Faild to list Tests for Assignment '{}': {}".format(auid, str(err)))
+        click.echo("Failed to list Tests for Assignment '{}': {}".format(auid, str(err)))
     for tuid, err in tsts_failed.items():
-        click.echo("Faild to get Test '{}': {}".format(tuid, str(err)))
+        click.echo("Failed to get Test '{}': {}".format(tuid, str(err)))
     for auid, err in sub_list_failed.items():
-        click.echo("Faild to list Submissions for Assignment '{}': {}".format(audi, str(err)))
+        click.echo("Failed to list Submissions for Assignment '{}': {}".format(audi, str(err)))
     for suid, err in subs_failed.items():
-        click.echo("Faild to get Submission '{}': {}".format(suid, str(err)))
+        click.echo("Failed to get Submission '{}': {}".format(suid, str(err)))
     for suid, err in run_list_failed.items():
-        click.echo("Faild to list Runs for Submission '{}': {}".format(suid, str(err)))
+        click.echo("Failed to list Runs for Submission '{}': {}".format(suid, str(err)))
     for ruid, err in runs_failed.items():
-        click.echo("Faild to get Run '{}': {}".format(ruid, str(err)))
+        click.echo("Failed to get Run '{}': {}".format(ruid, str(err)))
 
     # Display Table
     click_util.echo_table(table, headings=headings, line_limit=line_limit)
