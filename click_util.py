@@ -4,7 +4,7 @@
 
 import click
 
-def echo_table(values, headings=None, line_limit=None):
+def echo_table(values, headings=None, line_limit=None, sort_by=None):
 
     # Process Args
     if line_limit is None:
@@ -12,6 +12,24 @@ def echo_table(values, headings=None, line_limit=None):
 
     # Preprocess
     values = [[str(c) for c in r] for r in values]
+
+    # Sort
+    if sort_by:
+
+        # Process Args
+        if type(sort_by) is str:
+            if not headings:
+                raise TypeError("sort_by only supports str when headings are provided")
+            else:
+                idx = headings.index(sort_by)
+        elif type(sort_by) is int:
+            idx = sort_by
+        else:
+            raise TypeError("sort_by must be string or int")
+
+        # Sort by idx
+        orig_values = values
+        values = sorted(orig_values, key=lambda val: val[idx])
 
     # Calculate lengths
     if headings:

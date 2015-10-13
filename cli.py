@@ -732,10 +732,14 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
 @click.option('--no_date', is_flag=True, help='Control whether to display run date and time')
 @click.option('--no_status', is_flag=True, help='Control whether to display run status')
 @click.option('--no_score', is_flag=True, help='Control whether to display run score')
+@click.option('--sort_by', default=None,
+              type=click.Choice(['User', 'Assignment', 'Test', 'Submission',
+                                 'Run', 'Date', 'Status', 'Score']),
+              help='Control whether to display run score')
 @click.pass_obj
 @auth_required
 def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
-                      show_uuid, no_date, no_status, no_score):
+                      show_uuid, no_date, no_status, no_score, sort_by):
 
     # Table Objects
     headings = ["User", "Assignment", "Test", "Submission", "Run"]
@@ -745,6 +749,11 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         headings.append("Status")
     if not no_score:
         headings.append("Score")
+    if sort_by is None:
+        if not no_date:
+            sort_by = "Date"
+        else:
+            sort_by = "Run"
     table = []
 
     # COG Objects
@@ -943,7 +952,7 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         click.echo("Failed to get Run '{}': {}".format(ruid, str(err)))
 
     # Display Table
-    click_util.echo_table(table, headings=headings, line_limit=line_limit)
+    click_util.echo_table(table, headings=headings, line_limit=line_limit, sort_by=sort_by)
 
 def async_obj_map(obj_list, async_fun, label=None, sleep=0.1):
 
