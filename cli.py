@@ -696,6 +696,15 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
         subs.update(output)
         subs_failed.update(failed)
 
+        # Post-Filter Submission Set
+        if usr_uid:
+            sub_set = set()
+            for suid, sub in subs.items():
+                if sub["owner"] == usr_uid:
+                    sub_set.add(suid)
+            if not sub_set:
+                raise Exception("No submissions for user '{}' found".format(usr_uid))
+
         # Async Get File Lists
         def async_fun(uid):
             return obj['files'].async_list(sub_uid=uid)
@@ -824,6 +833,15 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         output, failed = async_obj_map(sub_list, async_fun, label=label)
         subs.update(output)
         subs_failed.update(failed)
+
+        # Post-Filter Submission Set
+        if usr_uid:
+            sub_list = set()
+            for suid, sub in subs.items():
+                if sub["owner"] == usr_uid:
+                    sub_list.add(suid)
+            if not sub_list:
+                raise Exception("No submissions for user '{}' found".format(usr_uid))
 
         # Async Get Run Lists
         def async_fun(uid):
