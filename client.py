@@ -393,10 +393,26 @@ class Files(COGObject):
 
         return path
 
+    def direct_download(self, uid, path, overwrite=False):
+
+        # Clean Input
+        path = os.path.abspath(path)
+
+        if overwrite or not os.path.exists(path):
+
+            # Download File
+            ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
+            path = self._conn.http_download(ep, path)
+
+        return path
+
 class AsyncFiles(Files, AsyncCOGObject):
 
     def async_download(self, *args, **kwargs):
         return self._conn.submit(self.download, *args, **kwargs)
+
+    def async_direct_download(self, *args, **kwargs):
+        return self._conn.submit(self.direct_download, *args, **kwargs)
 
 class Assignments(COGObject):
 
