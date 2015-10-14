@@ -954,28 +954,28 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
     # Display Table
     click_util.echo_table(table, headings=headings, line_limit=line_limit, sort_by=sort_by)
 
-def async_obj_map(obj_list, async_fun, label=None, sleep=0.1):
+def async_obj_map(obj_list, async_fun, *args, label=None, sleep=0.1, **kwargs):
 
     output = {}
     failed = {}
     future = {}
 
-    for uid in obj_list:
-        future[uid] = async_fun(uid)
+    for key in obj_list:
+        future[key] = async_fun(key, *args, **kwargs)
     with click.progressbar(label=label, length=len(future)) as bar:
         while future:
             remain = future
             future = {}
-            for uid, f in remain.items():
+            for key, f in remain.items():
                 if f.done():
                     try:
-                        output[uid] = f.result()
+                        output[key] = f.result()
                     except requests.exceptions.HTTPError as err:
-                        failed[uid] = err
+                        failed[key] = err
                     finally:
                         bar.update(1)
                 else:
-                    future[uid] = f
+                    future[key] = f
             time.sleep(sleep)
 
     return output, failed
