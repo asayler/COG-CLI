@@ -16,6 +16,7 @@ import click
 
 import client
 import click_util
+import util as cli_util
 
 _EP_TOKENS = 'tokens'
 
@@ -634,6 +635,9 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
 @auth_required
 def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
 
+    # Handle Input
+    base_path = os.path.abspath(path)
+
     # COG Objects
     asn_set = set()
     asn_lists_failed = {}
@@ -648,6 +652,10 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
     fle_lists_failed = {}
     fles = {}
     fles_failed = {}
+    fles_todo = {}
+    paths_set = set()
+    paths_out = {}
+    paths_out_failed = {}
 
     # Make Async Calls
     with obj['connection']:
@@ -721,6 +729,31 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
         fles.update(output)
         fles_failed.update(failed)
 
+        # Build File Lists
+        for suid, fle_list in fle_lists.items():
+            usid = subs[suid]['owner']
+            auid = subs[suid]['assignment']
+            asn_dir = "asn_{}_{}".format(auid, "".join(asns[auid]['name'].split()))
+            usr_dir = "usr_{}".format(usid)
+            sub_dir = "sub_{}".format(suid)
+            sub_path = os.path.join(base_path, asn_dir, usr_dir, sub_dir)
+            os.makedirs(sub_path, exist_ok=True)
+            for fuid in fle_list:
+                rel_path = fles[fuid]["name"]
+                rel_path = cli_util.clean_path(rel_path)
+                rel_path = cli_util.secure_path(rel_path)
+                fle_path = os.path.join(sub_path, rel_path)
+                fles_todo[fle_path] = fuid
+
+        # Async Download Files
+        def async_fun(fle_path, fles_todo):
+            fuid = fles_todo[fle_path]
+            return obj['files'].async_direct_download(fuid, fle_path)
+        label="Downloading Files  "
+        output, failed = async_obj_map(fles_todo, async_fun, fles_todo, label=label)
+        paths_set.update(set([out_path for in_path, out_path in output.items()]))
+        paths_out.update(output)
+        paths_out_failed.update(failed)
 
 @util.command(name='show-results')
 @click.option('--asn_uid', default=None, help='Asn UUID')
