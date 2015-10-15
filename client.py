@@ -477,8 +477,13 @@ class Assignments(COGObject):
         # Call Parent
         return asn_list
 
+    def list_by_null(self, null_uid):
+        return self.list()
+
 class AsyncAssignments(Assignments, AsyncCOGObject):
-    pass
+
+    def async_list_by_null(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_null, *args, **kwargs)
 
 class Tests(COGFileAttachedObject):
 
