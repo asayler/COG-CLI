@@ -169,7 +169,8 @@ class AsyncConnection(Connection):
         return False
 
     def open(self):
-        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.threads)
+        mw = self.threads
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=mw)
 
     def close(self, wait=True):
         self._executor.shutdown(wait=wait)

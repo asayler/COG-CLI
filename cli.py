@@ -37,7 +37,8 @@ def auth_required(func):
                     obj['username'] = click.prompt("Username", hide_input=False)
                 if not obj['password']:
                     obj['password'] = click.prompt("Password", hide_input=True)
-                obj['connection'].authenticate(username=obj['username'], password=obj['password'])
+                obj['connection'].authenticate(username=obj['username'],
+                                               password=obj['password'])
 
         # Call Function
         return func(obj, *args, **kwargs)
@@ -83,8 +84,10 @@ def fle_create(obj, path, extract):
     click.echo("{}".format(fle_list))
 
 @fle.command(name='list')
-@click.option('--tst_uid', default=None, help='Only list files attached to a specific test')
-@click.option('--sub_uid', default=None, help='Only list files attached to a specific submission')
+@click.option('--tst_uid', default=None,
+              help='Only list files attached to a specific test')
+@click.option('--sub_uid', default=None,
+              help='Only list files attached to a specific submission')
 @click.pass_obj
 @auth_required
 def fle_list(obj, tst_uid, sub_uid):
@@ -115,7 +118,8 @@ def fle_delete(obj, uid):
 @click.option('--path', default=None, prompt=True,
               type=click.Path(writable=True, resolve_path=True),
               help='Destination Path')
-@click.option('--orig_path', is_flag=True, help='Control whether original path is used')
+@click.option('--orig_path', is_flag=True,
+              help='Control whether original path is used')
 @click.pass_obj
 @auth_required
 def fle_download(obj, uid, path, orig_path):
@@ -412,7 +416,8 @@ def util_replace_test_files(obj, path, extract, tst_uid):
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
 @click.pass_obj
 @auth_required
-def util_setup_assignment(obj, asn_name, env, tst_name, tester, maxscore, path, extract):
+def util_setup_assignment(obj, asn_name, env, tst_name, tester,
+                          maxscore, path, extract):
 
     click.echo("Creating assignment...")
     asn_list = obj['assignments'].create(asn_name, env)
@@ -467,7 +472,8 @@ def download_submission(obj, suid, fle_list, asn_dir_path):
 
 @util.command(name='download-submissions')
 @click.option('--path', default=None, prompt=True,
-              type=click.Path(exists=True, writable=True, resolve_path=True, file_okay=False),
+              type=click.Path(exists=True, writable=True,
+                              resolve_path=True, file_okay=False),
               help='Destination Directory')
 @click.option('--asn_uid', default=None, help='Assignment UUID')
 @click.option('--sub_uid', default=None, help='Submission UUID')
@@ -562,7 +568,8 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                     continue
 
                 # Build Assignment Path
-                asn_dir_name = "assignment_{}_{}".format(auid, "".join(asn['name'].split()))
+                asn_name = "".join(asn['name'].split())
+                asn_dir_name = "assignment_{}_{}".format(auid, asn_name)
                 asn_dir_path = os.path.join(path, asn_dir_name)
 
                 # Spin Threads
@@ -571,7 +578,8 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
                     # Iterate Submissions
                     futures = []
                     for suid, fle_list in sub_files.items():
-                        f = exc.submit(download_submission, obj, suid, fle_list, asn_dir_path)
+                        f = exc.submit(download_submission, obj, suid,
+                                       fle_list, asn_dir_path)
                         futures.append(f)
 
                     # Collect Results
@@ -626,7 +634,8 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
 
 @util.command(name='download-submissions2')
 @click.option('--path', default=None, prompt=True,
-              type=click.Path(exists=True, writable=True, resolve_path=True, file_okay=False),
+              type=click.Path(exists=True, writable=True,
+                              resolve_path=True, file_okay=False),
               help='Destination Directory')
 @click.option('--asn_uid', default=None, help='Asn UUID')
 @click.option('--sub_uid', default=None, help='Sub UUID')
@@ -761,11 +770,11 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
     for auid, err in asns_failed.items():
         click.echo("Failed to get Assignment '{}': {}".format(auid, str(err)))
     for auid, err in sub_lists_failed.items():
-        click.echo("Failed to list Submissions for Assignment '{}': {}".format(audi, str(err)))
+        click.echo("Failed to list Subs for Asn '{}': {}".format(audi, str(err)))
     for suid, err in subs_failed.items():
         click.echo("Failed to get Submission '{}': {}".format(suid, str(err)))
     for suid, err in fle_lists_failed.items():
-        click.echo("Failed to list Files for Submission '{}': {}".format(suid, str(err)))
+        click.echo("Failed to list Files for Sub '{}': {}".format(suid, str(err)))
     for fuid, err in fles_failed.items():
         click.echo("Failed to get File '{}': {}".format(fuid, str(err)))
     for path, err in paths_out_failed.items():
@@ -782,10 +791,14 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
 @click.option('--sub_uid', default=None, help='Sub UUID')
 @click.option('--usr_uid', default=None, help='User UUID')
 @click.option('--line_limit', default=None, help='Limit output to line length')
-@click.option('--show_uuid', is_flag=True, help='Control whether to display names or full UUIDs')
-@click.option('--no_date', is_flag=True, help='Control whether to display run date and time')
-@click.option('--no_status', is_flag=True, help='Control whether to display run status')
-@click.option('--no_score', is_flag=True, help='Control whether to display run score')
+@click.option('--show_uuid', is_flag=True,
+              help='Control whether to display names or full UUIDs')
+@click.option('--no_date', is_flag=True,
+              help='Control whether to display run date and time')
+@click.option('--no_status', is_flag=True,
+              help='Control whether to display run status')
+@click.option('--no_score', is_flag=True,
+              help='Control whether to display run score')
 @click.option('--sort_by', default=None,
               type=click.Choice(['User', 'Assignment', 'Test', 'Submission',
                                  'Run', 'Date', 'Status', 'Score']),
@@ -993,20 +1006,21 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
     for auid, err in asns_failed.items():
         click.echo("Failed to get Assignment '{}': {}".format(auid, str(err)))
     for auid, err in tst_list_failed.items():
-        click.echo("Failed to list Tests for Assignment '{}': {}".format(auid, str(err)))
+        click.echo("Failed to list Tests for Asn '{}': {}".format(auid, str(err)))
     for tuid, err in tsts_failed.items():
         click.echo("Failed to get Test '{}': {}".format(tuid, str(err)))
     for auid, err in sub_list_failed.items():
-        click.echo("Failed to list Submissions for Assignment '{}': {}".format(audi, str(err)))
+        click.echo("Failed to list Subs for Asn '{}': {}".format(audi, str(err)))
     for suid, err in subs_failed.items():
         click.echo("Failed to get Submission '{}': {}".format(suid, str(err)))
     for suid, err in run_list_failed.items():
-        click.echo("Failed to list Runs for Submission '{}': {}".format(suid, str(err)))
+        click.echo("Failed to list Runs for Sub '{}': {}".format(suid, str(err)))
     for ruid, err in runs_failed.items():
         click.echo("Failed to get Run '{}': {}".format(ruid, str(err)))
 
     # Display Table
-    click_util.echo_table(table, headings=headings, line_limit=line_limit, sort_by=sort_by)
+    click_util.echo_table(table, headings=headings,
+                          line_limit=line_limit, sort_by=sort_by)
 
 def async_obj_map(obj_list, async_fun, *args, label=None, sleep=0.1, **kwargs):
 
@@ -1060,7 +1074,8 @@ def async_obj_fetch(iter_parent, obj_client=None, async_list=None, async_show=No
             if ouid in todo_set_orig:
                 todo_set.add(ouid)
             else:
-                msg = "Pre-filtered {} '{}'".format(obj_name if obj_name else "object", ouid)
+                obj_str = obj_name if obj_name else "object"
+                msg = "Pre-filtered {} '{}' not found".format(obj_str, ouid)
                 raise TypeError(msg)
 
     # Async Get
