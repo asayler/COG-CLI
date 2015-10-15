@@ -755,6 +755,27 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
         paths_out.update(output)
         paths_out_failed.update(failed)
 
+    # Display Errors:
+    for puid, err in asn_lists_failed:
+        click.echo("Failed to list Assignments: {}".format(str(err)))
+    for auid, err in asns_failed.items():
+        click.echo("Failed to get Assignment '{}': {}".format(auid, str(err)))
+    for auid, err in sub_lists_failed.items():
+        click.echo("Failed to list Submissions for Assignment '{}': {}".format(audi, str(err)))
+    for suid, err in subs_failed.items():
+        click.echo("Failed to get Submission '{}': {}".format(suid, str(err)))
+    for suid, err in fle_lists_failed.items():
+        click.echo("Failed to list Files for Submission '{}': {}".format(suid, str(err)))
+    for fuid, err in fles_failed.items():
+        click.echo("Failed to get File '{}': {}".format(fuid, str(err)))
+    for path, err in paths_out_failed.items():
+        click.echo("Failed to download file '{}': {}".format(path, str(err)))
+
+    # Display Stats:
+    click.echo("Downloaded {} files".format(len(paths_out)))
+    click.echo("Failed {} files".format(len(paths_out_failed)))
+
+
 @util.command(name='show-results')
 @click.option('--asn_uid', default=None, help='Asn UUID')
 @click.option('--tst_uid', default=None, help='Test UUID')
