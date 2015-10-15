@@ -364,6 +364,12 @@ class Files(COGObject):
         # Call Parent
         return super().list(endpoint=ep)
 
+    def list_by_tst(self, tst_uid):
+        return self.list(tst_uid=tst_uid)
+
+    def list_by_sub(self, sub_uid):
+        return self.list(sub_uid=sub_uid)
+
     def download(self, uid, path, orig_path=False, overwrite=False):
 
         # Clean Input
@@ -407,6 +413,12 @@ class Files(COGObject):
         return path
 
 class AsyncFiles(Files, AsyncCOGObject):
+
+    def async_list_by_tst(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_tst, *args, **kwargs)
+
+    def async_list_by_sub(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_sub, *args, **kwargs)
 
     def async_download(self, *args, **kwargs):
         return self._conn.submit(self.download, *args, **kwargs)
@@ -501,8 +513,13 @@ class Tests(COGFileAttachedObject):
         # Call Parent
         return super().list(endpoint=ep)
 
+    def list_by_asn(self, asn_uid):
+        return self.list(asn_uid=asn_uid)
+
 class AsyncTests(Tests, AsyncCOGFileAttachedObject):
-    pass
+
+    def async_list_by_asn(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_asn, *args, **kwargs)
 
 class Submissions(COGFileAttachedObject):
 
@@ -538,8 +555,13 @@ class Submissions(COGFileAttachedObject):
         # Call Parent
         return super().list(endpoint=ep)
 
+    def list_by_asn(self, asn_uid):
+        return self.list(asn_uid=asn_uid)
+
 class AsyncSubmissions(Submissions, AsyncCOGFileAttachedObject):
-    pass
+
+    def async_list_by_asn(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_asn, *args, **kwargs)
 
 class Runs(COGObject):
 
@@ -575,5 +597,10 @@ class Runs(COGObject):
         # Call Parent
         return super().list(endpoint=ep)
 
+    def list_by_sub(self, sub_uid):
+        return self.list(sub_uid=sub_uid)
+
 class AsyncRuns(Runs, AsyncCOGObject):
-    pass
+
+    def async_list_by_sub(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_sub, *args, **kwargs)
