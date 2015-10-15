@@ -1034,5 +1034,46 @@ def async_obj_map(obj_list, async_fun, *args, label=None, sleep=0.1, **kwargs):
 
     return output, failed
 
+def lists_to_set(lists):
+
+    sset = set([ouid for puid, ouids in lists.items() for ouid in ouids])
+    return sset
+
+def async_obj_fetch(iter_parent, obj_client=None, async_list=None, async_show=None,
+                    prefilter_list=None, obj_name=None):
+
+    # Async List
+    if async_list is None:
+        if obj_client is not None:
+            async_list = obj_client.async_list()
+        else:
+            raise TypeError("Requires either obj_client ot async_list")
+    label = "Listing {}".format(obj_name if obj_name else "")
+    lists, lists_failed = async_obj_map(iter_parent, async_list, label=label)
+    todo_set = lists_to_set(lists)
+
+    # Pre-Filter List
+    if filter_list:
+        todo_set_orig = todo_set
+        todo_set = set()
+        for ouid in prefilter_list:
+            if ouid in todo_set_orig:
+                todo_set.add(ouid)
+            else:
+                msg = "Pre-filtered {} '{}'".format(obj_name if obj_name else "object", ouid)
+                raise TypeError(msg)
+
+    # Async Get
+    if async_show is None:
+        if obj_client is not None:
+            async_show = obj_client.async_show()
+        else:
+            raise TypeError("Requires either obj_client ot async_show")
+    label = "Getting {}".format(obj_name if obj_name else "")
+    objs, objs_failed = async_obj_map(todo_set, async_show, label=label)
+
+    # Return
+    return lists, objs, lists_failed, objs_failed
+
 if __name__ == '__main__':
     sys.exit(cli())
