@@ -1067,7 +1067,7 @@ def async_obj_fetch(iter_parent, obj_client=None, async_list=None, async_show=No
     todo_set = lists_to_set(lists)
 
     # Pre-Filter List
-    if filter_list:
+    if prefilter_list:
         todo_set_orig = todo_set
         todo_set = set()
         for ouid in prefilter_list:
@@ -1088,7 +1088,7 @@ def async_obj_fetch(iter_parent, obj_client=None, async_list=None, async_show=No
     objs, objs_failed = async_obj_map(todo_set, async_show, label=label)
 
     # Return
-    return lists, objs, lists_failed, objs_failed
+    return lists, todo_set, objs, lists_failed, objs_failed
 
 if __name__ == '__main__':
     sys.exit(cli())
