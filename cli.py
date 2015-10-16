@@ -478,7 +478,7 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
                               async_list=obj['submissions'].async_list_by_asn,
                               async_show=obj['submissions'].async_show,
                               prefilter_list=sub_list,
-                              postfilter_func=postfilter_owner,
+                              postfilter_func=postfilter_attr_owner,
                               postfilter_func_args=[usr_list])
         sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
 
@@ -557,27 +557,36 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
         click.echo(ops_str)
 
 @util.command(name='show-results')
-@click.option('--asn_uid', default=None, help='Asn UUID')
-@click.option('--tst_uid', default=None, help='Test UUID')
-@click.option('--sub_uid', default=None, help='Sub UUID')
-@click.option('--usr_uid', default=None, help='User UUID')
+@click.option('-a', '--asn_uid', 'asn_list',
+              default=None, multiple=True, help='Limit to Assignment UUID')
+@click.option('-t', '--tst_uid', 'tst_list',
+              default=None, multiple=True, help='Limit to Test UUID')
+@click.option('-s', '--sub_uid', 'sub_list',
+              default=None, multiple=True, help='Limit to Submission UUID')
+@click.option('-r', '--run_uid', 'run_list',
+              default=None, multiple=True, help='Limit to Run UUID')
+@click.option('-u', '--usr_uid', 'usr_list',
+              default=None, multiple=True, help='Limit to User UUID')
+@click.option('--sort_by', default=None,
+              type=click.Choice(['User', 'Assignment', 'Test', 'Submission',
+                                 'Run', 'Date', 'Status', 'Score']),
+              help='Coulumn to sort data by')
 @click.option('--line_limit', default=None, help='Limit output to line length')
-@click.option('--show_uuid', is_flag=True,
-              help='Control whether to display names or full UUIDs')
+@click.option('--full_uuid', is_flag=True,
+              help='Force use of full UUIDs in output')
+@click.option('--show_timing', 'timing', is_flag=True,
+              help='Collect and show timing data')
 @click.option('--no_date', is_flag=True,
               help='Control whether to display run date and time')
 @click.option('--no_status', is_flag=True,
               help='Control whether to display run status')
 @click.option('--no_score', is_flag=True,
               help='Control whether to display run score')
-@click.option('--sort_by', default=None,
-              type=click.Choice(['User', 'Assignment', 'Test', 'Submission',
-                                 'Run', 'Date', 'Status', 'Score']),
-              help='Control whether to display run score')
 @click.pass_obj
 @auth_required
-def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
-                      show_uuid, no_date, no_status, no_score, sort_by):
+def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
+                      sort_by, line_limit, full_uuid, timing,
+                      no_date, no_status, no_score):
 
     # Table Objects
     headings = ["User", "Assignment", "Test", "Submission", "Run"]
@@ -594,153 +603,56 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
             sort_by = "Run"
     table = []
 
-    # COG Objects
-    asn_list = set()
-    asn_list_failed = {}
-    asns = {}
-    asns_failed = {}
-    tst_list = set()
-    tst_list_failed = {}
-    tsts = {}
-    tsts_failed = {}
-    sub_list = set()
-    sub_list_failed = {}
-    subs = {}
-    subs_failed = {}
-    run_list = set()
-    run_list_failed = {}
-    runs = {}
-    runs_failed = {}
-
     # Make Async Calls
     with obj['connection']:
 
-        # Async Assignment List
-        def async_fun(uid):
-            return obj['assignments'].async_list()
-        label="Listing Assignments"
-        output, failed = async_obj_map([None], async_fun, label=label)
-        asn_list.update(set([auid for puid, asns in output.items() for auid in asns]))
-        asn_list_failed.update(failed)
+        # Fetch Assignments
+        tup = async_obj_fetch([None], obj_name="Assignments", timing=timing,
+                              async_list=obj['assignments'].async_list_by_null,
+                              async_show=obj['assignments'].async_show,
+                              prefilter_list=asn_list)
+        asn_lsts, asn_set, asn_objs, asn_lsts_failed, asn_objs_failed = tup
 
-        # Pre-Filter Assignment List
-        if asn_uid:
-            if asn_uid in asn_list:
-                asn_list = set([asn_uid])
-            else:
-                raise Exception("Assignment '{}' not found".format(asn_uid))
+        # Fetch Tests
+        tup = async_obj_fetch(asn_set, obj_name="Tests      ", timing=timing,
+                              async_list=obj['tests'].async_list_by_asn,
+                              async_show=obj['tests'].async_show,
+                              prefilter_list=tst_list)
+        tst_lsts, tst_set, tst_objs, tst_lsts_failed, tst_objs_failed = tup
 
-        # Async Get Assignments
-        async_fun = obj['assignments'].async_show
-        label="Getting Assignments"
-        output, failed = async_obj_map(asn_list, async_fun, label=label)
-        asns.update(output)
-        asns_failed.update(failed)
+        # Fetch Submissions
+        tup = async_obj_fetch(asn_set, obj_name="Submissions", timing=timing,
+                              async_list=obj['submissions'].async_list_by_asn,
+                              async_show=obj['submissions'].async_show,
+                              prefilter_list=sub_list,
+                              postfilter_func=postfilter_attr_owner,
+                              postfilter_func_args=[usr_list])
+        sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
 
-        # Async Get Test Lists
-        def async_fun(uid):
-            return obj['tests'].async_list(asn_uid=uid)
-        label="Listing Tests      "
-        output, failed = async_obj_map(asn_list, async_fun, label=label)
-        tst_list.update(set([tuid for puid, tsts in output.items() for tuid in tsts]))
-        tst_list_failed.update(failed)
-
-        # Pre-Filter Test List
-        if tst_uid:
-            if tst_uid in tst_list:
-                tst_list = set([tst_uid])
-            else:
-                raise Exception("Test '{}' not found".format(tst_uid))
-
-        # Async Get Tests
-        async_fun = obj['tests'].async_show
-        label="Getting Tests      "
-        output, failed = async_obj_map(tst_list, async_fun, label=label)
-        tsts.update(output)
-        tsts_failed.update(failed)
-
-        # Async Get Submission Lists
-        def async_fun(uid):
-            return obj['submissions'].async_list(asn_uid=uid)
-        label="Listing Submissions"
-        output, failed = async_obj_map(asn_list, async_fun, label=label)
-        sub_list.update(set([suid for puid, subs in output.items() for suid in subs]))
-        sub_list_failed.update(failed)
-
-        # Pre-Filter Submission List
-        if sub_uid:
-            if sub_uid in sub_list:
-                sub_list = set([sub_uid])
-            else:
-                raise Exception("Submission '{}' not found".format(sub_uid))
-
-        # Async Get Submissions
-        async_fun = obj['submissions'].async_show
-        label="Getting Submissions"
-        output, failed = async_obj_map(sub_list, async_fun, label=label)
-        subs.update(output)
-        subs_failed.update(failed)
-
-        # Post-Filter Submission Set
-        if usr_uid:
-            sub_list = set()
-            for suid, sub in subs.items():
-                if sub["owner"] == usr_uid:
-                    sub_list.add(suid)
-            if not sub_list:
-                raise Exception("No submissions for user '{}' found".format(usr_uid))
-
-        # Async Get Run Lists
-        def async_fun(uid):
-            return obj['runs'].async_list(sub_uid=uid)
-        label="Listing Runs       "
-        output, failed = async_obj_map(sub_list, async_fun, label=label)
-        run_list.update(set([ruid for puid, runs in output.items() for ruid in runs]))
-        run_list_failed.update(failed)
-
-        # Async Get Runs
-        async_fun = obj['runs'].async_show
-        label="Getting Runs       "
-        output, failed = async_obj_map(run_list, async_fun, label=label)
-        runs.update(output)
-        runs_failed.update(failed)
-
-    # Filter Results
-    runs_filtered = {}
-    for ruid, run in runs.items():
-
-        # Filter Users
-        if usr_uid:
-            if (usr_uid != run["owner"]):
-                continue
-
-        # Filter Submissions
-        if sub_uid:
-            if (sub_uid != run["submission"]):
-                continue
-
-        # Filter Tests
-        if tst_uid:
-            if (tst_uid != run["test"]):
-                continue
-
-        runs_filtered[ruid] = run
+        # Fetch Runs
+        tup = async_obj_fetch(sub_set, obj_name="Runs       ", timing=timing,
+                              async_list=obj['runs'].async_list_by_sub,
+                              async_show=obj['runs'].async_show,
+                              prefilter_list=run_list,
+                              postfilter_func=postfilter_attr_test,
+                              postfilter_func_args=[tst_list])
+        run_lsts, run_set, run_objs, run_lsts_failed, run_objs_failed = tup
 
     # Build Table Rows
-    for ruid, run in runs_filtered.items():
+    for ruid, run in run_objs.items():
 
         # Get Objects
         ruid = uuid.UUID(ruid)
         usid = uuid.UUID(run["owner"])
         suid = uuid.UUID(run["submission"])
-        sub = subs[str(suid)]
+        sub = sub_objs[str(suid)]
         tuid = uuid.UUID(run["test"])
-        tst = tsts[str(tuid)]
+        tst = tst_objs[str(tuid)]
         auid = uuid.UUID(sub["assignment"])
-        asn = asns[str(auid)]
+        asn = asn_objs[str(auid)]
 
         # Display Objects
-        if show_uuid:
+        if full_uuid:
             usr_str = str(usid)
             asn_str = str(auid)
             tst_str = str(tuid)
@@ -772,21 +684,21 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
         table.append(row)
 
     # Display Errors:
-    for puid, err in asn_list_failed:
+    for puid, err in asn_lsts_failed:
         click.echo("Failed to list Assignments: {}".format(str(err)))
-    for auid, err in asns_failed.items():
+    for auid, err in asn_objs_failed.items():
         click.echo("Failed to get Assignment '{}': {}".format(auid, str(err)))
-    for auid, err in tst_list_failed.items():
+    for auid, err in tst_lsts_failed.items():
         click.echo("Failed to list Tests for Asn '{}': {}".format(auid, str(err)))
-    for tuid, err in tsts_failed.items():
+    for tuid, err in tst_objs_failed.items():
         click.echo("Failed to get Test '{}': {}".format(tuid, str(err)))
-    for auid, err in sub_list_failed.items():
+    for auid, err in sub_lsts_failed.items():
         click.echo("Failed to list Subs for Asn '{}': {}".format(audi, str(err)))
-    for suid, err in subs_failed.items():
+    for suid, err in sub_objs_failed.items():
         click.echo("Failed to get Submission '{}': {}".format(suid, str(err)))
-    for suid, err in run_list_failed.items():
+    for suid, err in run_lsts_failed.items():
         click.echo("Failed to list Runs for Sub '{}': {}".format(suid, str(err)))
-    for ruid, err in runs_failed.items():
+    for ruid, err in run_objs_failed.items():
         click.echo("Failed to get Run '{}': {}".format(ruid, str(err)))
 
     # Display Table
@@ -904,12 +816,20 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
     # Return
     return lists, todo_set, objs, lists_failed, objs_failed
 
-def postfilter_owner(ouid, obj, owners):
+def postfilter_attr(attr, ouid, obj, attrs):
 
-    if owners:
-        return obj["owner"] in owners
+    if attrs:
+        return obj[attr] in attrs
     else:
         return True
+
+def postfilter_attr_owner(ouid, obj, owners):
+
+    return postfilter_attr("owner", ouid, obj, owners)
+
+def postfilter_attr_test(ouid, obj, tests):
+
+    return postfilter_attr("test", ouid, obj, tests)
 
 def lists_to_set(lists):
 
