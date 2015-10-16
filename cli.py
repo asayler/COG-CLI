@@ -450,25 +450,31 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester,
               default=None, multiple=True, help='User UUID')
 @click.option('--full_uuid', is_flag=True,
               help='Force use of full UUIDs in output')
+@click.option('--show_timing', 'timing', is_flag=True,
+              help='Collect and chow timing data')
+@click.option('--overwrite', is_flag=True,
+              help='Overwrite existing files (skipped by default)')
 @click.pass_obj
 @auth_required
-def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list, full_uuid):
+def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
+                              full_uuid, timing, overwrite):
 
-    # COG Objects
-    fles_todo = {}
+    # Start Timing
+    if timing:
+        start = time.time()
 
     # Make Async Calls
     with obj['connection']:
 
         # Fetch Assignments
-        tup = async_obj_fetch([None], obj_name="Assignments",
+        tup = async_obj_fetch([None], obj_name="Assignments", timing=timing,
                               async_list=obj['assignments'].async_list_by_null,
                               async_show=obj['assignments'].async_show,
                               prefilter_list=asn_list)
         asn_lsts, asn_set, asn_objs, asn_lsts_failed, asn_objs_failed = tup
 
         # Fetch Submissions
-        tup = async_obj_fetch(asn_set, obj_name="Submissions",
+        tup = async_obj_fetch(asn_set, obj_name="Submissions", timing=timing,
                               async_list=obj['submissions'].async_list_by_asn,
                               async_show=obj['submissions'].async_show,
                               prefilter_list=sub_list,
@@ -477,7 +483,7 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list, full_
         sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
 
         # Fetch Files
-        tup = async_obj_fetch(sub_set, obj_name="Files      ",
+        tup = async_obj_fetch(sub_set, obj_name="Files      ", timing=timing,
                               async_list=obj['files'].async_list_by_sub,
                               async_show=obj['files'].async_show)
         fle_lsts, fle_set, fle_objs, fle_lsts_failed, fle_objs_failed = tup
@@ -515,9 +521,10 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list, full_
         # Async Download Files
         def async_fun(path, paths_map):
             fuid = paths_map[path]
-            return obj['files'].async_direct_download(fuid, path, overwrite=True)
+            return obj['files'].async_direct_download(fuid, path, overwrite=overwrite)
         label="Downloading Files  "
-        paths_out, paths_failed = async_obj_map(paths_set, async_fun, label=label,
+        paths_out, paths_failed = async_obj_map(paths_set, async_fun,
+                                                label=label, timing=timing,
                                                 async_func_args=[paths_map])
 
     # Display Errors:
@@ -538,8 +545,16 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list, full_
         click.echo("Failed to download '{}': {}".format(basename, str(err)))
 
     # Display Stats:
-    click.echo("Downloaded {} files".format(len(paths_out)))
-    click.echo("Failed {} files".format(len(paths_failed)))
+    click.echo("Downloaded: {:6d} files".format(len(paths_out)))
+    click.echo("Failed:     {:6d} files".format(len(paths_failed)))
+    if timing:
+        end = time.time()
+        dur = end - start
+        dur_str = "Duration:    {}".format(duration_to_str(dur))
+        ops = len(paths_set)/dur
+        ops_str = "Files/sec:   {:11.2f}".format(ops)
+        click.echo(dur_str)
+        click.echo(ops_str)
 
 @util.command(name='show-results')
 @click.option('--asn_uid', default=None, help='Asn UUID')
@@ -783,7 +798,7 @@ def async_obj_map(obj_list, async_fun,
                   label=None, timing=False, sleep=0.1):
 
     if timing:
-        start = time.clock()
+        start = time.time()
 
     future = {}
     for key in obj_list:
@@ -808,14 +823,10 @@ def async_obj_map(obj_list, async_fun,
             time.sleep(sleep)
 
     if timing:
-        end = time.clock()
+        end = time.time()
         dur = end - start
-        hours, rem = divmod(dur, 3600)
-        minutes, rem = divmod(rem, 60)
-        seconds = rem
-        dur_str = "Dur: {:02.0f}:{:02.0f}:{:05.2f}".format(hours, minutes, seconds)
-        cnt = len(obj_list)
-        ops = cnt/dur
+        dur_str = "Dur: {}".format(duration_to_str(dur))
+        ops = len(obj_list)/dur
         ops_str = "Objs/sec: {:6.0f}".format(ops)
         offset = "{val:{width}s}".format(val="", width=(len(label)+1))
         click.echo("{}  {},   {}".format(offset, dur_str, ops_str))
@@ -823,7 +834,7 @@ def async_obj_map(obj_list, async_fun,
     return output, failed
 
 def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
-                    async_list=None, async_show=None,
+                    async_list=None, async_show=None, timing=False,
                     prefilter_list=None, prefilter_func=None,
                     prefilter_func_args=[], prefilter_func_kwargs={},
                     postfilter_list=None, postfilter_func=None,
@@ -836,7 +847,8 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
         else:
             raise TypeError("Requires either obj_client ot async_list")
     label = "Listing {}".format(obj_name if obj_name else "")
-    lists, lists_failed = async_obj_map(iter_parent, async_list, label=label)
+    lists, lists_failed = async_obj_map(iter_parent, async_list,
+                                        label=label, timing=timing)
     todo_set = lists_to_set(lists)
 
     # Pre-Filter List
@@ -866,7 +878,8 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
         else:
             raise TypeError("Requires either obj_client ot async_show")
     label = "Getting {}".format(obj_name if obj_name else "")
-    objs, objs_failed = async_obj_map(todo_set, async_show, label=label)
+    objs, objs_failed = async_obj_map(todo_set, async_show,
+                                      label=label, timing=timing)
 
     # Post-Filter List
     if postfilter_list:
@@ -892,6 +905,7 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
     return lists, todo_set, objs, lists_failed, objs_failed
 
 def postfilter_owner(ouid, obj, owners):
+
     if owners:
         return obj["owner"] in owners
     else:
@@ -901,6 +915,18 @@ def lists_to_set(lists):
 
     sset = set([ouid for puid, ouids in lists.items() for ouid in ouids])
     return sset
+
+def split_duration(dur):
+
+    hours, rem = divmod(dur, 3600)
+    minutes, rem = divmod(rem, 60)
+    seconds = rem
+    return hours, minutes, seconds
+
+def duration_to_str(dur):
+
+    hours, minutes, seconds = split_duration(dur)
+    return "{:02.0f}:{:02.0f}:{:05.2f}".format(hours, minutes, seconds)
 
 if __name__ == '__main__':
     sys.exit(cli())
