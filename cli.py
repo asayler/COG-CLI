@@ -437,38 +437,6 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester,
     tst_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
     click.echo("Attached files:\n{}".format(tst_fle_list))
 
-
-def download_submission(obj, suid, fle_list, asn_dir_path):
-
-    # Fetch Submission
-    try:
-        sub = obj['submissions'].show(suid)
-    except requests.exceptions.HTTPError as err:
-        return (None, [(suid, err)])
-
-    # Build Submission Path
-    ouid = sub['owner']
-    own_dir_name = "user_{}".format(ouid)
-    own_dir_path = os.path.join(asn_dir_path, own_dir_name)
-    sub_dir_name = "submission_{}".format(suid)
-    sub_dir_path = os.path.join(own_dir_path, sub_dir_name)
-    os.makedirs(sub_dir_path, exist_ok=True)
-
-    # Iterate Files
-    fle_failed = []
-    fle_success = []
-    for fuid in fle_list:
-
-        try:
-            obj['files'].download(fuid, sub_dir_path, orig_path=True, overwrite=False)
-        except requests.exceptions.HTTPError as err:
-            fle_failed.append((fuid, err))
-            continue
-        else:
-            fle_success.append(fuid)
-
-    return (fle_success, fle_failed)
-
 @util.command(name='download-submissions')
 @click.argument('dest_dir',
                 type=click.Path(exists=True, writable=True,
