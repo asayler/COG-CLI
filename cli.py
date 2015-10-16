@@ -10,6 +10,7 @@ import uuid
 import threading
 import concurrent.futures
 import queue
+import datetime
 
 import requests
 import click
@@ -514,7 +515,7 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list, full_
         # Async Download Files
         def async_fun(path, paths_map):
             fuid = paths_map[path]
-            return obj['files'].async_direct_download(fuid, path)
+            return obj['files'].async_direct_download(fuid, path, overwrite=True)
         label="Downloading Files  "
         paths_out, paths_failed = async_obj_map(paths_set, async_fun, label=label,
                                                 async_func_args=[paths_map])
@@ -779,7 +780,10 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
 
 def async_obj_map(obj_list, async_fun,
                   async_func_args=[], async_func_kwargs={},
-                  label=None, sleep=0.1):
+                  label=None, timing=False, sleep=0.1):
+
+    if timing:
+        start = time.clock()
 
     future = {}
     for key in obj_list:
@@ -795,13 +799,26 @@ def async_obj_map(obj_list, async_fun,
                 if f.done():
                     try:
                         output[key] = f.result()
-                    except requests.exceptions.HTTPError as err:
+                    except Exception as err:
                         failed[key] = err
                     finally:
                         bar.update(1)
                 else:
                     future[key] = f
             time.sleep(sleep)
+
+    if timing:
+        end = time.clock()
+        dur = end - start
+        hours, rem = divmod(dur, 3600)
+        minutes, rem = divmod(rem, 60)
+        seconds = rem
+        dur_str = "Dur: {:02.0f}:{:02.0f}:{:05.2f}".format(hours, minutes, seconds)
+        cnt = len(obj_list)
+        ops = cnt/dur
+        ops_str = "Objs/sec: {:6.0f}".format(ops)
+        offset = "{val:{width}s}".format(val="", width=(len(label)+1))
+        click.echo("{}  {},   {}".format(offset, dur_str, ops_str))
 
     return output, failed
 
