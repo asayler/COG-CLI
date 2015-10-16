@@ -483,7 +483,7 @@ def download_submission(obj, suid, fle_list, asn_dir_path):
               help='Force use of full UUIDs in output')
 @click.pass_obj
 @auth_required
-def util_download_submissions2(obj, dest_dir, asn_list, sub_list, usr_list, full_uuid):
+def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list, full_uuid):
 
     # COG Objects
     fles_todo = {}
