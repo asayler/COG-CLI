@@ -649,9 +649,6 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
 
     # COG Objects
     fles_todo = {}
-    paths_set = set()
-    paths_out = {}
-    paths_out_failed = {}
 
     # Make Async Calls
     with obj['connection']:
@@ -663,19 +660,13 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
         asn_lsts, asn_set, asn_objs, asn_lsts_failed, asn_objs_failed = tup
 
         # Fetch Submissions
-        tup = async_obj_fetch(asn_set, prefilter_list=sub_uid, obj_name="Submissions",
+        tup = async_obj_fetch(asn_set, obj_name="Submissions",
                               async_list=obj['submissions'].async_list_by_asn,
-                              async_show=obj['submissions'].async_show)
+                              async_show=obj['submissions'].async_show,
+                              prefilter_list=sub_uid,
+                              postfilter_func=postfilter_func_owner,
+                              postfilter_func_args=[usr_uid])
         sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
-
-        # Post-Filter Submission Set
-        if usr_uid:
-            sub_set = set()
-            for suid, sub in sub_objs.items():
-                if sub["owner"] == usr_uid:
-                    sub_set.add(suid)
-            if not sub_set:
-                raise Exception("No submissions for user '{}' found".format(usr_uid))
 
         # Fetch Files
         tup = async_obj_fetch(sub_set, obj_name="Files      ",
@@ -684,6 +675,7 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
         fle_lsts, fle_set, fle_objs, fle_lsts_failed, fle_objs_failed = tup
 
         # Build File Lists
+        paths_map = {}
         for suid, fle_list in fle_lsts.items():
             usid = sub_objs[suid]['owner']
             auid = sub_objs[suid]['assignment']
@@ -697,17 +689,17 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
                 rel_path = cli_util.clean_path(rel_path)
                 rel_path = cli_util.secure_path(rel_path)
                 fle_path = os.path.join(sub_path, rel_path)
-                fles_todo[fle_path] = fuid
+                paths_map[fle_path] = fuid
+        paths_set = set(paths_map.keys())
 
         # Async Download Files
-        def async_fun(fle_path, fles_todo):
-            fuid = fles_todo[fle_path]
-            return obj['files'].async_direct_download(fuid, fle_path)
+        def async_fun(path, paths_map):
+            fuid = paths_map[path]
+            return obj['files'].async_direct_download(fuid, path)
         label="Downloading Files  "
-        output, failed = async_obj_map(fles_todo, async_fun, fles_todo, label=label)
-        paths_set.update(set([out_path for in_path, out_path in output.items()]))
-        paths_out.update(output)
-        paths_out_failed.update(failed)
+        paths_out, paths_failed = async_obj_map(paths_set,
+                                                async_fun, async_func_args=[paths_map],
+                                                label=label)
 
     # Display Errors:
     for puid, err in asn_lsts_failed:
@@ -722,13 +714,13 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
         click.echo("Failed to list Files for Sub '{}': {}".format(suid, str(err)))
     for fuid, err in fle_objs_failed.items():
         click.echo("Failed to get File '{}': {}".format(fuid, str(err)))
-    for path, err in paths_out_failed.items():
-        click.echo("Failed to download file '{}': {}".format(path, str(err)))
+    for path, err in paths_failed.items():
+        basename = sys.path.basename(path)
+        click.echo("Failed to download '{}': {}".format(basename, str(err)))
 
     # Display Stats:
     click.echo("Downloaded {} files".format(len(paths_out)))
-    click.echo("Failed {} files".format(len(paths_out_failed)))
-
+    click.echo("Failed {} files".format(len(paths_failed)))
 
 @util.command(name='show-results')
 @click.option('--asn_uid', default=None, help='Asn UUID')
@@ -967,14 +959,16 @@ def util_show_results(obj, asn_uid, tst_uid, sub_uid, usr_uid, line_limit,
     click_util.echo_table(table, headings=headings,
                           line_limit=line_limit, sort_by=sort_by)
 
-def async_obj_map(obj_list, async_fun, *args, label=None, sleep=0.1, **kwargs):
+def async_obj_map(obj_list, async_fun,
+                  async_func_args=[], async_func_kwargs={},
+                  label=None, sleep=0.1):
 
     output = {}
     failed = {}
     future = {}
 
     for key in obj_list:
-        future[key] = async_fun(key, *args, **kwargs)
+        future[key] = async_fun(key, *async_func_args, **async_func_kwargs)
     with click.progressbar(label=label, length=len(future)) as bar:
         while future:
             remain = future
@@ -993,13 +987,12 @@ def async_obj_map(obj_list, async_fun, *args, label=None, sleep=0.1, **kwargs):
 
     return output, failed
 
-def lists_to_set(lists):
-
-    sset = set([ouid for puid, ouids in lists.items() for ouid in ouids])
-    return sset
-
-def async_obj_fetch(iter_parent, obj_client=None, async_list=None, async_show=None,
-                    prefilter_list=None, obj_name=None):
+def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
+                    async_list=None, async_show=None,
+                    prefilter_list=None, prefilter_func=None,
+                    prefilter_func_args=[], prefilter_func_kwargs={},
+                    postfilter_list=None, postfilter_func=None,
+                    postfilter_func_args=[], postfilter_func_kwargs={}):
 
     # Async List
     if async_list is None:
@@ -1023,6 +1016,14 @@ def async_obj_fetch(iter_parent, obj_client=None, async_list=None, async_show=No
                 msg = "Pre-filtered {} '{}' not found".format(obj_str, ouid)
                 raise TypeError(msg)
 
+    # Pre-Filter Function
+    if prefilter_func:
+        todo_set_orig = todo_set
+        todo_set = set()
+        for ouid in todo_set_orig:
+            if prefilter_func(ouid, *prefilter_func_args, **prefilter_func_kwargs):
+                todo_set.add(ouid)
+
     # Async Get
     if async_show is None:
         if obj_client is not None:
@@ -1032,8 +1033,39 @@ def async_obj_fetch(iter_parent, obj_client=None, async_list=None, async_show=No
     label = "Getting {}".format(obj_name if obj_name else "")
     objs, objs_failed = async_obj_map(todo_set, async_show, label=label)
 
+    # Post-Filter List
+    if postfilter_list:
+        objs_orig = objs
+        objs = {}
+        for ouid in postfilter_list:
+            if ouid in objs_orig:
+                objs[ouid] = objs_orig[ouid]
+            else:
+                obj_str = obj_name if obj_name else "object"
+                msg = "Post-filtered {} '{}' not found".format(obj_str, ouid)
+                raise TypeError(msg)
+
+    # Post-Filter Function
+    if postfilter_func:
+        objs_orig = objs
+        objs = {}
+        for ouid, obj in objs_orig.items():
+            if postfilter_func(ouid, obj, *postfilter_func_args, **postfilter_func_kwargs):
+                objs[ouid] = obj
+
     # Return
     return lists, todo_set, objs, lists_failed, objs_failed
+
+def postfilter_func_owner(ouid, obj, owners):
+    if owners:
+        return obj["owner"] in owners
+    else:
+        return True
+
+def lists_to_set(lists):
+
+    sset = set([ouid for puid, ouids in lists.items() for ouid in ouids])
+    return sset
 
 if __name__ == '__main__':
     sys.exit(cli())
