@@ -443,15 +443,15 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester,
                 type=click.Path(exists=True, writable=True,
                                 resolve_path=True, file_okay=False))
 @click.option('-a', '--asn_uid', 'asn_list',
-              default=None, multiple=True, help='Limit to Asn UUID')
+              default=None, multiple=True, help='Limit to Assignment UUID')
 @click.option('-s', '--sub_uid', 'sub_list',
-              default=None, multiple=True, help='Sub UUID')
+              default=None, multiple=True, help='Limit to Submission UUID')
 @click.option('-u', '--usr_uid', 'usr_list',
-              default=None, multiple=True, help='User UUID')
+              default=None, multiple=True, help='Limit to User UUID')
 @click.option('--full_uuid', is_flag=True,
               help='Force use of full UUIDs in output')
 @click.option('--show_timing', 'timing', is_flag=True,
-              help='Collect and chow timing data')
+              help='Collect and show timing data')
 @click.option('--overwrite', is_flag=True,
               help='Overwrite existing files (skipped by default)')
 @click.pass_obj
