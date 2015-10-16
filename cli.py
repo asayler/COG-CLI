@@ -633,19 +633,20 @@ def util_download_submissions(obj, path, asn_uid, sub_uid):
             click.echo("{} - {}".format(fuid, str(err)), err=True)
 
 @util.command(name='download-submissions2')
-@click.option('--path', default=None, prompt=True,
-              type=click.Path(exists=True, writable=True,
-                              resolve_path=True, file_okay=False),
-              help='Destination Directory')
-@click.option('--asn_uid', default=None, multiple=True, help='Asn UUID')
-@click.option('--sub_uid', default=None, multiple=True, help='Sub UUID')
-@click.option('--usr_uid', default=None, multiple=True, help='User UUID')
+@click.argument('dest_dir', metavar="DEST_DIR",
+                type=click.Path(exists=True, writable=True,
+                                resolve_path=True, file_okay=False))
+@click.option('-a', '--asn_uid', 'asn_list',
+              default=None, multiple=True, help='Limit to Asn UUID')
+@click.option('-s', '--sub_uid', 'sub_list',
+              default=None, multiple=True, help='Sub UUID')
+@click.option('-u', '--usr_uid', 'usr_list',
+              default=None, multiple=True, help='User UUID')
+@click.option('--full_uuid', is_flag=True,
+              help='Force use of full UUIDs in output')
 @click.pass_obj
 @auth_required
-def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
-
-    # Handle Input
-    base_path = os.path.abspath(path)
+def util_download_submissions2(obj, dest_dir, asn_list, sub_list, usr_list, full_uuid):
 
     # COG Objects
     fles_todo = {}
@@ -654,18 +655,19 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
     with obj['connection']:
 
         # Fetch Assignments
-        tup = async_obj_fetch([None], prefilter_list=asn_uid, obj_name="Assignments",
+        tup = async_obj_fetch([None], obj_name="Assignments",
                               async_list=obj['assignments'].async_list_by_null,
-                              async_show=obj['assignments'].async_show)
+                              async_show=obj['assignments'].async_show,
+                              prefilter_list=asn_list)
         asn_lsts, asn_set, asn_objs, asn_lsts_failed, asn_objs_failed = tup
 
         # Fetch Submissions
         tup = async_obj_fetch(asn_set, obj_name="Submissions",
                               async_list=obj['submissions'].async_list_by_asn,
                               async_show=obj['submissions'].async_show,
-                              prefilter_list=sub_uid,
-                              postfilter_func=postfilter_func_owner,
-                              postfilter_func_args=[usr_uid])
+                              prefilter_list=sub_list,
+                              postfilter_func=postfilter_owner,
+                              postfilter_func_args=[usr_list])
         sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
 
         # Fetch Files
@@ -677,19 +679,31 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
         # Build File Lists
         paths_map = {}
         for suid, fle_list in fle_lsts.items():
-            usid = sub_objs[suid]['owner']
-            auid = sub_objs[suid]['assignment']
-            asn_dir = "asn_{}_{}".format(auid, "".join(asn_objs[auid]['name'].split()))
-            usr_dir = "usr_{}".format(usid)
-            sub_dir = "sub_{}".format(suid)
-            sub_path = os.path.join(base_path, asn_dir, usr_dir, sub_dir)
+
+            suid = uuid.UUID(suid)
+            usid = uuid.UUID(sub_objs[str(suid)]['owner'])
+            auid = uuid.UUID(sub_objs[str(suid)]['assignment'])
+
+            if full_uuid:
+                sub_str = str(suid)
+                usr_str = str(usid)
+                asn_str = str(auid)
+            else:
+                sub_str = "sub_{}".format(str(suid))
+                usr_str = "usr_{}".format(str(usid))
+                asn_nme = "".join(asn_objs[str(auid)]['name'].split())
+                asn_str = "asn_{}_{:012x}".format(asn_nme, auid.node)
+
+            sub_path = os.path.join(dest_dir, asn_str, usr_str, sub_str)
             os.makedirs(sub_path, exist_ok=True)
+
             for fuid in fle_list:
                 rel_path = fle_objs[fuid]["name"]
                 rel_path = cli_util.clean_path(rel_path)
                 rel_path = cli_util.secure_path(rel_path)
                 fle_path = os.path.join(sub_path, rel_path)
                 paths_map[fle_path] = fuid
+
         paths_set = set(paths_map.keys())
 
         # Async Download Files
@@ -697,9 +711,8 @@ def util_download_submissions2(obj, path, asn_uid, sub_uid, usr_uid):
             fuid = paths_map[path]
             return obj['files'].async_direct_download(fuid, path)
         label="Downloading Files  "
-        paths_out, paths_failed = async_obj_map(paths_set,
-                                                async_fun, async_func_args=[paths_map],
-                                                label=label)
+        paths_out, paths_failed = async_obj_map(paths_set, async_fun, label=label,
+                                                async_func_args=[paths_map])
 
     # Display Errors:
     for puid, err in asn_lsts_failed:
@@ -963,12 +976,12 @@ def async_obj_map(obj_list, async_fun,
                   async_func_args=[], async_func_kwargs={},
                   label=None, sleep=0.1):
 
-    output = {}
-    failed = {}
     future = {}
-
     for key in obj_list:
         future[key] = async_fun(key, *async_func_args, **async_func_kwargs)
+
+    output = {}
+    failed = {}
     with click.progressbar(label=label, length=len(future)) as bar:
         while future:
             remain = future
@@ -1056,7 +1069,7 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
     # Return
     return lists, todo_set, objs, lists_failed, objs_failed
 
-def postfilter_func_owner(ouid, obj, owners):
+def postfilter_owner(ouid, obj, owners):
     if owners:
         return obj["owner"] in owners
     else:
