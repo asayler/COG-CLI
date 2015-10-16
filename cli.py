@@ -470,7 +470,7 @@ def download_submission(obj, suid, fle_list, asn_dir_path):
     return (fle_success, fle_failed)
 
 @util.command(name='download-submissions')
-@click.argument('dest_dir', metavar="DEST_DIR",
+@click.argument('dest_dir',
                 type=click.Path(exists=True, writable=True,
                                 resolve_path=True, file_okay=False))
 @click.option('-a', '--asn_uid', 'asn_list',
