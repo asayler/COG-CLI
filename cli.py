@@ -388,14 +388,17 @@ def util_replace_test_files(obj, path, extract, tst_uid):
     old_fle_list = obj['files'].list(tst_uid=tst_uid)
     click.echo("Old files:\n{}".format(old_fle_list))
 
-    click.echo("Removing old files...")
-    rem_fle_list = obj['tests'].detach_files(tst_uid, old_fle_list)
-    click.echo("Remaining files:\n{}".format(rem_fle_list))
+    if old_fle_list:
+        click.echo("Removing old files...")
+        rem_fle_list = obj['tests'].detach_files(tst_uid, old_fle_list)
+        click.echo("Remaining files:\n{}".format(rem_fle_list))
 
-    click.echo("Deleting old files...")
-    for fle_uid in old_fle_list:
-        click.echo("Deleting file '{}'...".format(fle_uid))
-        fle = obj['files'].delete(fle_uid)
+        click.echo("Deleting old files...")
+        for fle_uid in old_fle_list:
+            click.echo("Deleting file '{}'...".format(fle_uid))
+            fle = obj['files'].delete(fle_uid)
+    else:
+        click.echo("No old files found")
 
     click.echo("Creating new files...")
     new_fle_list = obj['files'].create(path, extract=extract)
