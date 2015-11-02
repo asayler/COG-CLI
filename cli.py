@@ -408,6 +408,31 @@ def util_replace_test_files(obj, path, extract, tst_uid):
     tst_fle_list = rem_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
     click.echo("Attached files:\n{}".format(tst_fle_list))
 
+@util.command(name='duplicate-test')
+@click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
+@click.pass_obj
+@auth_required
+def util_duplicate_test(obj, tst_uid):
+
+    click.echo("Getting original test...")
+    orig_tst_uid = tst_uid
+    orig_tst_obj = obj['tests'].show(orig_tst_uid)
+    click.echo("Found test:\n{}".format(orig_tst_obj))
+
+    click.echo("Creating new test...")
+    new_tst_list = obj['tests'].create(orig_tst_obj['assignment'], orig_tst_obj['name'],
+                                       orig_tst_obj['tester'], orig_tst_obj['maxscore'])
+    new_tst_uid = new_tst_list[0]
+    click.echo("Created test:\n{}".format(new_tst_uid))
+
+    click.echo("Getting original files...")
+    orig_fle_list = obj['files'].list(tst_uid=orig_tst_uid)
+    click.echo("Found files:\n{}".format(orig_fle_list))
+
+    click.echo("Attaching files to new test...")
+    new_fle_list = obj['tests'].attach_files(new_tst_uid, orig_fle_list)
+    click.echo("Attached files:\n{}".format(new_fle_list))
+
 @util.command(name='setup-assignment')
 @click.option('--asn_name', default=None, prompt=True, help='Assignment Name')
 @click.option('--env', default=None, prompt=True, help='Assignment Environment')
