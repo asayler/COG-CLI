@@ -1,2 +1,2 @@
-requests
-click
+requests>=2.7.0,<=2.7.99
+click>=5.0,<=5.99
