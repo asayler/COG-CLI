@@ -1,11 +1,11 @@
 # Andy Sayler
-# Summer 2014
+# 2014, 2015
 # Univerity of Colorado
 
 ECHO = @echo
 
-PYTHON = python
-PIP = pip
+PYTHON = python3
+PIP = pip3
 
 REQUIRMENTS = requirments.txt
 
