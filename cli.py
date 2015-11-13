@@ -396,7 +396,10 @@ def util_replace_test_files(obj, path, extract, tst_uid):
         click.echo("Deleting old files...")
         for fle_uid in old_fle_list:
             click.echo("Deleting file '{}'...".format(fle_uid))
-            fle = obj['files'].delete(fle_uid)
+            try:
+                fle = obj['files'].delete(fle_uid)
+            except Exception as e:
+                click.echo("Failed to delete file '{}': {}".format(fle_uid, str(e)))
     else:
         click.echo("No old files found")
 
