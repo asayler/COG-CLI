@@ -17,8 +17,12 @@ import requests
 import util
 
 _EP_MY = 'my'
-_EP_TOKEN = 'token'
-_KEY_TOKEN = 'token'
+_EP_MY_TOKEN = 'token'
+_KEY_MY_TOKEN = 'token'
+_EP_MY_USERNAME = 'username'
+_KEY_MY_USERNAME = 'username'
+_EP_MY_USERUUID = 'useruuid'
+_KEY_MY_USERUUID = 'useruuid'
 _EP_FILES = 'files'
 _EP_FILES_CONTENTS = 'contents'
 _KEY_FILES = 'files'
@@ -73,7 +77,7 @@ class Connection(object):
 
     def authenticate(self, username=None, password=None, token=None):
 
-        endpoint = "{:s}/{:s}/{:s}/".format(self._url, _EP_MY, _EP_TOKEN)
+        endpoint = "{:s}/{:s}/{:s}/".format(self._url, _EP_MY, _EP_MY_TOKEN)
 
         if token:
 
@@ -81,7 +85,7 @@ class Connection(object):
             auth = requests.auth.HTTPBasicAuth(token, '')
             r = requests.get(endpoint, auth=auth)
             r.raise_for_status()
-            token = r.json()[_KEY_TOKEN]
+            token = r.json()[_KEY_MY_TOKEN]
 
         else:
 
@@ -93,7 +97,7 @@ class Connection(object):
             auth = requests.auth.HTTPBasicAuth(username, password)
             r = requests.get(endpoint, auth=auth)
             r.raise_for_status()
-            token = r.json()[_KEY_TOKEN]
+            token = r.json()[_KEY_MY_TOKEN]
 
         self._auth = requests.auth.HTTPBasicAuth(token, '')
 
@@ -106,8 +110,11 @@ class Connection(object):
     def get_url(self):
         return self._url
 
+    def get_user(self):
+        return self.http_get("{}/{}".format(_EP_MY, _EP_MY_USERNAME))[_KEY_MY_USERNAME]
+
     def get_token(self):
-        return self.http_get("{}/{}".format(_EP_MY, _EP_TOKEN))[_KEY_TOKEN]
+        return self.http_get("{}/{}".format(_EP_MY, _EP_MY_TOKEN))[_KEY_MY_TOKEN]
 
     def http_post(self, endpoint, json=None, files=None):
         url = "{:s}/{:s}/".format(self._url, endpoint)
@@ -216,6 +223,45 @@ class AsyncConnection(Connection):
 
     def async_http_download(self, *args, **kwargs):
         return self.submit(self.http_download, *args, **kwargs)
+
+class MyInfo(object):
+
+    def __init__(self, connection):
+        """ Constructor"""
+
+        # Save Params
+        self._conn = connection
+        self._ep = _EP_MY
+
+    def token(self):
+        return self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_TOKEN))[_KEY_MY_TOKEN]
+
+    def username(self):
+        return self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_USERNAME))[_KEY_MY_USERNAME]
+
+    def useruuid(self):
+        return self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_USERUUID))[_KEY_MY_USERUUID]
+
+class AsyncMyInfo(MyInfo):
+
+    def __init__(self, async_connection):
+        """ Constructor"""
+
+        # Check Type
+        if type(async_connection) is not AsyncConnection:
+            raise TypeError("Connection must be AsyncConnection")
+
+        # Call Parent
+        super().__init__(async_connection)
+
+    def async_token(self, *args, **kwargs):
+        return self._conn.submit(self.token, *args, **kwargs)
+
+    def async_username(self, *args, **kwargs):
+        return self._conn.submit(self.username, *args, **kwargs)
+
+    def async_useruuid(self, *args, **kwargs):
+        return self._conn.submit(self.useruuid, *args, **kwargs)
 
 class COGObject(object):
 
