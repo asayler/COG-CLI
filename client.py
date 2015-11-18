@@ -31,6 +31,8 @@ _EP_SUBMISSIONS = 'submissions'
 _KEY_SUBMISSIONS = 'submissions'
 _EP_RUNS = 'runs'
 _KEY_RUNS = 'runs'
+_EP_USERS = 'users'
+_KEY_USERS = 'users'
 
 _BLOCK_SIZE = 1024
 _THREAD_MULTIPLIER = 5
@@ -610,3 +612,29 @@ class AsyncRuns(Runs, AsyncCOGObject):
 
     def async_list_by_sub(self, *args, **kwargs):
         return self._conn.submit(self.list_by_sub, *args, **kwargs)
+
+class Users(COGObject):
+
+    def __init__(self, connection):
+        """ Constructor"""
+
+        # Call Parent
+        super().__init__(connection)
+
+        #Set Base Key and Endpoint
+        self._ep = _EP_USERS
+        self._key = _KEY_USERS
+
+    def create(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def delete(self, *args, **kwargs):
+        raise NotImplementedError()
+
+class AsyncUsers(Users, AsyncCOGObject):
+
+    def async_create(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def async_delete(self, *args, **kwargs):
+        raise NotImplementedError()
