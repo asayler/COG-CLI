@@ -482,6 +482,8 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester,
               default=None, multiple=True, help='Limit to User UUID')
 @click.option('--full_uuid', is_flag=True,
               help='Force use of full UUIDs in output')
+@click.option('--full_name', is_flag=True,
+              help='Display full names instead of usernames in output')
 @click.option('--show_timing', 'timing', is_flag=True,
               help='Collect and show timing data')
 @click.option('--overwrite', is_flag=True,
@@ -489,7 +491,7 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester,
 @click.pass_obj
 @auth_required
 def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
-                              full_uuid, timing, overwrite):
+                              full_uuid, full_name, timing, overwrite):
 
     # Start Timing
     if timing:
@@ -520,23 +522,40 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
                               async_show=obj['files'].async_show)
         fle_lsts, fle_set, fle_objs, fle_lsts_failed, fle_objs_failed = tup
 
+        # Fetch Users
+        usr_set = set()
+        for sub in sub_objs.values():
+            usr_set.add(sub["owner"])
+        usr_objs, usr_objs_failed = async_obj_map(usr_set, obj['users'].async_show,
+                                                  label="Getting Users      ", timing=timing)
+
         # Build File Lists
         paths_map = {}
         for suid, fle_list in fle_lsts.items():
 
             suid = uuid.UUID(suid)
+            sub = sub_objs[str(suid)]
             usid = uuid.UUID(sub_objs[str(suid)]['owner'])
+            usr = usr_objs[str(usid)]
             auid = uuid.UUID(sub_objs[str(suid)]['assignment'])
+            asn = asn_objs[str(auid)]
 
             if full_uuid:
-                sub_str = str(suid)
-                usr_str = str(usid)
-                asn_str = str(auid)
-            else:
                 sub_str = "sub_{}".format(str(suid))
                 usr_str = "usr_{}".format(str(usid))
-                asn_nme = "".join(asn_objs[str(auid)]['name'].split())
-                asn_str = "asn_{}_{:012x}".format(asn_nme, auid.node)
+                asn_str = "asn_{}".format(str(auid))
+            else:
+                date = time.localtime(float(sub["created_time"]))
+                date_str = time.strftime("%y%m%d_%H%M%S", date)
+                sub_str = "sub_{}_{:012x}".format(date_str, suid.node)
+                if full_name:
+                    full_nme = "".join("{}_{}".format(usr['last'], usr['first']).split())
+                    usr_str = "usr_{}_{:012x}".format(full_nme, usid.node)
+                else:
+                    user_nme = "".join(usr['username'].split())
+                    usr_str = "usr_{}".format(user_nme)
+                asgn_nme = "".join(asn['name'].split())
+                asn_str = "asn_{}_{:012x}".format(asgn_nme, auid.node)
 
             sub_path = os.path.join(dest_dir, asn_str, usr_str, sub_str)
             os.makedirs(sub_path, exist_ok=True)
