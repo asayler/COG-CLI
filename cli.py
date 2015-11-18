@@ -366,6 +366,7 @@ def util(obj):
     obj['tests'] = client.AsyncTests(obj['connection'])
     obj['submissions'] = client.AsyncSubmissions(obj['connection'])
     obj['runs'] = client.AsyncRuns(obj['connection'])
+    obj['users'] = client.AsyncUsers(obj['connection'])
 
 @util.command(name='show-token')
 @click.pass_obj
@@ -605,6 +606,8 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
 @click.option('--line_limit', default=None, help='Limit output to line length')
 @click.option('--full_uuid', is_flag=True,
               help='Force use of full UUIDs in output')
+@click.option('--full_name', is_flag=True,
+              help='Display full names instead of usernames in output')
 @click.option('--show_timing', 'timing', is_flag=True,
               help='Collect and show timing data')
 @click.option('--no_date', is_flag=True,
@@ -616,7 +619,7 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
 @click.pass_obj
 @auth_required
 def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
-                      sort_by, line_limit, full_uuid, timing,
+                      sort_by, line_limit, full_uuid, full_name, timing,
                       no_date, no_status, no_score):
 
     # Table Objects
@@ -669,12 +672,20 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
                               postfilter_func_args=[tst_list])
         run_lsts, run_set, run_objs, run_lsts_failed, run_objs_failed = tup
 
+        # Fetch Users
+        usr_set = set()
+        for run in run_objs.values():
+            usr_set.add(run["owner"])
+        usr_objs, usr_objs_failed = async_obj_map(usr_set, obj['users'].async_show,
+                                                  label="Getting Users      ", timing=timing)
+
     # Build Table Rows
     for ruid, run in run_objs.items():
 
         # Get Objects
         ruid = uuid.UUID(ruid)
         usid = uuid.UUID(run["owner"])
+        usr = usr_objs[str(usid)]
         suid = uuid.UUID(run["submission"])
         sub = sub_objs[str(suid)]
         tuid = uuid.UUID(run["test"])
@@ -690,7 +701,10 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
             sub_str = str(suid)
             run_str = str(ruid)
         else:
-            usr_str = "{:012X}".format(usid.node)
+            if full_name:
+                usr_str = "{}, {}".format(usr["last"], usr["first"])
+            else:
+                usr_str = usr["username"]
             asn_str = asn["name"]
             tst_str = tst["name"]
             sub_str = "{:012X}".format(suid.node)
@@ -788,7 +802,7 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
         if obj_client is not None:
             async_list = obj_client.async_list()
         else:
-            raise TypeError("Requires either obj_client ot async_list")
+            raise TypeError("Requires either obj_client or async_list")
     label = "Listing {}".format(obj_name if obj_name else "")
     lists, lists_failed = async_obj_map(iter_parent, async_list,
                                         label=label, timing=timing)
