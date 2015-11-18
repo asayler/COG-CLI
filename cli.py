@@ -63,6 +63,39 @@ def cli(ctx, url, username, password, token):
     ctx.obj['token'] = token
     ctx.obj['connection'] = client.AsyncConnection(ctx.obj['url'])
 
+### My Commands ###
+
+@cli.group(name='my')
+@click.pass_obj
+def my(obj):
+
+    # Setup Client Class
+    obj['myinfo'] = client.MyInfo(obj['connection'])
+
+@my.command(name='token')
+@click.pass_obj
+@auth_required
+def my_token(obj):
+
+    token = obj['myinfo'].token()
+    click.echo("{}".format(token))
+
+@my.command(name='username')
+@click.pass_obj
+@auth_required
+def my_username(obj):
+
+    username = obj['myinfo'].username()
+    click.echo("{}".format(username))
+
+@my.command(name='useruuid')
+@click.pass_obj
+@auth_required
+def my_useruuid(obj):
+
+    useruuid = obj['myinfo'].useruuid()
+    click.echo("{}".format(useruuid))
+
 ### File Commands ###
 
 @cli.group(name='file')
