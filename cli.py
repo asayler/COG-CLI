@@ -406,6 +406,7 @@ def util(obj):
 @auth_required
 def util_show_token(obj):
 
+    click.echo("WARNING: 'util show-token' is deprecated. Use 'my token' instead.", err=True)
     click.echo("'{}'".format(obj['connection'].get_token()))
 
 @util.command(name='replace-test-files')
