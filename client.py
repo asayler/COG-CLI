@@ -16,8 +16,9 @@ import requests
 
 import util
 
-_EP_TOKENS = 'tokens'
-_KEY_TOKENS = 'token'
+_EP_MY = 'my'
+_EP_TOKEN = 'token'
+_KEY_TOKEN = 'token'
 _EP_FILES = 'files'
 _EP_FILES_CONTENTS = 'contents'
 _KEY_FILES = 'files'
@@ -72,7 +73,7 @@ class Connection(object):
 
     def authenticate(self, username=None, password=None, token=None):
 
-        endpoint = "{:s}/{:s}/".format(self._url, _EP_TOKENS)
+        endpoint = "{:s}/{:s}/{:s}/".format(self._url, _EP_MY, _EP_TOKEN)
 
         if token:
 
@@ -80,7 +81,7 @@ class Connection(object):
             auth = requests.auth.HTTPBasicAuth(token, '')
             r = requests.get(endpoint, auth=auth)
             r.raise_for_status()
-            token = r.json()[_KEY_TOKENS]
+            token = r.json()[_KEY_TOKEN]
 
         else:
 
@@ -92,7 +93,7 @@ class Connection(object):
             auth = requests.auth.HTTPBasicAuth(username, password)
             r = requests.get(endpoint, auth=auth)
             r.raise_for_status()
-            token = r.json()[_KEY_TOKENS]
+            token = r.json()[_KEY_TOKEN]
 
         self._auth = requests.auth.HTTPBasicAuth(token, '')
 
@@ -106,7 +107,7 @@ class Connection(object):
         return self._url
 
     def get_token(self):
-        return self.http_get(_EP_TOKENS)[_KEY_TOKENS]
+        return self.http_get("{}/{}".format(_EP_MY, _EP_TOKEN))[_KEY_TOKEN]
 
     def http_post(self, endpoint, json=None, files=None):
         url = "{:s}/{:s}/".format(self._url, endpoint)
