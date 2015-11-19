@@ -4,6 +4,7 @@ import sys
 import json
 import functools
 import os
+import os.path
 import shelve
 import time
 import uuid
@@ -11,6 +12,7 @@ import threading
 import concurrent.futures
 import queue
 import datetime
+import configparser
 
 import requests
 import click
@@ -20,6 +22,8 @@ import click_util
 import util as cli_util
 
 _EP_TOKENS = 'tokens'
+_APP_NAME = 'cog-cli'
+_PATH_SERVER_CONF = os.path.join(click.get_app_dir(_APP_NAME), 'servers')
 
 def auth_required(func):
 
@@ -47,13 +51,39 @@ def auth_required(func):
     return _wrapper
 
 @click.group()
-@click.option('--url', default=None, prompt=True, help='API URL')
-@click.option('--username', default=None, help='API Username')
-@click.option('--password', default=None, help='API Password')
-@click.option('--token', default=None, help='API Token')
+@click.option('--server', default=None, help="API Server (from [config_path])")
+@click.option('--url', default=None, help="API URL")
+@click.option('--username', default=None, help="API Username")
+@click.option('--password', default=None, help="API Password")
+@click.option('--token', default=None, help="API Token")
+@click.option('--conf_path', default=_PATH_SERVER_CONF, prompt=False,
+              type=click.Path(resolve_path=True),
+              help="Config Path ('{}')".format(_PATH_SERVER_CONF))
 @click.pass_context
-def cli(ctx, url, username, password, token):
+def cli(ctx, server, url, username, password, token, conf_path):
     """COG CLI"""
+
+    # Read Config
+    if server is not None:
+        if not os.path.isfile(conf_path):
+            raise click.FileError(conf_path)
+        conf_obj = configparser.ConfigParser()
+        conf_obj.read(conf_path)
+        if not server in conf_obj:
+            msg = "Could not find '{}' in '{}'".format(server, conf_path)
+            raise click.BadOptionUsage('server', msg)
+        conf_dict = conf_obj[server]
+        if url is None:
+            url = conf_dict['url']
+        if username is None:
+            username = conf_dict['user']
+        if password is None:
+            if token is None:
+                token = conf_dict['token']
+
+    # Check Required Parameters
+    if not url:
+        raise click.UsageError("URL required")
 
     # Setup Context
     ctx.obj = {}
@@ -400,6 +430,34 @@ def util(obj):
     obj['submissions'] = client.AsyncSubmissions(obj['connection'])
     obj['runs'] = client.AsyncRuns(obj['connection'])
     obj['users'] = client.AsyncUsers(obj['connection'])
+
+@util.command(name='save-config')
+@click.argument('name')
+@click.option('--conf_path', default=_PATH_SERVER_CONF, prompt=False,
+              type=click.Path(resolve_path=True),
+              help="Config Path ('{}')".format(_PATH_SERVER_CONF))
+@click.pass_obj
+@auth_required
+def util_save_config(obj, name, conf_path):
+
+    conf_obj = configparser.ConfigParser()
+
+    if os.path.isfile(conf_path):
+        click.echo("Reading existing '{}'".format(conf_path))
+        conf_obj.read(conf_path)
+
+    conf_dict = {}
+    conf_dict['url'] = obj['connection'].get_url()
+    conf_dict['user'] = obj['connection'].get_user()
+    conf_dict['token'] = obj['connection'].get_token()
+    click.echo("New config for '{}': {}".format(name, conf_dict))
+    conf_obj[name] = conf_dict
+
+    conf_dir = os.path.dirname(conf_path)
+    os.makedirs(conf_dir, exist_ok=True)
+    with open(conf_path, 'w') as conf_file:
+        click.echo("Writing new config to '{}'".format(conf_path))
+        conf_obj.write(conf_file)
 
 @util.command(name='show-token')
 @click.pass_obj
