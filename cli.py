@@ -17,13 +17,16 @@ import configparser
 import requests
 import click
 
-import client
-import click_util
-import util as cli_util
+import api_client
+import util_click
+import util_cli
 
 _EP_TOKENS = 'tokens'
 _APP_NAME = 'cog-cli'
 _PATH_SERVER_CONF = os.path.join(click.get_app_dir(_APP_NAME), 'servers')
+
+
+### Auth Functions ###
 
 def auth_required(func):
 
@@ -49,6 +52,146 @@ def auth_required(func):
         return func(obj, *args, **kwargs)
 
     return _wrapper
+
+
+### Async Helper Functions ###
+
+def async_obj_map(obj_list, async_fun,
+                  async_func_args=[], async_func_kwargs={},
+                  label=None, timing=False, sleep=0.1):
+
+    if timing:
+        start = time.time()
+
+    future = {}
+    for key in obj_list:
+        future[key] = async_fun(key, *async_func_args, **async_func_kwargs)
+
+    output = {}
+    failed = {}
+    with click.progressbar(label=label, length=len(future)) as bar:
+        while future:
+            remain = future
+            future = {}
+            for key, f in remain.items():
+                if f.done():
+                    try:
+                        output[key] = f.result()
+                    except Exception as err:
+                        failed[key] = err
+                    finally:
+                        bar.update(1)
+                else:
+                    future[key] = f
+            time.sleep(sleep)
+
+    if timing:
+        end = time.time()
+        dur = end - start
+        dur_str = "Dur: {}".format(util_cli.duration_to_str(dur))
+        ops = len(obj_list)/dur
+        ops_str = "Objs/sec: {:6.0f}".format(ops)
+        offset = "{val:{width}s}".format(val="", width=(len(label)+1))
+        click.echo("{}  {},   {}".format(offset, dur_str, ops_str))
+
+    return output, failed
+
+def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
+                    async_list=None, async_show=None, timing=False,
+                    prefilter_list=None, prefilter_func=None,
+                    prefilter_func_args=[], prefilter_func_kwargs={},
+                    postfilter_list=None, postfilter_func=None,
+                    postfilter_func_args=[], postfilter_func_kwargs={}):
+
+    # Async List
+    if async_list is None:
+        if obj_client is not None:
+            async_list = obj_client.async_list()
+        else:
+            raise TypeError("Requires either obj_client or async_list")
+    label = "Listing {}".format(obj_name if obj_name else "")
+    lists, lists_failed = async_obj_map(iter_parent, async_list,
+                                        label=label, timing=timing)
+    todo_set = lists_to_set(lists)
+
+    # Pre-Filter List
+    if prefilter_list:
+        todo_set_orig = todo_set
+        todo_set = set()
+        for ouid in prefilter_list:
+            if ouid in todo_set_orig:
+                todo_set.add(ouid)
+            else:
+                obj_str = obj_name if obj_name else "object"
+                msg = "Pre-filtered {} '{}' not found".format(obj_str, ouid)
+                raise TypeError(msg)
+
+    # Pre-Filter Function
+    if prefilter_func:
+        todo_set_orig = todo_set
+        todo_set = set()
+        for ouid in todo_set_orig:
+            if prefilter_func(ouid, *prefilter_func_args, **prefilter_func_kwargs):
+                todo_set.add(ouid)
+
+    # Async Get
+    if async_show is None:
+        if obj_client is not None:
+            async_show = obj_client.async_show()
+        else:
+            raise TypeError("Requires either obj_clientn ot async_show")
+    label = "Getting {}".format(obj_name if obj_name else "")
+    objs, objs_failed = async_obj_map(todo_set, async_show,
+                                      label=label, timing=timing)
+
+    # Post-Filter List
+    if postfilter_list:
+        objs_orig = objs
+        objs = {}
+        for ouid in postfilter_list:
+            if ouid in objs_orig:
+                objs[ouid] = objs_orig[ouid]
+            else:
+                obj_str = obj_name if obj_name else "object"
+                msg = "Post-filtered {} '{}' not found".format(obj_str, ouid)
+                raise TypeError(msg)
+
+    # Post-Filter Function
+    if postfilter_func:
+        objs_orig = objs
+        objs = {}
+        for ouid, obj in objs_orig.items():
+            if postfilter_func(ouid, obj, *postfilter_func_args, **postfilter_func_kwargs):
+                objs[ouid] = obj
+
+    # Return
+    return lists, todo_set, objs, lists_failed, objs_failed
+
+def lists_to_set(lists):
+
+    sset = set([ouid for puid, ouids in lists.items() for ouid in ouids])
+    return sset
+
+
+### Post Processing Filters ###
+
+def postfilter_attr(attr, ouid, obj, attrs):
+
+    if attrs:
+        return obj[attr] in attrs
+    else:
+        return True
+
+def postfilter_attr_owner(ouid, obj, owners):
+
+    return postfilter_attr("owner", ouid, obj, owners)
+
+def postfilter_attr_test(ouid, obj, tests):
+
+    return postfilter_attr("test", ouid, obj, tests)
+
+
+### CLI Root ###
 
 @click.group()
 @click.option('--server', default=None, help="API Server (from [config_path])")
@@ -91,7 +234,8 @@ def cli(ctx, server, url, username, password, token, conf_path):
     ctx.obj['username'] = username
     ctx.obj['password'] = password
     ctx.obj['token'] = token
-    ctx.obj['connection'] = client.AsyncConnection(ctx.obj['url'])
+    ctx.obj['connection'] = api_client.AsyncConnection(ctx.obj['url'])
+
 
 ### My Commands ###
 
@@ -100,7 +244,7 @@ def cli(ctx, server, url, username, password, token, conf_path):
 def my(obj):
 
     # Setup Client Class
-    obj['myinfo'] = client.MyInfo(obj['connection'])
+    obj['myinfo'] = api_client.MyInfo(obj['connection'])
 
 @my.command(name='token')
 @click.pass_obj
@@ -126,6 +270,7 @@ def my_useruuid(obj):
     useruuid = obj['myinfo'].useruuid()
     click.echo("{}".format(useruuid))
 
+
 ### File Commands ###
 
 @cli.group(name='file')
@@ -133,7 +278,7 @@ def my_useruuid(obj):
 def fle(obj):
 
     # Setup Client Class
-    obj['files'] = client.Files(obj['connection'])
+    obj['files'] = api_client.Files(obj['connection'])
 
 @fle.command(name='create')
 @click.option('--path', default=None, prompt=True,
@@ -191,6 +336,7 @@ def fle_download(obj, uid, path, orig_path):
     path = obj['files'].download(uid, path, orig_path=orig_path)
     click.echo("{}".format(path))
 
+
 ### Assignment Commands ###
 
 @cli.group()
@@ -198,7 +344,7 @@ def fle_download(obj, uid, path, orig_path):
 def assignment(obj):
 
     # Setup Client Class
-    obj['assignments'] = client.Assignments(obj['connection'])
+    obj['assignments'] = api_client.Assignments(obj['connection'])
 
 @assignment.command(name='create')
 @click.option('--name', default=None, prompt=True, help='Assignment Name')
@@ -238,6 +384,7 @@ def assignment_delete(obj, uid):
     asn = obj['assignments'].delete(uid)
     click.echo("{}".format(asn))
 
+
 ### Test Commands ###
 
 @cli.group()
@@ -245,7 +392,7 @@ def assignment_delete(obj, uid):
 def test(obj):
 
     # Setup Client Class
-    obj['tests'] = client.Tests(obj['connection'])
+    obj['tests'] = api_client.Tests(obj['connection'])
 
 @test.command(name='create')
 @click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
@@ -306,6 +453,7 @@ def test_detach_files(obj, uid, fle_uid):
     tst = obj['tests'].detach_files(uid, fle_uid)
     click.echo("{}".format(tst))
 
+
 ### Submission Commands ###
 
 @cli.group()
@@ -313,7 +461,7 @@ def test_detach_files(obj, uid, fle_uid):
 def submission(obj):
 
     # Setup Client Class
-    obj['submissions'] = client.Submissions(obj['connection'])
+    obj['submissions'] = api_client.Submissions(obj['connection'])
 
 @submission.command(name='create')
 @click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
@@ -371,6 +519,7 @@ def submission_detach_files(obj, uid, fle_uid):
     tst = obj['submissions'].detach_files(uid, fle_uid)
     click.echo("{}".format(tst))
 
+
 ### Run Commands ###
 
 @cli.group()
@@ -378,7 +527,7 @@ def submission_detach_files(obj, uid, fle_uid):
 def run(obj):
 
     # Setup Client Class
-    obj['runs'] = client.Runs(obj['connection'])
+    obj['runs'] = api_client.Runs(obj['connection'])
 
 @run.command(name='create')
 @click.option('--sub_uid', default=None, prompt=True, help='Submission UUID')
@@ -417,6 +566,7 @@ def run_delete(obj, uid):
     tst = obj['runs'].delete(uid)
     click.echo("{}".format(tst))
 
+
 ### Util Commands ###
 
 @cli.group()
@@ -424,12 +574,12 @@ def run_delete(obj, uid):
 def util(obj):
 
     # Setup Client Class
-    obj['files'] = client.AsyncFiles(obj['connection'])
-    obj['assignments'] = client.AsyncAssignments(obj['connection'])
-    obj['tests'] = client.AsyncTests(obj['connection'])
-    obj['submissions'] = client.AsyncSubmissions(obj['connection'])
-    obj['runs'] = client.AsyncRuns(obj['connection'])
-    obj['users'] = client.AsyncUsers(obj['connection'])
+    obj['files'] = api_client.AsyncFiles(obj['connection'])
+    obj['assignments'] = api_client.AsyncAssignments(obj['connection'])
+    obj['tests'] = api_client.AsyncTests(obj['connection'])
+    obj['submissions'] = api_client.AsyncSubmissions(obj['connection'])
+    obj['runs'] = api_client.AsyncRuns(obj['connection'])
+    obj['users'] = api_client.AsyncUsers(obj['connection'])
 
 @util.command(name='save-config')
 @click.argument('name')
@@ -654,8 +804,8 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
 
             for fuid in fle_list:
                 rel_path = fle_objs[fuid]["name"]
-                rel_path = cli_util.clean_path(rel_path)
-                rel_path = cli_util.secure_path(rel_path)
+                rel_path = util_cli.clean_path(rel_path)
+                rel_path = util_cli.secure_path(rel_path)
                 fle_path = os.path.join(sub_path, rel_path)
                 paths_map[fle_path] = fuid
 
@@ -693,7 +843,7 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
     if timing:
         end = time.time()
         dur = end - start
-        dur_str = "Duration:    {}".format(duration_to_str(dur))
+        dur_str = "Duration:    {}".format(util_cli.duration_to_str(dur))
         ops = len(paths_set)/dur
         ops_str = "Files/sec:   {:11.2f}".format(ops)
         click.echo(dur_str)
@@ -858,151 +1008,11 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
         click.echo("Failed to get Run '{}': {}".format(ruid, str(err)))
 
     # Display Table
-    click_util.echo_table(table, headings=headings,
+    util_click.echo_table(table, headings=headings,
                           line_limit=line_limit, sort_by=sort_by)
 
-def async_obj_map(obj_list, async_fun,
-                  async_func_args=[], async_func_kwargs={},
-                  label=None, timing=False, sleep=0.1):
 
-    if timing:
-        start = time.time()
-
-    future = {}
-    for key in obj_list:
-        future[key] = async_fun(key, *async_func_args, **async_func_kwargs)
-
-    output = {}
-    failed = {}
-    with click.progressbar(label=label, length=len(future)) as bar:
-        while future:
-            remain = future
-            future = {}
-            for key, f in remain.items():
-                if f.done():
-                    try:
-                        output[key] = f.result()
-                    except Exception as err:
-                        failed[key] = err
-                    finally:
-                        bar.update(1)
-                else:
-                    future[key] = f
-            time.sleep(sleep)
-
-    if timing:
-        end = time.time()
-        dur = end - start
-        dur_str = "Dur: {}".format(duration_to_str(dur))
-        ops = len(obj_list)/dur
-        ops_str = "Objs/sec: {:6.0f}".format(ops)
-        offset = "{val:{width}s}".format(val="", width=(len(label)+1))
-        click.echo("{}  {},   {}".format(offset, dur_str, ops_str))
-
-    return output, failed
-
-def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
-                    async_list=None, async_show=None, timing=False,
-                    prefilter_list=None, prefilter_func=None,
-                    prefilter_func_args=[], prefilter_func_kwargs={},
-                    postfilter_list=None, postfilter_func=None,
-                    postfilter_func_args=[], postfilter_func_kwargs={}):
-
-    # Async List
-    if async_list is None:
-        if obj_client is not None:
-            async_list = obj_client.async_list()
-        else:
-            raise TypeError("Requires either obj_client or async_list")
-    label = "Listing {}".format(obj_name if obj_name else "")
-    lists, lists_failed = async_obj_map(iter_parent, async_list,
-                                        label=label, timing=timing)
-    todo_set = lists_to_set(lists)
-
-    # Pre-Filter List
-    if prefilter_list:
-        todo_set_orig = todo_set
-        todo_set = set()
-        for ouid in prefilter_list:
-            if ouid in todo_set_orig:
-                todo_set.add(ouid)
-            else:
-                obj_str = obj_name if obj_name else "object"
-                msg = "Pre-filtered {} '{}' not found".format(obj_str, ouid)
-                raise TypeError(msg)
-
-    # Pre-Filter Function
-    if prefilter_func:
-        todo_set_orig = todo_set
-        todo_set = set()
-        for ouid in todo_set_orig:
-            if prefilter_func(ouid, *prefilter_func_args, **prefilter_func_kwargs):
-                todo_set.add(ouid)
-
-    # Async Get
-    if async_show is None:
-        if obj_client is not None:
-            async_show = obj_client.async_show()
-        else:
-            raise TypeError("Requires either obj_client ot async_show")
-    label = "Getting {}".format(obj_name if obj_name else "")
-    objs, objs_failed = async_obj_map(todo_set, async_show,
-                                      label=label, timing=timing)
-
-    # Post-Filter List
-    if postfilter_list:
-        objs_orig = objs
-        objs = {}
-        for ouid in postfilter_list:
-            if ouid in objs_orig:
-                objs[ouid] = objs_orig[ouid]
-            else:
-                obj_str = obj_name if obj_name else "object"
-                msg = "Post-filtered {} '{}' not found".format(obj_str, ouid)
-                raise TypeError(msg)
-
-    # Post-Filter Function
-    if postfilter_func:
-        objs_orig = objs
-        objs = {}
-        for ouid, obj in objs_orig.items():
-            if postfilter_func(ouid, obj, *postfilter_func_args, **postfilter_func_kwargs):
-                objs[ouid] = obj
-
-    # Return
-    return lists, todo_set, objs, lists_failed, objs_failed
-
-def postfilter_attr(attr, ouid, obj, attrs):
-
-    if attrs:
-        return obj[attr] in attrs
-    else:
-        return True
-
-def postfilter_attr_owner(ouid, obj, owners):
-
-    return postfilter_attr("owner", ouid, obj, owners)
-
-def postfilter_attr_test(ouid, obj, tests):
-
-    return postfilter_attr("test", ouid, obj, tests)
-
-def lists_to_set(lists):
-
-    sset = set([ouid for puid, ouids in lists.items() for ouid in ouids])
-    return sset
-
-def split_duration(dur):
-
-    hours, rem = divmod(dur, 3600)
-    minutes, rem = divmod(rem, 60)
-    seconds = rem
-    return hours, minutes, seconds
-
-def duration_to_str(dur):
-
-    hours, minutes, seconds = split_duration(dur)
-    return "{:02.0f}:{:02.0f}:{:05.2f}".format(hours, minutes, seconds)
+### Main ###
 
 if __name__ == '__main__':
     sys.exit(cli())

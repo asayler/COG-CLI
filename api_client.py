@@ -14,7 +14,7 @@ import functools
 
 import requests
 
-import util
+import util_cli
 
 _EP_MY = 'my'
 _EP_MY_TOKEN = 'token'
@@ -429,8 +429,8 @@ class Files(COGObject):
         if os.path.isdir(path):
             fle_obj = self.show(uid)
             fle_path = fle_obj["name"]
-            fle_path = util.clean_path(fle_path)
-            fle_path = util.secure_path(fle_path)
+            fle_path = util_cli.clean_path(fle_path)
+            fle_path = util_cli.secure_path(fle_path)
             fle_name = os.path.basename(fle_path)
             if orig_path:
                 path = os.path.join(path, fle_path)

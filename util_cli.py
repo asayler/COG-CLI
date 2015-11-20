@@ -3,11 +3,16 @@
 # University of Colorado
 # From https://github.com/asayler/COG/blob/master/cogs/util.py
 
+
 import collections
 import string
 import os.path
 
+
 VALID_FILENAME_CHARS = "+-_.() {}{}".format(string.ascii_letters, string.digits)
+
+
+### Path Function ###
 
 def split_path(path):
     """ Split a path into a list of components """
@@ -67,3 +72,18 @@ def secure_path(path):
         sec_path = rel_path
 
     return sec_path
+
+
+### Time + Duration Functions ###
+
+def split_duration(dur):
+
+    hours, rem = divmod(dur, 3600)
+    minutes, rem = divmod(rem, 60)
+    seconds = rem
+    return hours, minutes, seconds
+
+def duration_to_str(dur):
+
+    hours, minutes, seconds = split_duration(dur)
+    return "{:02.0f}:{:02.0f}:{:05.2f}".format(hours, minutes, seconds)
