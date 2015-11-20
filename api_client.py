@@ -277,13 +277,17 @@ class COGObject(object):
 
     @abc.abstractmethod
     def create(self, endpoint=None, json=None, files=None):
-
         if endpoint is None:
             endpoint = self._ep
-
         res = self._conn.http_post(endpoint, json=json, files=files)
         uuid_list = res[self._key]
         return uuid_list
+
+    def update(self, uid, json):
+        ep = "{:s}/{:s}".format(self._ep, uid)
+        res = self._conn.http_put(ep, json=json)
+        obj = res[uid]
+        return obj
 
     def list(self, endpoint=None):
 
@@ -324,6 +328,9 @@ class AsyncCOGObject(COGObject):
 
     def async_list(self, *args, **kwargs):
         return self._conn.submit(self.list, *args, **kwargs)
+
+    def async_update(self, *args, **kwargs):
+        return self._conn.submit(self.update, *args, **kwargs)
 
     def async_show(self, *args, **kwargs):
         return self._conn.submit(self.show, *args, **kwargs)
