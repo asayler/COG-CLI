@@ -355,6 +355,17 @@ def assignment_create(obj, name, env):
     asn_list = obj['assignments'].create(name, env)
     click.echo("{}".format(asn_list))
 
+@assignment.command(name='update')
+@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--name', default=None, help='Assignment Name')
+@click.option('--env', default=None, help='Assignment Environment')
+@click.pass_obj
+@auth_required
+def assignment_update(obj, uid, name, env):
+
+    asn = obj['assignments'].update(uid, name=name, env=env)
+    click.echo("{}".format(asn))
+
 @assignment.command(name='list')
 @click.option('--submitable', is_flag=True, help='Limit to submitable assignments')
 @click.option('--runable', is_flag=True, help='Limit to runable assignments')

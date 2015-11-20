@@ -509,6 +509,28 @@ class Assignments(COGObject):
         # Call Parent
         return super().create(json=data)
 
+    def update(self, uid, name=None, env=None,
+               duedate=None, respect_duedate=None,
+               accepting_runs=None, accepting_submissions=None):
+
+        # Setup Data
+        data = {}
+        if name is not None:
+            data['name'] = name
+        if env is not None:
+            data['env'] = env
+        if duedate is not None:
+            data['duedate'] = str(duedate) if duedate else ''
+        if respect_duedate is not None:
+            data['respect_duedate'] = '1' if respect_duedate else '0'
+        if accepting_runs is not None:
+            data['accepting_runs'] = '1' if accepting_runs else '0'
+        if accepting_submissions is not None:
+            data['accepting_submissions'] = '1' if accepting_submissions else '0'
+
+        # Call Parent
+        return super().update(uid, json=data)
+
     def list(self, submitable=False, runable=False):
 
         # Limted Cases
