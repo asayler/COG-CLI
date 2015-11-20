@@ -5,7 +5,6 @@ import json
 import functools
 import os
 import os.path
-import shelve
 import time
 import uuid
 import threading
