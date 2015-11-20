@@ -495,10 +495,16 @@ class Assignments(COGObject):
         self._ep = _EP_ASSIGNMENTS
         self._key = _KEY_ASSIGNMENTS
 
-    def create(self, name, env):
+    def create(self, name, env='local',
+               duedate=None, respect_duedate=False,
+               accepting_runs=False, accepting_submissions=False):
 
         # Setup Data
         data = {'name': name, 'env': env}
+        data['duedate'] = str(duedate) if duedate else ''
+        data['respect_duedate'] = '1' if respect_duedate else '0'
+        data['accepting_runs'] = '1' if accepting_runs else '0'
+        data['accepting_submissions'] = '1' if accepting_submissions else '0'
 
         # Call Parent
         return super().create(json=data)
