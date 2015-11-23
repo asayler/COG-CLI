@@ -426,13 +426,13 @@ def test(obj):
 @test.command(name='create')
 @click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
 @click.option('--name', default=None, prompt=True, help='Test Name')
-@click.option('--tester', default=None, prompt=True, help='Test Module')
 @click.option('--maxscore', default=None, prompt=True, help='Max Score')
+@click.option('--tester', default=None, prompt=True, help='Test Module')
 @click.pass_obj
 @auth_required
-def test_create(obj, asn_uid, name, tester, maxscore):
+def test_create(obj, asn_uid, name, maxscore, tester):
 
-    tst_list = obj['tests'].create(asn_uid, name, tester, maxscore)
+    tst_list = obj['tests'].create(asn_uid, name, maxscore, tester=tester)
     click.echo("{}".format(tst_list))
 
 @test.command(name='list')
@@ -696,7 +696,7 @@ def util_duplicate_test(obj, tst_uid):
 
     click.echo("Creating new test...")
     new_tst_list = obj['tests'].create(orig_tst_obj['assignment'], orig_tst_obj['name'],
-                                       orig_tst_obj['tester'], orig_tst_obj['maxscore'])
+                                       orig_tst_obj['maxscore'], tester=orig_tst_obj['tester'])
     new_tst_uid = new_tst_list[0]
     click.echo("Created test:\n{}".format(new_tst_uid))
 
@@ -724,12 +724,12 @@ def util_setup_assignment(obj, asn_name, env, tst_name, tester,
                           maxscore, path, extract):
 
     click.echo("Creating assignment...")
-    asn_list = obj['assignments'].create(asn_name, env)
+    asn_list = obj['assignments'].create(asn_name, env=env)
     click.echo("Created assignments:\n{}".format(asn_list))
     asn_uid = asn_list[0]
 
     click.echo("Creating test...")
-    tst_list = obj['tests'].create(asn_uid, tst_name, tester, maxscore)
+    tst_list = obj['tests'].create(asn_uid, tst_name, maxscore, tester=tester)
     click.echo("Created tests:\n{}".format(tst_list))
     tst_uid = tst_list[0]
 

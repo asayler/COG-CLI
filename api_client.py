@@ -581,7 +581,7 @@ class Tests(COGFileAttachedObject):
         self._ep = _EP_TESTS
         self._key = _KEY_TESTS
 
-    def create(self, asn_uid, name, tester, maxscore):
+    def create(self, asn_uid, name, maxscore, tester='script'):
 
         # Setup Data
         data = {"name": name, "tester": tester, "maxscore": maxscore}
