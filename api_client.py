@@ -496,15 +496,19 @@ class Assignments(COGObject):
         self._key = _KEY_ASSIGNMENTS
 
     def create(self, name, env='local',
-               duedate=None, respect_duedate=False,
-               accepting_runs=False, accepting_subs=False):
+               duedate=None, respect_duedate=None,
+               accepting_runs=None, accepting_subs=None):
 
         # Setup Data
-        data = {'name': name, 'env': env}
-        data['duedate'] = str(duedate) if duedate else ''
-        data['respect_duedate'] = '1' if respect_duedate else '0'
-        data['accepting_runs'] = '1' if accepting_runs else '0'
-        data['accepting_submissions'] = '1' if accepting_subs else '0'
+        data = {'name': str(name), 'env': str(env)}
+        if duedate is not None:
+            data['duedate'] = str(duedate)
+        if respect_duedate is not None:
+            data['respect_duedate'] = '1' if respect_duedate else '0'
+        if accepting_runs is not None:
+            data['accepting_runs'] = '1' if accepting_runs else '0'
+        if accepting_subs is not None:
+            data['accepting_submissions'] = '1' if accepting_subs else '0'
 
         # Call Parent
         return super().create(json=data)
@@ -516,11 +520,11 @@ class Assignments(COGObject):
         # Setup Data
         data = {}
         if name is not None:
-            data['name'] = name
+            data['name'] = str(name)
         if env is not None:
-            data['env'] = env
+            data['env'] = str(env)
         if duedate is not None:
-            data['duedate'] = str(duedate) if duedate else ''
+            data['duedate'] = str(duedate)
         if respect_duedate is not None:
             data['respect_duedate'] = '1' if respect_duedate else '0'
         if accepting_runs is not None:
@@ -581,16 +585,40 @@ class Tests(COGFileAttachedObject):
         self._ep = _EP_TESTS
         self._key = _KEY_TESTS
 
-    def create(self, asn_uid, name, maxscore, tester='script'):
+    def create(self, asn_uid, name, maxscore, tester='script',
+               builder=None, path_script=None):
 
         # Setup Data
-        data = {"name": name, "tester": tester, "maxscore": maxscore}
+        data = {"name": str(name), "maxscore": str(maxscore), "tester": str(tester)}
+        if builder is not None:
+            data['builder'] = str(builder)
+        if path_script is not None:
+            data['path_script'] = str(path_script)
 
         # Setup Endpoint
         ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
 
         # Call Parent
         return super().create(endpoint=ep, json=data)
+
+    def update(self, uid, name=None, maxscore=None, tester=None,
+               builder=None, path_script=None):
+
+        # Setup Data
+        data = {}
+        if name is not None:
+            data['name'] = str(name)
+        if maxscore is not None:
+            data['maxscore'] = str(maxscore)
+        if tester is not None:
+            data['tester'] = str(tester)
+        if builder is not None:
+            data['builder'] = str(builder)
+        if path_script is not None:
+            data['path_script'] = str(path_script)
+
+        # Call Parent
+        return super().update(uid, json=data)
 
     def list(self, asn_uid=None):
 
