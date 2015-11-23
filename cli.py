@@ -347,23 +347,42 @@ def assignment(obj):
 
 @assignment.command(name='create')
 @click.option('--name', default=None, prompt=True, help='Assignment Name')
-@click.option('--env', default=None, prompt=True, help='Assignment Environment')
+@click.option('--env', default='local', help='Assignment Environment')
+@click.option('--duedate', default=None, help='Assignment Due Date')
+@click.option('--respect_duedate', default=None, help='Respect Assignment Due Date')
+@click.option('--accepting_runs', default=False, help='Assignment Accepting Test Runs')
+@click.option('--accepting_subs', default=False, help='Assignment Accepting Submissions')
 @click.pass_obj
 @auth_required
-def assignment_create(obj, name, env):
+def assignment_create(obj, name, env, duedate, respect_duedate,
+                      accepting_runs, accepting_subs):
 
-    asn_list = obj['assignments'].create(name, env)
+
+    asn_list = obj['assignments'].create(name, env=env,
+                                         duedate=duedate,
+                                         respect_duedate=respect_duedate,
+                                         accepting_runs=accepting_runs,
+                                         accepting_subs=accepting_subs)
     click.echo("{}".format(asn_list))
 
 @assignment.command(name='update')
 @click.option('--uid', default=None, prompt=True, help='Assignment UUID')
 @click.option('--name', default=None, help='Assignment Name')
 @click.option('--env', default=None, help='Assignment Environment')
+@click.option('--duedate', default=None, help='Assignment Due Date')
+@click.option('--respect_duedate', default=None, help='Respect Assignment Due Date')
+@click.option('--accepting_runs', default=None, help='Assignment Accepting Test Runs')
+@click.option('--accepting_subs', default=None, help='Assignment Accepting Submissions')
 @click.pass_obj
 @auth_required
-def assignment_update(obj, uid, name, env):
+def assignment_update(obj, uid, name, env, duedate, respect_duedate,
+                      accepting_runs, accepting_subs):
 
-    asn = obj['assignments'].update(uid, name=name, env=env)
+    asn = obj['assignments'].update(uid, name=name, env=env,
+                                         duedate=duedate,
+                                         respect_duedate=respect_duedate,
+                                         accepting_runs=accepting_runs,
+                                         accepting_subs=accepting_subs)
     click.echo("{}".format(asn))
 
 @assignment.command(name='list')

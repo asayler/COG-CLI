@@ -497,21 +497,21 @@ class Assignments(COGObject):
 
     def create(self, name, env='local',
                duedate=None, respect_duedate=False,
-               accepting_runs=False, accepting_submissions=False):
+               accepting_runs=False, accepting_subs=False):
 
         # Setup Data
         data = {'name': name, 'env': env}
         data['duedate'] = str(duedate) if duedate else ''
         data['respect_duedate'] = '1' if respect_duedate else '0'
         data['accepting_runs'] = '1' if accepting_runs else '0'
-        data['accepting_submissions'] = '1' if accepting_submissions else '0'
+        data['accepting_submissions'] = '1' if accepting_subs else '0'
 
         # Call Parent
         return super().create(json=data)
 
     def update(self, uid, name=None, env=None,
                duedate=None, respect_duedate=None,
-               accepting_runs=None, accepting_submissions=None):
+               accepting_runs=None, accepting_subs=None):
 
         # Setup Data
         data = {}
@@ -525,8 +525,8 @@ class Assignments(COGObject):
             data['respect_duedate'] = '1' if respect_duedate else '0'
         if accepting_runs is not None:
             data['accepting_runs'] = '1' if accepting_runs else '0'
-        if accepting_submissions is not None:
-            data['accepting_submissions'] = '1' if accepting_submissions else '0'
+        if accepting_subs is not None:
+            data['accepting_submissions'] = '1' if accepting_subs else '0'
 
         # Call Parent
         return super().update(uid, json=data)
