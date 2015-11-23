@@ -427,13 +427,33 @@ def test(obj):
 @click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
 @click.option('--name', default=None, prompt=True, help='Test Name')
 @click.option('--maxscore', default=None, prompt=True, help='Max Score')
-@click.option('--tester', default=None, prompt=True, help='Test Module')
+@click.option('--tester', default='script', help='Test Module')
+@click.option('--builder', default=None, help='Build Module')
+@click.option('--path_script', default=None, help='Relative Path to Gradign Script')
 @click.pass_obj
 @auth_required
-def test_create(obj, asn_uid, name, maxscore, tester):
+def test_create(obj, asn_uid, name, maxscore, tester, builder, path_script):
 
-    tst_list = obj['tests'].create(asn_uid, name, maxscore, tester=tester)
+    tst_list = obj['tests'].create(asn_uid, name, maxscore,
+                                   tester=tester, builder=builder,
+                                   path_script=path_script)
     click.echo("{}".format(tst_list))
+
+@test.command(name='update')
+@click.option('--uid', default=None, prompt=True, help='Test UUID')
+@click.option('--name', default=None, help='Test Name')
+@click.option('--maxscore', default=None, help='Max Score')
+@click.option('--tester', default=None, help='Test Module')
+@click.option('--builder', default=None, help='Build Module')
+@click.option('--path_script', default=None, help='Relative Path to Gradign Script')
+@click.pass_obj
+@auth_required
+def test_update(obj, uid, name, maxscore, tester, builder, path_script):
+
+    tst = obj['tests'].update(uid, name=name, maxscore=maxscore,
+                              tester=tester, builder=builder,
+                              path_script=path_script)
+    click.echo("{}".format(tst))
 
 @test.command(name='list')
 @click.option('--asn_uid', default=None, help='Assignment UUID')
