@@ -772,7 +772,8 @@ def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
     asn_uid = asn_list[0]
 
     click.echo("Creating test...")
-    tst_list = obj['tests'].create(asn_uid, tst_name, maxscore, tester=tester)
+    tst_list = obj['tests'].create(asn_uid, tst_name, maxscore,
+                                   tester=tester, path_script=path_script)
     click.echo("Created tests:\n{}".format(tst_list))
     tst_uid = tst_list[0]
 
