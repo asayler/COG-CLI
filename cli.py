@@ -447,7 +447,7 @@ def test(obj):
 @click.option('--maxscore', default=None, prompt=True, help='Max Score')
 @click.option('--tester', default='script', help='Test Module')
 @click.option('--builder', default=None, help='Build Module')
-@click.option('--path_script', default=None, help='Relative Path to Gradign Script')
+@click.option('--path_script', default=None, help='Relative Path to Grading Script')
 @click.pass_obj
 @auth_required
 def test_create(obj, asn_uid, name, maxscore, tester, builder, path_script):
@@ -463,7 +463,7 @@ def test_create(obj, asn_uid, name, maxscore, tester, builder, path_script):
 @click.option('--maxscore', default=None, help='Max Score')
 @click.option('--tester', default=None, help='Test Module')
 @click.option('--builder', default=None, help='Build Module')
-@click.option('--path_script', default=None, help='Relative Path to Gradign Script')
+@click.option('--path_script', default=None, help='Relative Path to Grading Script')
 @click.pass_obj
 @auth_required
 def test_update(obj, uid, name, maxscore, tester, builder, path_script):
@@ -755,7 +755,7 @@ def util_duplicate_test(obj, tst_uid):
 @click.option('--tst_name', default=None, prompt=True, help='Test Name')
 @click.option('--maxscore', default=None, prompt=True, help='Max Score')
 @click.option('--tester', default=None, prompt=True, help='Test Module')
-@click.option('--path_script', default=None, help='Relative Path to Gradign Script')
+@click.option('--path_script', default=None, help='Relative Path to Grading Script')
 @click.option('--path', default=None, prompt=True,
               type=click.Path(exists=True, readable=True, resolve_path=True),
               help='Source Path')
