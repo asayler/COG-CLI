@@ -790,6 +790,35 @@ def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
         obj['assignments'].update(asn_uid, accpeting_runs=True, accepting_subs=True)
         click.echo("Assignment Activated")
 
+@util.command(name='setup-assignment-test')
+@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--tst_name', default=None, prompt=True, help='Test Name')
+@click.option('--maxscore', default=None, prompt=True, help='Max Score')
+@click.option('--tester', default='script', help='Test Module')
+@click.option('--path_script', default=None, help='Relative Path to Grading Script')
+@click.option('--path', default=None, prompt=True,
+              type=click.Path(exists=True, readable=True, resolve_path=True),
+              help='Source Path')
+@click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.pass_obj
+@auth_required
+def util_setup_assignment_test(obj, asn_uid, tst_name, maxscore, tester,
+                               path_script, path, extract):
+
+    click.echo("Creating test...")
+    tst_list = obj['tests'].create(asn_uid, tst_name, maxscore,
+                                   tester=tester, path_script=path_script)
+    click.echo("Created tests:\n{}".format(tst_list))
+    tst_uid = tst_list[0]
+
+    click.echo("Creating files...")
+    new_fle_list = obj['files'].create(path, extract)
+    click.echo("Created files:\n{}".format(new_fle_list))
+
+    click.echo("Attaching files...")
+    tst_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
+    click.echo("Attached files:\n{}".format(tst_fle_list))
+
 @util.command(name='download-submissions')
 @click.argument('dest_dir',
                 type=click.Path(exists=True, writable=True,
