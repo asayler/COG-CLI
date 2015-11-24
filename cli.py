@@ -716,7 +716,10 @@ def util_duplicate_test(obj, tst_uid):
 
     click.echo("Creating new test...")
     new_tst_list = obj['tests'].create(orig_tst_obj['assignment'], orig_tst_obj['name'],
-                                       orig_tst_obj['maxscore'], tester=orig_tst_obj['tester'])
+                                       orig_tst_obj['maxscore'], tester=orig_tst_obj['tester'],
+                                       builder=orig_tst_obj['builder'],
+                                       path_script=(orig_tst_obj['path_script'] if
+                                                    orig_tst_obj['path_script'] else None))
     new_tst_uid = new_tst_list[0]
     click.echo("Created test:\n{}".format(new_tst_uid))
 
@@ -732,16 +735,17 @@ def util_duplicate_test(obj, tst_uid):
 @click.option('--asn_name', default=None, prompt=True, help='Assignment Name')
 @click.option('--env', default=None, prompt=True, help='Assignment Environment')
 @click.option('--tst_name', default=None, prompt=True, help='Test Name')
-@click.option('--tester', default=None, prompt=True, help='Test Module')
 @click.option('--maxscore', default=None, prompt=True, help='Max Score')
+@click.option('--tester', default=None, prompt=True, help='Test Module')
+@click.option('--path_script', default=None, help='Relative Path to Gradign Script')
 @click.option('--path', default=None, prompt=True,
               type=click.Path(exists=True, readable=True, resolve_path=True),
               help='Source Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
 @click.pass_obj
 @auth_required
-def util_setup_assignment(obj, asn_name, env, tst_name, tester,
-                          maxscore, path, extract):
+def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
+                          path_script, path, extract):
 
     click.echo("Creating assignment...")
     asn_list = obj['assignments'].create(asn_name, env=env)
