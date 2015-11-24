@@ -413,6 +413,24 @@ def assignment_delete(obj, uid):
     asn = obj['assignments'].delete(uid)
     click.echo("{}".format(asn))
 
+@assignment.command(name='activate')
+@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def assignment_activate(obj, uid):
+
+    asn = obj['assignments'].update(asn_uid, accpeting_runs=True, accepting_subs=True)
+    click.echo("{}".format(asn))
+
+@assignment.command(name='deactivate')
+@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def assignment_deactivate(obj, uid):
+
+    asn = obj['assignments'].update(asn_uid, accpeting_runs=False, accepting_subs=False)
+    click.echo("{}".format(asn))
+
 
 ### Test Commands ###
 
@@ -742,10 +760,11 @@ def util_duplicate_test(obj, tst_uid):
               type=click.Path(exists=True, readable=True, resolve_path=True),
               help='Source Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.option('--activate', is_flag=True, help='Control whether or not to make assignment live')
 @click.pass_obj
 @auth_required
 def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
-                          path_script, path, extract):
+                          path_script, path, extract, activate):
 
     click.echo("Creating assignment...")
     asn_list = obj['assignments'].create(asn_name, env=env)
@@ -764,6 +783,11 @@ def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
     click.echo("Attaching files...")
     tst_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
     click.echo("Attached files:\n{}".format(tst_fle_list))
+
+    if activate:
+        click.echo("Activating Assignment...")
+        obj['assignments'].update(asn_uid, accpeting_runs=True, accepting_subs=True)
+        click.echo("Assignment Activated")
 
 @util.command(name='download-submissions')
 @click.argument('dest_dir',
