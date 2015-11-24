@@ -754,7 +754,7 @@ def util_duplicate_test(obj, tst_uid):
 @click.option('--env', default=None, prompt=True, help='Assignment Environment')
 @click.option('--tst_name', default=None, prompt=True, help='Test Name')
 @click.option('--maxscore', default=None, prompt=True, help='Max Score')
-@click.option('--tester', default=None, prompt=True, help='Test Module')
+@click.option('--tester', default='script', help='Test Module')
 @click.option('--path_script', default=None, help='Relative Path to Grading Script')
 @click.option('--path', default=None, prompt=True,
               type=click.Path(exists=True, readable=True, resolve_path=True),
