@@ -419,7 +419,7 @@ def assignment_delete(obj, uid):
 @auth_required
 def assignment_activate(obj, uid):
 
-    asn = obj['assignments'].update(asn_uid, accpeting_runs=True, accepting_subs=True)
+    asn = obj['assignments'].update(uid, accepting_runs=True, accepting_subs=True)
     click.echo("{}".format(asn))
 
 @assignment.command(name='deactivate')
