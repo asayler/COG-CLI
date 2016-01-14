@@ -139,7 +139,7 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
             async_show = obj_client.async_show()
         else:
             raise TypeError("Requires either obj_clientn ot async_show")
-    label = "Getting {}".format(obj_name if obj_name else "")
+    label = "Getting  {}".format(obj_name if obj_name else "")
     objs, objs_failed = async_obj_map(todo_set, async_show,
                                       label=label, timing=timing)
 
