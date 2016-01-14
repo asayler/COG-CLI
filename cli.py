@@ -1219,7 +1219,7 @@ def util_cleanup(obj, cleanup_all, timing,
             fle_lsts, fle_set, fle_objs, fle_lsts_failed, fle_objs_failed = tup
 
             # Delete Files
-            fle_deleted, fle_failed = async_obj_map(run_set, obj['files'].async_delete,
+            fle_deleted, fle_failed = async_obj_map(fle_set, obj['files'].async_delete,
                                                     label="Deleting Files      ",
                                                     timing=timing)
 
@@ -1231,7 +1231,7 @@ def util_cleanup(obj, cleanup_all, timing,
             click.echo("Failed to list Assignments: {}".format(str(err)))
         for auid, err in asn_objs_failed.items():
             click.echo("Failed to fetch Assignment '{}': {}".format(auid, str(err)))
-        for auid, err in asn_failed:
+        for auid, err in asn_failed.items():
             click.echo("Failed to delete Assignment '{}': {}".format(auid, str(err)))
 
     if cleanup_tst or cleanup_all:
@@ -1240,16 +1240,16 @@ def util_cleanup(obj, cleanup_all, timing,
             click.echo("Failed to list Tests: {}".format(str(err)))
         for tuid, err in tst_objs_failed.items():
             click.echo("Failed to fetch Test '{}': {}".format(tuid, str(err)))
-        for tuid, err in tst_failed:
+        for tuid, err in tst_failed.items():
             click.echo("Failed to delete Test '{}': {}".format(tuid, str(err)))
 
-    if cleanup_sub or cleanup_all:
+    if cleanup_sub or cleanup_all.items():
 
         for nuid, err in sub_lsts_failed:
             click.echo("Failed to list Submissions: {}".format(str(err)))
         for suid, err in sub_objs_failed.items():
             click.echo("Failed to fetch Submission '{}': {}".format(suid, str(err)))
-        for suid, err in sub_failed:
+        for suid, err in sub_failed.items():
             click.echo("Failed to delete Submission '{}': {}".format(suid, str(err)))
 
     if cleanup_run or cleanup_all:
@@ -1258,7 +1258,7 @@ def util_cleanup(obj, cleanup_all, timing,
             click.echo("Failed to list Runs: {}".format(str(err)))
         for ruid, err in run_objs_failed.items():
             click.echo("Failed to fetch Run '{}': {}".format(ruid, str(err)))
-        for ruid, err in run_failed:
+        for ruid, err in run_failed.items():
             click.echo("Failed to delete Run '{}': {}".format(ruid, str(err)))
 
     if cleanup_fle or cleanup_all:
@@ -1267,7 +1267,7 @@ def util_cleanup(obj, cleanup_all, timing,
             click.echo("Failed to list Files: {}".format(str(err)))
         for fuid, err in fle_objs_failed.items():
             click.echo("Failed to fetch File '{}': {}".format(fuid, str(err)))
-        for fuid, err in fle_failed:
+        for fuid, err in fle_failed.items():
             click.echo("Failed to delete File '{}': {}".format(fuid, str(err)))
 
 
