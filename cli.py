@@ -1118,6 +1118,155 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
     util_click.echo_table(table, headings=headings,
                           line_limit=line_limit, sort_by=sort_by)
 
+@util.command(name='cleanup')
+@click.option('--assignments', 'cleanup_asn', is_flag=True,
+              help='Delete Assigments')
+@click.option('-a', '--asn_uid', 'asn_list',
+              default=None, multiple=True, help='Limit to Assignment UUID')
+@click.option('--tests', 'cleanup_tst', is_flag=True,
+              help='Delete Tests')
+@click.option('-t', '--tst_uid', 'tst_list',
+              default=None, multiple=True, help='Limit to Test UUID')
+@click.option('--submissions', 'cleanup_sub', is_flag=True,
+              help='Delete Submissions')
+@click.option('-s', '--sub_uid', 'sub_list',
+              default=None, multiple=True, help='Limit to Submission UUID')
+@click.option('--runs', 'cleanup_run', is_flag=True,
+              help='Delete Runs')
+@click.option('-r', '--run_uid', 'run_list',
+              default=None, multiple=True, help='Limit to Run UUID')
+@click.option('--files', 'cleanup_fle', is_flag=True,
+              help='Delete Files')
+@click.option('-f', '--file_uid', 'fle_list',
+              default=None, multiple=True, help='Limit to File UUID')
+@click.option('--show_timing', 'timing', is_flag=True,
+              help='Collect and show timing data')
+@click.pass_obj
+@auth_required
+def util_cleanup(obj, cleanup_asn, asn_list, cleanup_tst, tst_list,
+                 cleanup_sub, sub_list, cleanup_run, run_list,
+                 cleanup_fle, fle_list, timing):
+
+    # Make Async Calls
+    with obj['connection']:
+
+        if cleanup_asn or cleanup_all:
+
+            # Fetch Assignments
+            tup = async_obj_fetch([None], obj_name="Assignments", timing=timing,
+                                  async_list=obj['assignments'].async_list_by_null,
+                                  async_show=obj['assignments'].async_show,
+                                  prefilter_list=asn_list)
+            asn_lsts, asn_set, asn_objs, asn_lsts_failed, asn_objs_failed = tup
+
+            # Delete Assignments
+            asn_deleted, asn_failed = async_obj_map(asn_set, obj['assignments'].async_delete
+                                                    label="Deleting Assignments",
+                                                    timing=timing)
+
+        if cleanup_tst or cleanup_all:
+
+            # Fetch Tests
+            tup = async_obj_fetch([None], obj_name="Tests      ", timing=timing,
+                                  async_list=obj['tests'].async_list_by_null,
+                                  async_show=obj['tests'].async_show,
+                                  prefilter_list=tst_list)
+            tst_lsts, tst_set, tst_objs, tst_lsts_failed, tst_objs_failed = tup
+
+            # Delete Tests
+            tst_deleted, tst_failed = async_obj_map(tst_set, obj['tests'].async_delete
+                                                    label="Deleting Tests      ",
+                                                    timing=timing)
+
+        if cleanup_sub or cleanup_all:
+
+            # Fetch Submissions
+            tup = async_obj_fetch([None], obj_name="Submissions", timing=timing,
+                                  async_list=obj['submissions'].async_list_by_null,
+                                  async_show=obj['submissions'].async_show,
+                                  prefilter_list=sub_list)
+            sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
+
+            # Delete Submissions
+            sub_deleted, sub_failed = async_obj_map(sub_set, obj['submissions'].async_delete
+                                                    label="Deleting Submissions",
+                                                    timing=timing)
+
+        if cleanup_run or cleanup_all:
+
+            # Fetch Runs
+            tup = async_obj_fetch([None], obj_name="Runs       ", timing=timing,
+                                  async_list=obj['runs'].async_list_by_null,
+                                  async_show=obj['runs'].async_show,
+                                  prefilter_list=run_list)
+            run_lsts, run_set, run_objs, run_lsts_failed, run_objs_failed = tup
+
+            # Delete Runs
+            run_deleted, run_failed = async_obj_map(run_set, obj['runs'].async_delete
+                                                    label="Deleting Runs       ",
+                                                    timing=timing)
+
+        if cleanup_fle or cleanup_all:
+
+            # Fetch Files
+            tup = async_obj_fetch([None], obj_name="Files      ", timing=timing,
+                                  async_list=obj['files'].async_list_by_null,
+                                  async_show=obj['files'].async_show,
+                                  prefilter_list=fle_list)
+            fle_lsts, fle_set, fle_objs, fle_lsts_failed, fle_objs_failed = tup
+
+            # Delete Files
+            fle_deleted, fle_failed = async_obj_map(run_set, obj['files'].async_delete
+                                                    label="Deleting Files      ",
+                                                    timing=timing)
+
+    # Display Errors:
+
+    if cleanup_asn or cleanup_all:
+
+        for nuid, err in asn_lsts_failed:
+            click.echo("Failed to list Assignments: {}".format(str(err)))
+        for auid, err in asn_objs_failed.items():
+            click.echo("Failed to fetch Assignment '{}': {}".format(auid, str(err)))
+        for auid, err in asn_failed:
+            click.echo("Failed to delete Assignment '{}': {}".format(auid, str(err)))
+
+    if cleanup_tst or cleanup_all:
+
+        for nuid, err in tst_lsts_failed:
+            click.echo("Failed to list Tests: {}".format(str(err)))
+        for tuid, err in tst_objs_failed.items():
+            click.echo("Failed to fetch Test '{}': {}".format(tuid, str(err)))
+        for tuid, err in tst_failed:
+            click.echo("Failed to delete Test '{}': {}".format(tuid, str(err)))
+
+    if cleanup_sub or cleanup_all:
+
+        for nuid, err in sub_lsts_failed:
+            click.echo("Failed to list Submissions: {}".format(str(err)))
+        for suid, err in sub_objs_failed.items():
+            click.echo("Failed to fetch Submission '{}': {}".format(suid, str(err)))
+        for suid, err in sub_failed:
+            click.echo("Failed to delete Submission '{}': {}".format(suid, str(err)))
+
+    if cleanup_run or cleanup_all:
+
+        for nuid, err in run_lsts_failed:
+            click.echo("Failed to list Runs: {}".format(str(err)))
+        for ruid, err in run_objs_failed.items():
+            click.echo("Failed to fetch Run '{}': {}".format(ruid, str(err)))
+        for ruid, err in run_failed:
+            click.echo("Failed to delete Run '{}': {}".format(ruid, str(err)))
+
+    if cleanup_fle or cleanup_all:
+
+        for nuid, err in fle_lsts_failed:
+            click.echo("Failed to list Files: {}".format(str(err)))
+        for fuid, err in fle_objs_failed.items():
+            click.echo("Failed to fetch File '{}': {}".format(fuid, str(err)))
+        for fuid, err in fle_failed:
+            click.echo("Failed to delete File '{}': {}".format(fuid, str(err)))
+
 
 ### Main ###
 
