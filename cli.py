@@ -1160,7 +1160,7 @@ def util_cleanup(obj, cleanup_asn, asn_list, cleanup_tst, tst_list,
             asn_lsts, asn_set, asn_objs, asn_lsts_failed, asn_objs_failed = tup
 
             # Delete Assignments
-            asn_deleted, asn_failed = async_obj_map(asn_set, obj['assignments'].async_delete
+            asn_deleted, asn_failed = async_obj_map(asn_set, obj['assignments'].async_delete,
                                                     label="Deleting Assignments",
                                                     timing=timing)
 
@@ -1174,7 +1174,7 @@ def util_cleanup(obj, cleanup_asn, asn_list, cleanup_tst, tst_list,
             tst_lsts, tst_set, tst_objs, tst_lsts_failed, tst_objs_failed = tup
 
             # Delete Tests
-            tst_deleted, tst_failed = async_obj_map(tst_set, obj['tests'].async_delete
+            tst_deleted, tst_failed = async_obj_map(tst_set, obj['tests'].async_delete,
                                                     label="Deleting Tests      ",
                                                     timing=timing)
 
@@ -1188,7 +1188,7 @@ def util_cleanup(obj, cleanup_asn, asn_list, cleanup_tst, tst_list,
             sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
 
             # Delete Submissions
-            sub_deleted, sub_failed = async_obj_map(sub_set, obj['submissions'].async_delete
+            sub_deleted, sub_failed = async_obj_map(sub_set, obj['submissions'].async_delete,
                                                     label="Deleting Submissions",
                                                     timing=timing)
 
@@ -1202,7 +1202,7 @@ def util_cleanup(obj, cleanup_asn, asn_list, cleanup_tst, tst_list,
             run_lsts, run_set, run_objs, run_lsts_failed, run_objs_failed = tup
 
             # Delete Runs
-            run_deleted, run_failed = async_obj_map(run_set, obj['runs'].async_delete
+            run_deleted, run_failed = async_obj_map(run_set, obj['runs'].async_delete,
                                                     label="Deleting Runs       ",
                                                     timing=timing)
 
@@ -1216,7 +1216,7 @@ def util_cleanup(obj, cleanup_asn, asn_list, cleanup_tst, tst_list,
             fle_lsts, fle_set, fle_objs, fle_lsts_failed, fle_objs_failed = tup
 
             # Delete Files
-            fle_deleted, fle_failed = async_obj_map(run_set, obj['files'].async_delete
+            fle_deleted, fle_failed = async_obj_map(run_set, obj['files'].async_delete,
                                                     label="Deleting Files      ",
                                                     timing=timing)
 
