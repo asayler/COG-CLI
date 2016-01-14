@@ -427,6 +427,9 @@ class Files(COGObject):
     def list_by_sub(self, sub_uid):
         return self.list(sub_uid=sub_uid)
 
+    def list_by_null(self, null_uid):
+        return self.list()
+
     def download(self, uid, path, orig_path=False, overwrite=False):
 
         # Clean Input
@@ -476,6 +479,9 @@ class AsyncFiles(Files, AsyncCOGObject):
 
     def async_list_by_sub(self, *args, **kwargs):
         return self._conn.submit(self.list_by_sub, *args, **kwargs)
+
+    def async_list_by_null(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_null, *args, **kwargs)
 
     def async_download(self, *args, **kwargs):
         return self._conn.submit(self.download, *args, **kwargs)
@@ -634,10 +640,16 @@ class Tests(COGFileAttachedObject):
     def list_by_asn(self, asn_uid):
         return self.list(asn_uid=asn_uid)
 
+    def list_by_null(self, null_uid):
+        return self.list()
+
 class AsyncTests(Tests, AsyncCOGFileAttachedObject):
 
     def async_list_by_asn(self, *args, **kwargs):
         return self._conn.submit(self.list_by_asn, *args, **kwargs)
+
+    def async_list_by_null(self, *args, **Kwargs):
+        return self._conn.submit(self.list_by_null, *args, **kwargs)
 
 class Submissions(COGFileAttachedObject):
 
@@ -676,10 +688,16 @@ class Submissions(COGFileAttachedObject):
     def list_by_asn(self, asn_uid):
         return self.list(asn_uid=asn_uid)
 
+    def list_by_null(self, null_uid):
+        return self.list()
+
 class AsyncSubmissions(Submissions, AsyncCOGFileAttachedObject):
 
     def async_list_by_asn(self, *args, **kwargs):
         return self._conn.submit(self.list_by_asn, *args, **kwargs)
+
+    def async_list_by_null(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_null, *args, **kwargs)
 
 class Runs(COGObject):
 
@@ -718,10 +736,16 @@ class Runs(COGObject):
     def list_by_sub(self, sub_uid):
         return self.list(sub_uid=sub_uid)
 
+    def list_by_null(self, null_uid):
+        return self.list()
+
 class AsyncRuns(Runs, AsyncCOGObject):
 
     def async_list_by_sub(self, *args, **kwargs):
         return self._conn.submit(self.list_by_sub, *args, **kwargs)
+
+    def async_list_by_null(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_null, *args, **kwargs)
 
 class Users(COGObject):
 
