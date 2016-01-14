@@ -1119,6 +1119,10 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
                           line_limit=line_limit, sort_by=sort_by)
 
 @util.command(name='cleanup')
+@click.option('--all', 'cleanup_all', is_flag=True,
+              help='Delete All Objects')
+@click.option('--show_timing', 'timing', is_flag=True,
+              help='Collect and show timing data')
 @click.option('--assignments', 'cleanup_asn', is_flag=True,
               help='Delete Assigments')
 @click.option('-a', '--asn_uid', 'asn_list',
@@ -1139,13 +1143,12 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
               help='Delete Files')
 @click.option('-f', '--file_uid', 'fle_list',
               default=None, multiple=True, help='Limit to File UUID')
-@click.option('--show_timing', 'timing', is_flag=True,
-              help='Collect and show timing data')
 @click.pass_obj
 @auth_required
-def util_cleanup(obj, cleanup_asn, asn_list, cleanup_tst, tst_list,
+def util_cleanup(obj, cleanup_all, timing,
+                 cleanup_asn, asn_list, cleanup_tst, tst_list,
                  cleanup_sub, sub_list, cleanup_run, run_list,
-                 cleanup_fle, fle_list, timing):
+                 cleanup_fle, fle_list):
 
     # Make Async Calls
     with obj['connection']:
