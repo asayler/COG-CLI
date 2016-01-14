@@ -648,7 +648,7 @@ class AsyncTests(Tests, AsyncCOGFileAttachedObject):
     def async_list_by_asn(self, *args, **kwargs):
         return self._conn.submit(self.list_by_asn, *args, **kwargs)
 
-    def async_list_by_null(self, *args, **Kwargs):
+    def async_list_by_null(self, *args, **kwargs):
         return self._conn.submit(self.list_by_null, *args, **kwargs)
 
 class Submissions(COGFileAttachedObject):
