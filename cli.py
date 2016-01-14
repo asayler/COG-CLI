@@ -108,7 +108,7 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
             async_list = obj_client.async_list()
         else:
             raise TypeError("Requires either obj_client or async_list")
-    label = "Listing {}".format(obj_name if obj_name else "")
+    label = "Listing  {}".format(obj_name if obj_name else "")
     lists, lists_failed = async_obj_map(iter_parent, async_list,
                                         label=label, timing=timing)
     todo_set = lists_to_set(lists)
