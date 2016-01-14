@@ -1243,7 +1243,7 @@ def util_cleanup(obj, cleanup_all, timing,
         for tuid, err in tst_failed.items():
             click.echo("Failed to delete Test '{}': {}".format(tuid, str(err)))
 
-    if cleanup_sub or cleanup_all.items():
+    if cleanup_sub or cleanup_all:
 
         for nuid, err in sub_lsts_failed:
             click.echo("Failed to list Submissions: {}".format(str(err)))
