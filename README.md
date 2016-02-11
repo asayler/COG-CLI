@@ -1,7 +1,7 @@
 COG-CLI: COG Command Line Interface
 ===================================
 
-By [Andy Sayler](https://www.andysayler.com)
+By [Andy Sayler](https://www.andysayler.com)  
 University of Colorado, Boulder
 
 
@@ -41,7 +41,7 @@ First, setup a new config:
 $ ./cog-cli.py util --url <API URL> save-config <NAME>
 ```
 
-Where `<API URL>` is something like `api-cog-csci1300.cs.colorado.edu`
+Where `<API URL>` is something like `https://api-cog-csci1300.cs.colorado.edu`
 and <NAME> is something like `csci1300`.
 
 You will be prompted for your username and password. Use your COG
@@ -51,14 +51,14 @@ You will be prompted for your username and password. Use your COG
 ### Activating/Deactivating an Assignment ###
 
 An existing assignment can be activated/deactivate to control whether or
-not it shows up on the COG web GUI:
+not it shows up on the COG Web GUI:
 
 ```
 $ ./cog-cli.py --server <NAME> assignment activate --uid <ASSIGNMENT UUID>
 $ ./cog-cli.py --server <NAME> assignment deactivate --uid <ASSIGNMENT UUID>
 ```
 
-Where `<NAME>` is the value you set during the save-config command
+Where `<NAME>` is the value you set during the `save-config` command
 above and `<Assignment UUID>` is the UUID of the assignment in
 question.
 
@@ -70,15 +70,15 @@ test:
 
 ```
 $ ./cog-cli.py --server <NAME> util replace-test-files \
-               --path <PATH>.zip --extract \
-               --tst_uid <TEST UUID>
+               --tst_uid <TEST UUID> \
+               --path <PATH>.zip --extract
 ```
 
 Where `<NAME>` is the value you set during the save-config command
 above, `<PATH>` is the location of the grading script file or archive
-to upload, `--extract` ensures the uploaded archive Si extracted
+to upload, `--extract` ensures the uploaded archive is extracted
 (ignore this option for single-file uploads), and `<TEST UUID>` is the
-UUID of the test on which you which to replace the files.
+UUID of the test on which you wish to replace the files.
 
 
 Related
@@ -92,7 +92,7 @@ Related
 Licensing
 ---------
 
-Copyright 2014, 2015 by Andy Sayler
+Copyright 2014, 2015, 2016 by Andy Sayler
 
 This file is part of COG-CLI.
 
