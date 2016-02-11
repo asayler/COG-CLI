@@ -428,7 +428,7 @@ def assignment_activate(obj, uid):
 @auth_required
 def assignment_deactivate(obj, uid):
 
-    asn = obj['assignments'].update(asn_uid, accpeting_runs=False, accepting_subs=False)
+    asn = obj['assignments'].update(uid, accepting_runs=False, accepting_subs=False)
     click.echo("{}".format(asn))
 
 
