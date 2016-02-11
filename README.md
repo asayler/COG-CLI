@@ -45,7 +45,7 @@ Where `<API URL>` is something like `https://api-cog-csci1300.cs.colorado.edu`
 and <NAME> is something like `csci1300`.
 
 You will be prompted for your username and password. Use your COG
-(e.g. Moodle/Identikey credentials).
+(i.e. Moodle/Identikey) credentials.
 
 
 ### Activating/Deactivating an Assignment ###
