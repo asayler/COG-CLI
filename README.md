@@ -1,14 +1,16 @@
 COG-CLI: COG Command Line Interface
-================================
+===================================
 
-By [Andy Sayler](https://www.andysayler.com)  
+By [Andy Sayler](https://www.andysayler.com)
 University of Colorado, Boulder
+
 
 Status
 ------
 
 COG-CLI is currently running in Beta in production. Bug reports,
 patches, and comments welcome.
+
 
 Prereq
 ------
@@ -18,6 +20,67 @@ $ sudo apt-get install python3
 $ sudo make reqs
 ```
 
+Usage
+-----
+
+### Help ###
+
+The CLI is self documenting:
+
+```
+$ ./cog-cli.py --help
+$ ./cog-cli.py <group> --help
+$ ./cog-cli.py <group> <command> --help
+```
+
+### Setup ###
+
+First, setup a new config:
+
+```
+$ ./cog-cli.py util --url <API URL> save-config <NAME>
+```
+
+Where `<API URL>` is something like `api-cog-csci1300.cs.colorado.edu`
+and <NAME> is something like `csci1300`.
+
+You will be prompted for your username and password. Use your COG
+(e.g. Moodle/Identikey credentials).
+
+
+### Activating/Deactivating an Assignment ###
+
+An existing assignment can be activated/deactivate to control whether or
+not it shows up on the COG web GUI:
+
+```
+$ ./cog-cli.py --server <NAME> assignment activate --uid <ASSIGNMENT UUID>
+$ ./cog-cli.py --server <NAME> assignment deactivate --uid <ASSIGNMENT UUID>
+```
+
+Where `<NAME>` is the value you set during the save-config command
+above and `<Assignment UUID>` is the UUID of the assignment in
+question.
+
+
+### Updating Test Files ###
+
+If you need to upload/replace the grader script files for a given
+test:
+
+```
+$ ./cog-cli.py --server <NAME> util replace-test-files \
+               --path <PATH>.zip --extract \
+               --tst_uid <TEST UUID>
+```
+
+Where `<NAME>` is the value you set during the save-config command
+above, `<PATH>` is the location of the grading script file or archive
+to upload, `--extract` ensures the uploaded archive Si extracted
+(ignore this option for single-file uploads), and `<TEST UUID>` is the
+UUID of the test on which you which to replace the files.
+
+
 Related
 -------
 
@@ -25,10 +88,11 @@ Related
  (this is where the magic happens)
  * [COG-Web](https://github.com/asayler/COG-Web): Web Front-end
 
+
 Licensing
 ---------
 
-Copyright 2014, 2015 by Andy Sayler  
+Copyright 2014, 2015 by Andy Sayler
 
 This file is part of COG-CLI.
 
