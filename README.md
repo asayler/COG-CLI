@@ -38,11 +38,11 @@ $ ./cog-cli.py <group> <command> --help
 First, setup a new config:
 
 ```
-$ ./cog-cli.py util --url <API URL> save-config <NAME>
+$ ./cog-cli.py --url <API URL> util save-config <NAME>
 ```
 
 Where `<API URL>` is something like `https://api-cog-csci1300.cs.colorado.edu`
-and <NAME> is something like `csci1300`.
+and `<NAME>` is something like `csci1300`.
 
 You will be prompted for your username and password. Use your COG
 (i.e. Moodle/Identikey) credentials.
