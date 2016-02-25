@@ -67,8 +67,8 @@ NAME` is your chosen test name, `<SCORE>` is the max score, `<ZIP
 PATH>` is the location of the grading script file or archive to
 upload, `--extract` ensures the uploaded archive is extracted (ignore
 this option for single-file uploads), `<SCRIPT PATH>` is the relative
-path to the grading script inside the grading archive, and <MOODLE CM
-ID> is the web ID of the Moodle assignment you want to report grades
+path to the grading script inside the grading archive, and `<MOODLE CM
+ID>` is the web ID of the Moodle assignment you want to report grades
 to (e.g. `moodle.cs.colorado.edu/mod/assign/view.php?id=<ID>`).
 
 
