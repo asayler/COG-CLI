@@ -791,11 +791,8 @@ class Reporters(COGFileAttachedObject):
         data = {"mod": str(mod)}
         data.update(kwargs)
 
-        # Setup Endpoint
-        ep = "{:s}/".format(_EP_REPORTERS)
-
         # Call Parent
-        return super().create(endpoint=ep, json=data)
+        return super().create(json=data)
 
     def update(self, uid, **kwargs):
 
