@@ -769,9 +769,6 @@ class Users(COGObject):
         raise NotImplementedError()
 
 class AsyncUsers(Users, AsyncCOGObject):
+    pass
 
-    def async_create(self, *args, **kwargs):
-        raise NotImplementedError()
 
-    def async_delete(self, *args, **kwargs):
-        raise NotImplementedError()
