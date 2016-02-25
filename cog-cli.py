@@ -936,7 +936,7 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
         for sub in sub_objs.values():
             usr_set.add(sub["owner"])
         usr_objs, usr_objs_failed = async_obj_map(usr_set, obj['users'].async_show,
-                                                  label="Getting Users      ", timing=timing)
+                                                  label="Getting  Users      ", timing=timing)
 
         # Build File Lists
         paths_map = {}
@@ -982,7 +982,7 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
         def async_fun(path, paths_map):
             fuid = paths_map[path]
             return obj['files'].async_direct_download(fuid, path, overwrite=overwrite)
-        label="Downloading Files  "
+        label="Downloading Files   "
         paths_out, paths_failed = async_obj_map(paths_set, async_fun,
                                                 label=label, timing=timing,
                                                 async_func_args=[paths_map])
@@ -1105,7 +1105,7 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
         for run in run_objs.values():
             usr_set.add(run["owner"])
         usr_objs, usr_objs_failed = async_obj_map(usr_set, obj['users'].async_show,
-                                                  label="Getting Users      ", timing=timing)
+                                                  label="Getting  Users      ", timing=timing)
 
     # Build Table Rows
     for ruid, run in run_objs.items():
