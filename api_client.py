@@ -650,6 +650,42 @@ class Tests(COGFileAttachedObject):
     def list_by_null(self, null_uid):
         return self.list()
 
+    def attach_reporters(self, uid, rpt_uids):
+
+        # Check Args
+        if not rpt_uids:
+            raise TypeError("rpt_uids must not be empty")
+
+        # Setup Endpoint
+        ep = "{:s}/{:s}/{:s}".format(self._ep, str(uid), _EP_REPORTERS)
+
+        # Setup Data
+        rpt_uids = [str(uid) for uid in rpt_uids]
+        data = {_KEY_REPORTERS: rpt_uids}
+
+        # HTTP Call
+        res = self._conn.http_put(endpoint=ep, json=data)
+        lst = res[_KEY_REPORTERS]
+        return lst
+
+    def detach_reporters(self, uid, fle_uids):
+
+        # Check Args
+        if not rpt_uids:
+            raise TypeError("rpt_uids must not be empty")
+
+        # Setup Endpoint
+        ep = "{:s}/{:s}/{:s}".format(self._ep, str(uid), _EP_REPORTERS)
+
+        # Setup Data
+        rpt_uids = [str(uid) for uid in rpt_uids]
+        data = {_KEY_REPORTERS: rpt_uids}
+
+        # HTTP Call
+        res = self._conn.http_delete(endpoint=ep, json=data)
+        lst = res[_KEY_REPORTERS]
+        return lst
+
 class AsyncTests(Tests, AsyncCOGFileAttachedObject):
 
     def async_list_by_asn(self, *args, **kwargs):
