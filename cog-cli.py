@@ -635,6 +635,64 @@ def run_delete(obj, uid):
     click.echo("{}".format(tst))
 
 
+### Reporter Commands ###
+
+@cli.group()
+@click.pass_obj
+def reporter(obj):
+
+    # Setup Client Class
+    obj['reporters'] = api_client.Reporters(obj['connection'])
+
+@reporter.command(name='create')
+@click.option('--mod', default=None, prompt=True, help='Reporter Module')
+@click.option('--mod_opt', 'mod_opts', nargs=2, multiple=True, help='Key:Value Option')
+@click.pass_obj
+@auth_required
+def reporter_create(obj, mod, mod_opts):
+
+    mod_kwargs = dict(list(mod_opts))
+    rpt_list = obj['reporters'].create(mod, **mod_kwargs)
+    click.echo("{}".format(rpt_list))
+
+@reporter.command(name='update')
+@click.option('--uid', prompt=True, type=click.UUID, help='Reporter UUID')
+@click.option('--mod_opt', 'mod_opts', nargs=2, multiple=True, help='Key:Value Option')
+@click.pass_obj
+@auth_required
+def reporter_update(obj, uid, mod_opts):
+
+    mod_kwargs = dict(list(mod_opts))
+    rpt = obj['reporters'].update(uid, **mod_kwargs)
+    click.echo("{}".format(rpt))
+
+@reporter.command(name='list')
+@click.pass_obj
+@auth_required
+def reporter_list(obj):
+
+    rpt_list = obj['reporters'].list()
+    click.echo("{}".format(rpt_list))
+
+@reporter.command(name='show')
+@click.option('--uid', prompt=True, type=click.UUID, help='Reporter UUID')
+@click.pass_obj
+@auth_required
+def reporter_show(obj, uid):
+
+    rpt = obj['reporters'].show(uid)
+    click.echo("{}".format(rpt))
+
+@reporter.command(name='delete')
+@click.option('--uid', prompt=True, type=click.UUID, help='Reporter UUID')
+@click.pass_obj
+@auth_required
+def reporter_delete(obj, uid):
+
+    rpt = obj['reporters'].delete(uid)
+    click.echo("{}".format(rpt))
+
+
 ### Util Commands ###
 
 @cli.group()

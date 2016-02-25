@@ -38,6 +38,8 @@ _EP_RUNS = 'runs'
 _KEY_RUNS = 'runs'
 _EP_USERS = 'users'
 _KEY_USERS = 'users'
+_EP_REPORTERS = 'reporters'
+_KEY_REPORTERS = 'reporters'
 
 _BLOCK_SIZE = 1024
 _THREAD_MULTIPLIER = 5
@@ -771,4 +773,38 @@ class Users(COGObject):
 class AsyncUsers(Users, AsyncCOGObject):
     pass
 
+class Reporters(COGFileAttachedObject):
 
+    def __init__(self, connection):
+        """ Constructor"""
+
+        # Call Parent
+        super().__init__(connection)
+
+        #Set Base Key and Endpoint
+        self._ep = _EP_REPORTERS
+        self._key = _KEY_REPORTERS
+
+    def create(self, mod, **kwargs):
+
+        # Setup Data
+        data = {"mod": str(mod)}
+        data.update(kwargs)
+
+        # Setup Endpoint
+        ep = "{:s}/".format(_EP_REPORTERS)
+
+        # Call Parent
+        return super().create(endpoint=ep, json=data)
+
+    def update(self, uid, **kwargs):
+
+        # Setup Data
+        data = {}
+        data.update(kwargs)
+
+        # Call Parent
+        return super().update(uid, json=data)
+
+class AsyncReporters(Reporters, AsyncCOGObject):
+    pass
