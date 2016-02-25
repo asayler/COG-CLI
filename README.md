@@ -58,18 +58,24 @@ $ ./cog-cli.py --server <SERVER NAME> util setup-assignment \
   --asn_name "<ASSIGNMENT NAME>" --env "local" \
   --tst_name "<TEST NAME>" --tester "script" --maxscore <SCORE> \
   --path <ZIP PATH>.zip --extract --path_script '<SCRIPT PATH>' \
-  --rptmod moodle --rptmod_opt moodle_cm_id <MOODLE CM ID>
+  --rptmod moodle --rptmod_opt moodle_cm_id <CMID>
 ```
 
 Where `<SERVER NAME>` is the value you set during the save-config
-command above, `ASSIGNMENT NAME` is your chosen assignment name, `TEST
-NAME` is your chosen test name, `<SCORE>` is the max score, `<ZIP
-PATH>` is the location of the grading script file or archive to
+command above, `<ASSIGNMENT NAME>` is your chosen assignment name,
+`<TEST NAME>` is your chosen test name, `<SCORE>` is the max score,
+`<ZIP PATH>` is the location of the grading script file or archive to
 upload, `--extract` ensures the uploaded archive is extracted (ignore
 this option for single-file uploads), `<SCRIPT PATH>` is the relative
-path to the grading script inside the grading archive, and `<MOODLE CM
-ID>` is the web ID of the Moodle assignment you want to report grades
-to (e.g. `moodle.cs.colorado.edu/mod/assign/view.php?id=<ID>`).
+path to the grading script inside the grading archive, and `<CMID>` is
+the web ID of the Moodle assignment you want to report grades to
+(e.g. `moodle.cs.colorado.edu/mod/assign/view.php?id=<CMID>`).
+
+You may wish to save the output of this command since the UUIDs it
+produces will be necessary in subsequent commands.
+
+You can add the option `--activate` option to activate the assignment
+immediately, thus avoiding the next step.
 
 
 ### Activating/Deactivating an Assignment ###
