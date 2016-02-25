@@ -803,5 +803,27 @@ class Reporters(COGFileAttachedObject):
         # Call Parent
         return super().update(uid, json=data)
 
+    def list(self, tst_uid=None):
+
+        # Setup Endpoint
+        if tst_uid:
+            ep = "{:s}/{:s}/{:s}".format(_EP_TESTS, str(tst_uid), _EP_REPORTERS)
+        else:
+            ep = self._ep
+
+        # Call Parent
+        return super().list(endpoint=ep)
+
+    def list_by_tst(self, tst_uid):
+        return self.list(tst_uid=tst_uid)
+
+    def list_by_null(self, null_uid):
+        return self.list()
+
 class AsyncReporters(Reporters, AsyncCOGObject):
-    pass
+
+    def async_list_by_tst(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_tst, *args, **kwargs)
+
+    def async_list_by_null(self, *args, **kwargs):
+        return self._conn.submit(self.list_by_null, *args, **kwargs)

@@ -667,11 +667,12 @@ def reporter_update(obj, uid, mod_opts):
     click.echo("{}".format(rpt))
 
 @reporter.command(name='list')
+@click.option('--tst_uid', default=None, type=click.UUID, help='Test UUID')
 @click.pass_obj
 @auth_required
-def reporter_list(obj):
+def reporter_list(obj, tst_uid):
 
-    rpt_list = obj['reporters'].list()
+    rpt_list = obj['reporters'].list(tst_uid=tst_uid)
     click.echo("{}".format(rpt_list))
 
 @reporter.command(name='show')
