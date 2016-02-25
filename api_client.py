@@ -284,6 +284,7 @@ class COGObject(object):
         return uuid_list
 
     def update(self, uid, json):
+        uid = str(uid)
         ep = "{:s}/{:s}".format(self._ep, uid)
         res = self._conn.http_put(ep, json=json)
         obj = res[uid]
@@ -299,12 +300,14 @@ class COGObject(object):
         return uuid_list
 
     def show(self, uid):
+        uid = str(uid)
         ep = "{:s}/{:s}".format(self._ep, uid)
         res = self._conn.http_get(ep)
         obj = res[uid]
         return obj
 
     def delete(self, uid):
+        uid = str(uid)
         ep = "{:s}/{:s}".format(self._ep, uid)
         res = self._conn.http_delete(ep)
         obj = res[uid]
