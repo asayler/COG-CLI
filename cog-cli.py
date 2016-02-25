@@ -707,6 +707,7 @@ def util(obj):
     obj['submissions'] = api_client.AsyncSubmissions(obj['connection'])
     obj['runs'] = api_client.AsyncRuns(obj['connection'])
     obj['users'] = api_client.AsyncUsers(obj['connection'])
+    obj['reporters'] = api_client.AsyncReporters(obj['connection'])
 
 @util.command(name='save-config')
 @click.argument('name')
@@ -821,10 +822,13 @@ def util_duplicate_test(obj, tst_uid):
               help='Source Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
 @click.option('--activate', is_flag=True, help='Control whether or not to make assignment live')
+@click.option('--rptmod', default=None, help='Reporter Module')
+@click.option('--rptmod_opt', 'rptmod_opts', nargs=2, multiple=True, help='Key:Value Option')
 @click.pass_obj
 @auth_required
 def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
-                          path_script, path, extract, activate):
+                          path_script, path, extract, activate,
+                          rptmod, rptmod_opts):
 
     click.echo("Creating assignment...")
     asn_list = obj['assignments'].create(asn_name, env=env)
@@ -845,7 +849,19 @@ def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
     tst_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
     click.echo("Attached files:\n{}".format(tst_fle_list))
 
+    if rptmod:
+
+        rptmod_kwargs = dict(list(rptmod_opts))
+        click.echo("Creating reporter...")
+        new_rpt_list = obj['reporters'].create(rptmod, **rptmod_kwargs)
+        click.echo("Created reporters:\n{}".format(new_rpt_list))
+
+        click.echo("Attaching reporters...")
+        tst_rpt_list = obj['tests'].attach_reporters(tst_uid, new_rpt_list)
+        click.echo("Attached reporters:\n{}".format(tst_rpt_list))
+
     if activate:
+
         click.echo("Activating Assignment...")
         obj['assignments'].update(asn_uid, accpeting_runs=True, accepting_subs=True)
         click.echo("Assignment Activated")
