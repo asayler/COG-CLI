@@ -48,17 +48,41 @@ You will be prompted for your username and password. Use your COG
 (i.e. Moodle/Identikey) credentials.
 
 
+### Creating an Assignment ###
+
+To create a new assignment, prep the necessary grader files into a zip
+file and run:
+
+```
+$ ./cog-cli.py --server <SERVER NAME> util setup-assignment \
+  --asn_name "<ASSIGNMENT NAME>" --env "local" \
+  --tst_name "<TEST NAME>" --tester "script" --maxscore <SCORE> \
+  --path <ZIP PATH>.zip --extract --path_script '<SCRIPT PATH>' \
+  --rptmod moodle --rptmod_opt moodle_cm_id <MOODLE CM ID>
+```
+
+Where `<SERVER NAME>` is the value you set during the save-config
+command above, `ASSIGNMENT NAME` is your chosen assignment name, `TEST
+NAME` is your chosen test name, `<SCORE>` is the max score, `<ZIP
+PATH>` is the location of the grading script file or archive to
+upload, `--extract` ensures the uploaded archive is extracted (ignore
+this option for single-file uploads), `<SCRIPT PATH>` is the relative
+path to the grading script inside the grading archive, and <MOODLE CM
+ID> is the web ID of the Moodle assignment you want to report grades
+to (e.g. `moodle.cs.colorado.edu/mod/assign/view.php?id=<ID>`).
+
+
 ### Activating/Deactivating an Assignment ###
 
 An existing assignment can be activated/deactivate to control whether or
 not it shows up on the COG Web GUI:
 
 ```
-$ ./cog-cli.py --server <NAME> assignment activate --uid <ASSIGNMENT UUID>
-$ ./cog-cli.py --server <NAME> assignment deactivate --uid <ASSIGNMENT UUID>
+$ ./cog-cli.py --server <SERVER NAME> assignment activate --uid <ASSIGNMENT UUID>
+$ ./cog-cli.py --server <SERVER NAME> assignment deactivate --uid <ASSIGNMENT UUID>
 ```
 
-Where `<NAME>` is the value you set during the `save-config` command
+Where `<SERVER NAME>` is the value you set during the `save-config` command
 above and `<Assignment UUID>` is the UUID of the assignment in
 question.
 
@@ -69,12 +93,12 @@ If you need to upload/replace the grader script files for a given
 test:
 
 ```
-$ ./cog-cli.py --server <NAME> util replace-test-files \
+$ ./cog-cli.py --server <SERVER NAME> util replace-test-files \
                --tst_uid <TEST UUID> \
                --path <PATH>.zip --extract
 ```
 
-Where `<NAME>` is the value you set during the save-config command
+Where `<SERVER NAME>` is the value you set during the save-config command
 above, `<PATH>` is the location of the grading script file or archive
 to upload, `--extract` ensures the uploaded archive is extracted
 (ignore this option for single-file uploads), and `<TEST UUID>` is the
