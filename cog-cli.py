@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 import sys
 import json
 import functools
@@ -20,7 +21,7 @@ import api_client
 import util_click
 import util_cli
 
-_EP_TOKENS = 'tokens'
+
 _APP_NAME = 'cog-cli'
 _PATH_SERVER_CONF = os.path.join(click.get_app_dir(_APP_NAME), 'servers')
 
