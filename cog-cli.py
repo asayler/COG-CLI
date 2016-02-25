@@ -293,9 +293,9 @@ def fle_create(obj, path, extract):
     click.echo("{}".format(fle_list))
 
 @fle.command(name='list')
-@click.option('--tst_uid', default=None,
+@click.option('--tst_uid', default=None, type=click.UUID,
               help='Only list files attached to a specific test')
-@click.option('--sub_uid', default=None,
+@click.option('--sub_uid', default=None, type=click.UUID,
               help='Only list files attached to a specific submission')
 @click.pass_obj
 @auth_required
@@ -305,7 +305,7 @@ def fle_list(obj, tst_uid, sub_uid):
     click.echo("{}".format(fle_list))
 
 @fle.command(name='show')
-@click.option('--uid', default=None, prompt=True, help='File UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='File UUID')
 @click.pass_obj
 @auth_required
 def fle_show(obj, uid):
@@ -314,7 +314,7 @@ def fle_show(obj, uid):
     click.echo("{}".format(fle))
 
 @fle.command(name='delete')
-@click.option('--uid', default=None, prompt=True, help='File UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='File UUID')
 @click.pass_obj
 @auth_required
 def fle_delete(obj, uid):
@@ -323,7 +323,7 @@ def fle_delete(obj, uid):
     click.echo("{}".format(fle))
 
 @fle.command(name='download')
-@click.option('--uid', default=None, prompt=True, help='File UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='File UUID')
 @click.option('--path', default=None, prompt=True,
               type=click.Path(writable=True, resolve_path=True),
               help='Destination Path')
@@ -367,7 +367,7 @@ def assignment_create(obj, name, env, duedate, respect_duedate,
     click.echo("{}".format(asn_list))
 
 @assignment.command(name='update')
-@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Assignment UUID')
 @click.option('--name', default=None, help='Assignment Name')
 @click.option('--env', default=None, help='Assignment Environment')
 @click.option('--duedate', default=None, help='Assignment Due Date')
@@ -397,7 +397,7 @@ def assignment_list(obj, submitable, runable):
     click.echo("{}".format(asn_list))
 
 @assignment.command(name='show')
-@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Assignment UUID')
 @click.pass_obj
 @auth_required
 def assignment_show(obj, uid):
@@ -406,7 +406,7 @@ def assignment_show(obj, uid):
     click.echo("{}".format(asn))
 
 @assignment.command(name='delete')
-@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Assignment UUID')
 @click.pass_obj
 @auth_required
 def assignment_delete(obj, uid):
@@ -415,7 +415,7 @@ def assignment_delete(obj, uid):
     click.echo("{}".format(asn))
 
 @assignment.command(name='activate')
-@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Assignment UUID')
 @click.pass_obj
 @auth_required
 def assignment_activate(obj, uid):
@@ -424,7 +424,7 @@ def assignment_activate(obj, uid):
     click.echo("{}".format(asn))
 
 @assignment.command(name='deactivate')
-@click.option('--uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Assignment UUID')
 @click.pass_obj
 @auth_required
 def assignment_deactivate(obj, uid):
@@ -459,7 +459,7 @@ def test_create(obj, asn_uid, name, maxscore, tester, builder, path_script):
     click.echo("{}".format(tst_list))
 
 @test.command(name='update')
-@click.option('--uid', default=None, prompt=True, help='Test UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Test UUID')
 @click.option('--name', default=None, help='Test Name')
 @click.option('--maxscore', default=None, help='Max Score')
 @click.option('--tester', default=None, help='Test Module')
@@ -475,7 +475,7 @@ def test_update(obj, uid, name, maxscore, tester, builder, path_script):
     click.echo("{}".format(tst))
 
 @test.command(name='list')
-@click.option('--asn_uid', default=None, help='Assignment UUID')
+@click.option('--asn_uid', default=None, type=click.UUID, help='Assignment UUID')
 @click.pass_obj
 @auth_required
 def test_list(obj, asn_uid):
@@ -484,7 +484,7 @@ def test_list(obj, asn_uid):
     click.echo("{}".format(tst_list))
 
 @test.command(name='show')
-@click.option('--uid', default=None, prompt=True, help='Test UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Test UUID')
 @click.pass_obj
 @auth_required
 def test_show(obj, uid):
@@ -493,7 +493,7 @@ def test_show(obj, uid):
     click.echo("{}".format(tst))
 
 @test.command(name='delete')
-@click.option('--uid', default=None, prompt=True, help='Test UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Test UUID')
 @click.pass_obj
 @auth_required
 def test_delete(obj, uid):
@@ -502,8 +502,8 @@ def test_delete(obj, uid):
     click.echo("{}".format(tst))
 
 @test.command(name='attach_files')
-@click.option('--uid', default=None, prompt=True, help='Test UUID')
-@click.option('--fle_uid', default=None, multiple=True, help='File UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Test UUID')
+@click.option('--fle_uid', multiple=True, type=click.UUID, help='File UUID')
 @click.pass_obj
 @auth_required
 def test_attach_files(obj, uid, fle_uid):
@@ -512,8 +512,8 @@ def test_attach_files(obj, uid, fle_uid):
     click.echo("{}".format(tst))
 
 @test.command(name='detach_files')
-@click.option('--uid', default=None, prompt=True, help='Test UUID')
-@click.option('--fle_uid', default=None, multiple=True, help='File UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Test UUID')
+@click.option('--fle_uid', multiple=True, type=click.UUID, help='File UUID')
 @click.pass_obj
 @auth_required
 def test_detach_files(obj, uid, fle_uid):
@@ -541,7 +541,7 @@ def submission_create(obj, asn_uid):
     click.echo("{}".format(tst_list))
 
 @submission.command(name='list')
-@click.option('--asn_uid', default=None, help='Assignment UUID')
+@click.option('--asn_uid', default=None, type=click.UUID, help='Assignment UUID')
 @click.pass_obj
 @auth_required
 def submission_list(obj, asn_uid):
@@ -550,7 +550,7 @@ def submission_list(obj, asn_uid):
     click.echo("{}".format(tst_list))
 
 @submission.command(name='show')
-@click.option('--uid', default=None, prompt=True, help='Submission UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
 @click.pass_obj
 @auth_required
 def submission_show(obj, uid):
@@ -559,7 +559,7 @@ def submission_show(obj, uid):
     click.echo("{}".format(tst))
 
 @submission.command(name='delete')
-@click.option('--uid', default=None, prompt=True, help='Submission UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
 @click.pass_obj
 @auth_required
 def submission_delete(obj, uid):
@@ -568,8 +568,8 @@ def submission_delete(obj, uid):
     click.echo("{}".format(tst))
 
 @submission.command(name='attach_files')
-@click.option('--uid', default=None, prompt=True, help='Submission UUID')
-@click.option('--fle_uid', default=None, multiple=True, help='File UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
+@click.option('--fle_uid', multiple=True, type=click.UUID, help='File UUID')
 @click.pass_obj
 @auth_required
 def submission_attach_files(obj, uid, fle_uid):
@@ -578,8 +578,8 @@ def submission_attach_files(obj, uid, fle_uid):
     click.echo("{}".format(tst))
 
 @submission.command(name='detach_files')
-@click.option('--uid', default=None, prompt=True, help='Submission UUID')
-@click.option('--fle_uid', default=None, multiple=True, help='File UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
+@click.option('--fle_uid', multiple=True, type=click.UUID, help='File UUID')
 @click.pass_obj
 @auth_required
 def submission_detach_files(obj, uid, fle_uid):
@@ -598,8 +598,8 @@ def run(obj):
     obj['runs'] = api_client.Runs(obj['connection'])
 
 @run.command(name='create')
-@click.option('--sub_uid', default=None, prompt=True, help='Submission UUID')
-@click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
+@click.option('--sub_uid', prompt=True, type=click.UUID, help='Submission UUID')
+@click.option('--tst_uid', prompt=True, type=click.UUID, help='Test UUID')
 @click.pass_obj
 @auth_required
 def run_create(obj, sub_uid, tst_uid):
@@ -608,7 +608,7 @@ def run_create(obj, sub_uid, tst_uid):
     click.echo("{}".format(tst_list))
 
 @run.command(name='list')
-@click.option('--sub_uid', default=None, help='Submission UUID')
+@click.option('--sub_uid', default=None, type=click.UUID, help='Submission UUID')
 @click.pass_obj
 @auth_required
 def run_list(obj, sub_uid):
@@ -617,7 +617,7 @@ def run_list(obj, sub_uid):
     click.echo("{}".format(tst_list))
 
 @run.command(name='show')
-@click.option('--uid', default=None, prompt=True, help='Run UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Run UUID')
 @click.pass_obj
 @auth_required
 def run_show(obj, uid):
@@ -626,7 +626,7 @@ def run_show(obj, uid):
     click.echo("{}".format(tst))
 
 @run.command(name='delete')
-@click.option('--uid', default=None, prompt=True, help='Run UUID')
+@click.option('--uid', prompt=True, type=click.UUID, help='Run UUID')
 @click.pass_obj
 @auth_required
 def run_delete(obj, uid):
@@ -749,7 +749,7 @@ def util_show_token(obj):
               type=click.Path(exists=True, readable=True, resolve_path=True),
               help='Source Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
-@click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
+@click.option('--tst_uid', prompt=True, type=click.UUID, help='Test UUID')
 @click.pass_obj
 @auth_required
 def util_replace_test_files(obj, path, extract, tst_uid):
@@ -782,7 +782,7 @@ def util_replace_test_files(obj, path, extract, tst_uid):
     click.echo("Attached files:\n{}".format(tst_fle_list))
 
 @util.command(name='duplicate-test')
-@click.option('--tst_uid', default=None, prompt=True, help='Test UUID')
+@click.option('--tst_uid', prompt=True, type=click.UUID, help='Test UUID')
 @click.pass_obj
 @auth_required
 def util_duplicate_test(obj, tst_uid):
@@ -851,7 +851,7 @@ def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
         click.echo("Assignment Activated")
 
 @util.command(name='setup-assignment-test')
-@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
+@click.option('--asn_uid', prompt=True, type=click.UUID, help='Assignment UUID')
 @click.option('--tst_name', default=None, prompt=True, help='Test Name')
 @click.option('--maxscore', default=None, prompt=True, help='Max Score')
 @click.option('--tester', default='script', help='Test Module')
@@ -884,11 +884,11 @@ def util_setup_assignment_test(obj, asn_uid, tst_name, maxscore, tester,
                 type=click.Path(exists=True, writable=True,
                                 resolve_path=True, file_okay=False))
 @click.option('-a', '--asn_uid', 'asn_list',
-              default=None, multiple=True, help='Limit to Assignment UUID')
+              multiple=True, type=click.UUID, help='Limit to Assignment UUID')
 @click.option('-s', '--sub_uid', 'sub_list',
-              default=None, multiple=True, help='Limit to Submission UUID')
+              multiple=True, type=click.UUID, help='Limit to Submission UUID')
 @click.option('-u', '--usr_uid', 'usr_list',
-              default=None, multiple=True, help='Limit to User UUID')
+              multiple=True, type=click.UUID, help='Limit to User UUID')
 @click.option('--full_uuid', is_flag=True,
               help='Force use of full UUIDs in output')
 @click.option('--full_name', is_flag=True,
@@ -1018,15 +1018,15 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
 
 @util.command(name='show-results')
 @click.option('-a', '--asn_uid', 'asn_list',
-              default=None, multiple=True, help='Limit to Assignment UUID')
+              multiple=True, type=click.UUID, help='Limit to Assignment UUID')
 @click.option('-t', '--tst_uid', 'tst_list',
-              default=None, multiple=True, help='Limit to Test UUID')
+              multiple=True, type=click.UUID, help='Limit to Test UUID')
 @click.option('-s', '--sub_uid', 'sub_list',
-              default=None, multiple=True, help='Limit to Submission UUID')
+              multiple=True, type=click.UUID, help='Limit to Submission UUID')
 @click.option('-r', '--run_uid', 'run_list',
-              default=None, multiple=True, help='Limit to Run UUID')
+              multiple=True, type=click.UUID, help='Limit to Run UUID')
 @click.option('-u', '--usr_uid', 'usr_list',
-              default=None, multiple=True, help='Limit to User UUID')
+              multiple=True, type=click.UUID, help='Limit to User UUID')
 @click.option('--sort_by', default=None,
               type=click.Choice(['User', 'Assignment', 'Test', 'Submission',
                                  'Run', 'Date', 'Status', 'Score']),
@@ -1186,23 +1186,23 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
 @click.option('--assignments', 'cleanup_asn', is_flag=True,
               help='Delete Assigments')
 @click.option('-a', '--asn_uid', 'asn_list',
-              default=None, multiple=True, help='Limit to Assignment UUID')
+              multiple=True, type=click.UUID, help='Limit to Assignment UUID')
 @click.option('--tests', 'cleanup_tst', is_flag=True,
               help='Delete Tests')
 @click.option('-t', '--tst_uid', 'tst_list',
-              default=None, multiple=True, help='Limit to Test UUID')
+              multiple=True, type=click.UUID, help='Limit to Test UUID')
 @click.option('--submissions', 'cleanup_sub', is_flag=True,
               help='Delete Submissions')
 @click.option('-s', '--sub_uid', 'sub_list',
-              default=None, multiple=True, help='Limit to Submission UUID')
+              multiple=True, type=click.UUID, help='Limit to Submission UUID')
 @click.option('--runs', 'cleanup_run', is_flag=True,
               help='Delete Runs')
 @click.option('-r', '--run_uid', 'run_list',
-              default=None, multiple=True, help='Limit to Run UUID')
+              multiple=True, type=click.UUID, help='Limit to Run UUID')
 @click.option('--files', 'cleanup_fle', is_flag=True,
               help='Delete Files')
 @click.option('-f', '--file_uid', 'fle_list',
-              default=None, multiple=True, help='Limit to File UUID')
+              multiple=True, type=click.UUID, help='Limit to File UUID')
 @click.pass_obj
 @auth_required
 def util_cleanup(obj, cleanup_all, timing,

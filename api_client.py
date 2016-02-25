@@ -352,9 +352,10 @@ class COGFileAttachedObject(COGObject):
             raise TypeError("fle_uids must not be empty")
 
         # Setup Endpoint
-        ep = "{:s}/{:s}/{:s}".format(self._ep, uid, _EP_FILES)
+        ep = "{:s}/{:s}/{:s}".format(self._ep, str(uid), _EP_FILES)
 
         # Setup Data
+        fle_uids = [str(uid) for uid in fle_uids]
         data = {_KEY_FILES: fle_uids}
 
         # HTTP Call
@@ -369,9 +370,10 @@ class COGFileAttachedObject(COGObject):
             raise TypeError("fle_uids must not be empty")
 
         # Setup Endpoint
-        ep = "{:s}/{:s}/{:s}".format(self._ep, uid, _EP_FILES)
+        ep = "{:s}/{:s}/{:s}".format(self._ep, str(uid), _EP_FILES)
 
         # Setup Data
+        fle_uids = [str(uid) for uid in fle_uids]
         data = {_KEY_FILES: fle_uids}
 
         # HTTP Call
@@ -417,9 +419,9 @@ class Files(COGObject):
 
         # Setup Endpoint
         if tst_uid:
-            ep = "{:s}/{:s}/{:s}".format(_EP_TESTS, tst_uid, _EP_FILES)
+            ep = "{:s}/{:s}/{:s}".format(_EP_TESTS, str(tst_uid), _EP_FILES)
         elif sub_uid:
-            ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, sub_uid, _EP_FILES)
+            ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, str(sub_uid), _EP_FILES)
         else:
             ep = self._ep
 
@@ -459,7 +461,7 @@ class Files(COGObject):
             os.makedirs(dir_path, exist_ok=True)
 
             # Download File
-            ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
+            ep = "{:s}/{:s}/{:s}/".format(self._ep, str(uid), _EP_FILES_CONTENTS)
             path = self._conn.http_download(ep, path)
 
         return path
@@ -472,7 +474,7 @@ class Files(COGObject):
         if overwrite or not os.path.exists(path):
 
             # Download File
-            ep = "{:s}/{:s}/{:s}/".format(self._ep, uid, _EP_FILES_CONTENTS)
+            ep = "{:s}/{:s}/{:s}/".format(self._ep, str(uid), _EP_FILES_CONTENTS)
             path = self._conn.http_download(ep, path)
 
         return path
@@ -635,7 +637,7 @@ class Tests(COGFileAttachedObject):
 
         # Setup Endpoint
         if asn_uid:
-            ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
+            ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, str(asn_uid), _EP_TESTS)
         else:
             ep = self._ep
 
@@ -674,7 +676,7 @@ class Submissions(COGFileAttachedObject):
         data = {}
 
         # Setup Endpoint
-        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_SUBMISSIONS)
+        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, str(asn_uid), _EP_SUBMISSIONS)
 
         # Call Parent
         return super().create(endpoint=ep, json=data)
@@ -683,7 +685,7 @@ class Submissions(COGFileAttachedObject):
 
         # Setup Endpoint
         if asn_uid:
-            ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_SUBMISSIONS)
+            ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, str(asn_uid), _EP_SUBMISSIONS)
         else:
             ep = self._ep
 
@@ -719,10 +721,10 @@ class Runs(COGObject):
     def create(self, sub_uid, tst_uid):
 
         # Setup Data
-        data = {"test": tst_uid}
+        data = {"test": str(tst_uid)}
 
         # Setup Endpoint
-        ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, sub_uid, _EP_RUNS)
+        ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, str(sub_uid), _EP_RUNS)
 
         # Call Parent
         return super().create(endpoint=ep, json=data)
@@ -731,7 +733,7 @@ class Runs(COGObject):
 
         # Setup Endpoint
         if sub_uid:
-            ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, sub_uid, _EP_RUNS)
+            ep = "{:s}/{:s}/{:s}".format(_EP_SUBMISSIONS, str(sub_uid), _EP_RUNS)
         else:
             ep = self._ep
 
