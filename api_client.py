@@ -11,6 +11,7 @@ import os.path
 import multiprocessing
 import concurrent.futures
 import functools
+import uuid
 
 import requests
 
@@ -236,13 +237,16 @@ class MyInfo(object):
         self._ep = _EP_MY
 
     def token(self):
-        return self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_TOKEN))[_KEY_MY_TOKEN]
+        ret = self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_TOKEN))
+        return ret[_KEY_MY_TOKEN]
 
     def username(self):
-        return self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_USERNAME))[_KEY_MY_USERNAME]
+        ret = self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_USERNAME))
+        return ret[_KEY_MY_USERNAME]
 
     def useruuid(self):
-        return self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_USERUUID))[_KEY_MY_USERUUID]
+        ret = self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_USERUUID))
+        return uuid.UUID(ret[_KEY_MY_USERUUID])
 
 class AsyncMyInfo(MyInfo):
 
@@ -283,7 +287,7 @@ class COGObject(object):
             endpoint = self._ep
         res = self._conn.http_post(endpoint, json=json, files=files)
         uuid_list = res[self._key]
-        return uuid_list
+        return [uuid.UUID(uid) for uid in uuid_list]
 
     def update(self, uid, json):
         uid = str(uid)
@@ -299,7 +303,7 @@ class COGObject(object):
 
         res = self._conn.http_get(endpoint)
         uuid_list = res[self._key]
-        return uuid_list
+        return [uuid.UUID(uid) for uid in uuid_list]
 
     def show(self, uid):
         uid = str(uid)
@@ -360,8 +364,8 @@ class COGFileAttachedObject(COGObject):
 
         # HTTP Call
         res = self._conn.http_put(endpoint=ep, json=data)
-        lst = res[_KEY_FILES]
-        return lst
+        uuid_list = res[_KEY_FILES]
+        return [uuid.UUID(uuid) for uid in uuid_list]
 
     def detach_files(self, uid, fle_uids):
 
@@ -378,8 +382,8 @@ class COGFileAttachedObject(COGObject):
 
         # HTTP Call
         res = self._conn.http_delete(endpoint=ep, json=data)
-        lst = res[_KEY_FILES]
-        return lst
+        uuid_list = res[_KEY_FILES]
+        return [uuid.UUID(uid) for uid in uuid_list]
 
 class AsyncCOGFileAttachedObject(COGFileAttachedObject, AsyncCOGObject):
 
@@ -665,8 +669,8 @@ class Tests(COGFileAttachedObject):
 
         # HTTP Call
         res = self._conn.http_put(endpoint=ep, json=data)
-        lst = res[_KEY_REPORTERS]
-        return lst
+        uuid_list = res[_KEY_REPORTERS]
+        return [uuid.UUID(uid) for uid in uuid_list]
 
     def detach_reporters(self, uid, fle_uids):
 
@@ -683,8 +687,8 @@ class Tests(COGFileAttachedObject):
 
         # HTTP Call
         res = self._conn.http_delete(endpoint=ep, json=data)
-        lst = res[_KEY_REPORTERS]
-        return lst
+        uuid_list = res[_KEY_REPORTERS]
+        return [uuid.UUID(uid) for uid in uuid_list]
 
 class AsyncTests(Tests, AsyncCOGFileAttachedObject):
 

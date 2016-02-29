@@ -123,7 +123,7 @@ def async_obj_fetch(iter_parent, obj_name=None, obj_client=None,
                 todo_set.add(ouid)
             else:
                 obj_str = obj_name if obj_name else "object"
-                msg = "Pre-filtered {} '{}' not found".format(obj_str, ouid)
+                msg = "Pre-filtered {} '{}' not found in '{}'".format(obj_str, ouid, todo_set_orig)
                 raise TypeError(msg)
 
     # Pre-Filter Function
@@ -175,20 +175,19 @@ def lists_to_set(lists):
 
 ### Post Processing Filters ###
 
-def postfilter_attr(attr, ouid, obj, attrs):
+def postfilter_attr_owner(ouid, obj, owners):
 
-    if attrs:
-        return obj[attr] in attrs
+    if owners:
+        return uuid.UUID(obj['owner']) in owners
     else:
         return True
 
-def postfilter_attr_owner(ouid, obj, owners):
-
-    return postfilter_attr("owner", ouid, obj, owners)
-
 def postfilter_attr_test(ouid, obj, tests):
 
-    return postfilter_attr("test", ouid, obj, tests)
+    if tests:
+        return uuid.UUID(obj['test']) in tests
+    else:
+        return True
 
 
 ### CLI Root ###
@@ -917,8 +916,10 @@ def util_setup_assignment_test(obj, asn_uid, tst_name, maxscore, tester,
               multiple=True, type=click.UUID, help='Limit to Assignment UUID')
 @click.option('-s', '--sub_uid', 'sub_list',
               multiple=True, type=click.UUID, help='Limit to Submission UUID')
-@click.option('-u', '--usr_uid', 'usr_list',
+@click.option('-u', '--usr_uid', 'usr_uid_list',
               multiple=True, type=click.UUID, help='Limit to User UUID')
+@click.option('--usr_name', 'usr_name_list',
+              multiple=True, type=click.STRING, help='Limit to User Name')
 @click.option('--full_uuid', is_flag=True,
               help='Force use of full UUIDs in output')
 @click.option('--full_name', is_flag=True,
@@ -929,7 +930,8 @@ def util_setup_assignment_test(obj, asn_uid, tst_name, maxscore, tester,
               help='Overwrite existing files (skipped by default)')
 @click.pass_obj
 @auth_required
-def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
+def util_download_submissions(obj, dest_dir, asn_list, sub_list,
+                              usr_uid_list, usr_name_list,
                               full_uuid, full_name, timing, overwrite):
 
     # Start Timing
@@ -939,6 +941,13 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
     # Make Async Calls
     with obj['connection']:
 
+        # Convert usernames to UIDs
+        if usr_name_list:
+            usr_uids, usr_uids_failed = async_obj_map(usr_name_list, obj['users'].async_name_to_uid,
+                                                      label="Getting  User UIDs  ", timing=timing)
+        usr_uid_list = list(usr_uid_list)
+        usr_uid_list += [usr_uids[name] for name in usr_name_list]
+
         # Fetch Assignments
         tup = async_obj_fetch([None], obj_name="Assignments", timing=timing,
                               async_list=obj['assignments'].async_list_by_null,
@@ -947,16 +956,16 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
         asn_lsts, asn_set, asn_objs, asn_lsts_failed, asn_objs_failed = tup
 
         # Fetch Submissions
-        tup = async_obj_fetch(asn_set, obj_name="Submissions", timing=timing,
+        tup = async_obj_fetch(asn_objs.keys(), obj_name="Submissions", timing=timing,
                               async_list=obj['submissions'].async_list_by_asn,
                               async_show=obj['submissions'].async_show,
                               prefilter_list=sub_list,
                               postfilter_func=postfilter_attr_owner,
-                              postfilter_func_args=[usr_list])
+                              postfilter_func_args=[usr_uid_list])
         sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
 
         # Fetch Files
-        tup = async_obj_fetch(sub_set, obj_name="Files      ", timing=timing,
+        tup = async_obj_fetch(sub_objs.keys(), obj_name="Files      ", timing=timing,
                               async_list=obj['files'].async_list_by_sub,
                               async_show=obj['files'].async_show)
         fle_lsts, fle_set, fle_objs, fle_lsts_failed, fle_objs_failed = tup
@@ -964,7 +973,7 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
         # Fetch Users
         usr_set = set()
         for sub in sub_objs.values():
-            usr_set.add(sub["owner"])
+            usr_set.add(uuid.UUID(sub["owner"]))
         usr_objs, usr_objs_failed = async_obj_map(usr_set, obj['users'].async_show,
                                                   label="Getting  Users      ", timing=timing)
 
@@ -972,12 +981,11 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
         paths_map = {}
         for suid, fle_list in fle_lsts.items():
 
-            suid = uuid.UUID(suid)
-            sub = sub_objs[str(suid)]
-            usid = uuid.UUID(sub_objs[str(suid)]['owner'])
-            usr = usr_objs[str(usid)]
-            auid = uuid.UUID(sub_objs[str(suid)]['assignment'])
-            asn = asn_objs[str(auid)]
+            sub = sub_objs[suid]
+            usid = uuid.UUID(sub_objs[suid]['owner'])
+            usr = usr_objs[usid]
+            auid = uuid.UUID(sub_objs[suid]['assignment'])
+            asn = asn_objs[auid]
 
             if full_uuid:
                 sub_str = "sub_{}".format(str(suid))
@@ -1055,8 +1063,10 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
               multiple=True, type=click.UUID, help='Limit to Submission UUID')
 @click.option('-r', '--run_uid', 'run_list',
               multiple=True, type=click.UUID, help='Limit to Run UUID')
-@click.option('-u', '--usr_uid', 'usr_list',
+@click.option('-u', '--usr_uid', 'usr_uid_list',
               multiple=True, type=click.UUID, help='Limit to User UUID')
+@click.option('--usr_name', 'usr_name_list',
+              multiple=True, type=click.STRING, help='Limit to User Name')
 @click.option('--sort_by', default=None,
               type=click.Choice(['User', 'Assignment', 'Test', 'Submission',
                                  'Run', 'Date', 'Status', 'Score']),
@@ -1076,7 +1086,8 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list, usr_list,
               help='Control whether to display run score')
 @click.pass_obj
 @auth_required
-def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
+def util_show_results(obj, asn_list, tst_list, sub_list, run_list,
+                      usr_uid_list, usr_name_list,
                       sort_by, line_limit, full_uuid, full_name, timing,
                       no_date, no_status, no_score):
 
@@ -1098,6 +1109,13 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
     # Make Async Calls
     with obj['connection']:
 
+        # Convert usernames to UIDs
+        if usr_name_list:
+            usr_uids, usr_uids_failed = async_obj_map(usr_name_list, obj['users'].async_name_to_uid,
+                                                      label="Getting  User UIDs  ", timing=timing)
+        usr_uid_list = list(usr_uid_list)
+        usr_uid_list += [usr_uids[name] for name in usr_name_list]
+
         # Fetch Assignments
         tup = async_obj_fetch([None], obj_name="Assignments", timing=timing,
                               async_list=obj['assignments'].async_list_by_null,
@@ -1106,23 +1124,23 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
         asn_lsts, asn_set, asn_objs, asn_lsts_failed, asn_objs_failed = tup
 
         # Fetch Tests
-        tup = async_obj_fetch(asn_set, obj_name="Tests      ", timing=timing,
+        tup = async_obj_fetch(asn_objs.keys(), obj_name="Tests      ", timing=timing,
                               async_list=obj['tests'].async_list_by_asn,
                               async_show=obj['tests'].async_show,
                               prefilter_list=tst_list)
         tst_lsts, tst_set, tst_objs, tst_lsts_failed, tst_objs_failed = tup
 
         # Fetch Submissions
-        tup = async_obj_fetch(asn_set, obj_name="Submissions", timing=timing,
+        tup = async_obj_fetch(asn_objs.keys(), obj_name="Submissions", timing=timing,
                               async_list=obj['submissions'].async_list_by_asn,
                               async_show=obj['submissions'].async_show,
                               prefilter_list=sub_list,
                               postfilter_func=postfilter_attr_owner,
-                              postfilter_func_args=[usr_list])
+                              postfilter_func_args=[usr_uid_list])
         sub_lsts, sub_set, sub_objs, sub_lsts_failed, sub_objs_failed = tup
 
         # Fetch Runs
-        tup = async_obj_fetch(sub_set, obj_name="Runs       ", timing=timing,
+        tup = async_obj_fetch(sub_objs.keys(), obj_name="Runs       ", timing=timing,
                               async_list=obj['runs'].async_list_by_sub,
                               async_show=obj['runs'].async_show,
                               prefilter_list=run_list,
@@ -1133,7 +1151,7 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
         # Fetch Users
         usr_set = set()
         for run in run_objs.values():
-            usr_set.add(run["owner"])
+            usr_set.add(uuid.UUID(run["owner"]))
         usr_objs, usr_objs_failed = async_obj_map(usr_set, obj['users'].async_show,
                                                   label="Getting  Users      ", timing=timing)
 
@@ -1141,15 +1159,14 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list, usr_list,
     for ruid, run in run_objs.items():
 
         # Get Objects
-        ruid = uuid.UUID(ruid)
         usid = uuid.UUID(run["owner"])
-        usr = usr_objs[str(usid)]
+        usr = usr_objs[usid]
         suid = uuid.UUID(run["submission"])
-        sub = sub_objs[str(suid)]
+        sub = sub_objs[suid]
         tuid = uuid.UUID(run["test"])
-        tst = tst_objs[str(tuid)]
+        tst = tst_objs[tuid]
         auid = uuid.UUID(sub["assignment"])
-        asn = asn_objs[str(auid)]
+        asn = asn_objs[auid]
 
         # Display Objects
         if full_uuid:
