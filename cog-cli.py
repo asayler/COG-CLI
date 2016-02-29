@@ -876,10 +876,13 @@ def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
               type=click.Path(exists=True, readable=True, resolve_path=True),
               help='Source Path')
 @click.option('--extract', is_flag=True, help='Control whether file is extracted')
+@click.option('--rptmod', default=None, help='Reporter Module')
+@click.option('--rptmod_opt', 'rptmod_opts', nargs=2, multiple=True, help='Key:Value Option')
 @click.pass_obj
 @auth_required
 def util_setup_assignment_test(obj, asn_uid, tst_name, maxscore, tester,
-                               path_script, path, extract):
+                               path_script, path, extract,
+                               rptmod, rptmod_opts):
 
     click.echo("Creating test...")
     tst_list = obj['tests'].create(asn_uid, tst_name, maxscore,
@@ -894,6 +897,17 @@ def util_setup_assignment_test(obj, asn_uid, tst_name, maxscore, tester,
     click.echo("Attaching files...")
     tst_fle_list = obj['tests'].attach_files(tst_uid, new_fle_list)
     click.echo("Attached files:\n{}".format(tst_fle_list))
+
+    if rptmod:
+
+        rptmod_kwargs = dict(list(rptmod_opts))
+        click.echo("Creating reporter...")
+        new_rpt_list = obj['reporters'].create(rptmod, **rptmod_kwargs)
+        click.echo("Created reporters:\n{}".format(new_rpt_list))
+
+        click.echo("Attaching reporters...")
+        tst_rpt_list = obj['tests'].attach_reporters(tst_uid, new_rpt_list)
+        click.echo("Attached reporters:\n{}".format(tst_rpt_list))
 
 @util.command(name='download-submissions')
 @click.argument('dest_dir',
