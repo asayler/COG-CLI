@@ -39,6 +39,10 @@ _EP_RUNS = 'runs'
 _KEY_RUNS = 'runs'
 _EP_USERS = 'users'
 _KEY_USERS = 'users'
+_EP_USERNAME = 'username'
+_KEY_USERNAME = 'username'
+_EP_USERUUID = 'useruuid'
+_KEY_USERUUID = 'useruuid'
 _EP_REPORTERS = 'reporters'
 _KEY_REPORTERS = 'reporters'
 
@@ -812,8 +816,28 @@ class Users(COGObject):
     def delete(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def update(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def name_to_uid(self, username):
+
+        ep = "{:s}/{:s}/{:s}/".format(self._ep, _EP_USERUUID, username)
+        res = self._conn.http_get(ep)
+        return uuid.UUID(res[_KEY_USERUUID])
+
+    def uid_to_name(self, useruuid):
+
+        ep = "{:s}/{:s}/{:s}/".format(self._ep, _EP_USERNAME, str(useruuid))
+        res = self._conn.http_get(ep)
+        return res[_KEY_USERNAME]
+
 class AsyncUsers(Users, AsyncCOGObject):
-    pass
+
+    def async_uid_to_name(self, *args, **kwargs):
+        return self._conn.submit(self.uid_to_name, *args, **kwargs)
+
+    def async_name_to_uid(self, *args, **kwargs):
+        return self._conn.submit(self.name_to_uid, *args, **kwargs)
 
 class Reporters(COGFileAttachedObject):
 

@@ -692,6 +692,50 @@ def reporter_delete(obj, uid):
     rpt = obj['reporters'].delete(uid)
     click.echo("{}".format(rpt))
 
+### User Commands ###
+
+@cli.group()
+@click.pass_obj
+def user(obj):
+
+    # Setup Client Class
+    obj['users'] = api_client.Users(obj['connection'])
+
+@user.command(name='list')
+@click.pass_obj
+@auth_required
+def user_list(obj):
+
+    usr_list = obj['users'].list()
+    click.echo("{}".format(usr_list))
+
+@user.command(name='show')
+@click.option('--uid', prompt=True, type=click.UUID, help='User UUID')
+@click.pass_obj
+@auth_required
+def user_show(obj, uid):
+
+    usr = obj['users'].show(uid)
+    click.echo("{}".format(usr))
+
+@user.command(name='uid_to_name')
+@click.argument('uid', type=click.UUID)
+@click.pass_obj
+@auth_required
+def user_uid_to_name(obj, uid):
+
+    name = obj['users'].uid_to_name(uid)
+    click.echo("{}".format(name))
+
+@user.command(name='name_to_uid')
+@click.argument('username', type=click.STRING)
+@click.pass_obj
+@auth_required
+def user_uid_to_name(obj, username):
+
+    uid = obj['users'].name_to_uid(username)
+    click.echo("{}".format(uid))
+
 
 ### Util Commands ###
 
