@@ -609,7 +609,7 @@ class Tests(COGFileAttachedObject):
             data['path_script'] = str(path_script)
 
         # Setup Endpoint
-        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, asn_uid, _EP_TESTS)
+        ep = "{:s}/{:s}/{:s}".format(_EP_ASSIGNMENTS, str(asn_uid), _EP_TESTS)
 
         # Call Parent
         return super().create(endpoint=ep, json=data)
