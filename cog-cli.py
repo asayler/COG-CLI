@@ -520,6 +520,26 @@ def test_detach_files(obj, uid, fle_uid):
     tst = obj['tests'].detach_files(uid, fle_uid)
     click.echo("{}".format(tst))
 
+@test.command(name='attach_reporters')
+@click.option('--uid', prompt=True, type=click.UUID, help='Test UUID')
+@click.option('--rpt_uid', multiple=True, type=click.UUID, help='Reporter UUID')
+@click.pass_obj
+@auth_required
+def test_attach_reporters(obj, uid, rpt_uid):
+
+    tst = obj['tests'].attach_reporters(uid, rpt_uid)
+    click.echo("{}".format(tst))
+
+@test.command(name='detach_reporters')
+@click.option('--uid', prompt=True, type=click.UUID, help='Test UUID')
+@click.option('--rpt_uid', multiple=True, type=click.UUID, help='Reporter UUID')
+@click.pass_obj
+@auth_required
+def test_detach_reporters(obj, uid, fle_uid):
+
+    tst = obj['tests'].detach_reporters(uid, rpt_uid)
+    click.echo("{}".format(tst))
+
 
 ### Submission Commands ###
 
