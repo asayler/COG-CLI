@@ -1122,23 +1122,40 @@ def util_download_submissions(obj, dest_dir, asn_list, sub_list,
               help='Display full names instead of usernames in output')
 @click.option('--show_timing', 'timing', is_flag=True,
               help='Collect and show timing data')
+@click.option('--no_usr', is_flag=True,
+              help='Disable display of User column')
+@click.option('--no_asn', is_flag=True,
+              help='Disable display of Assignment column')
+@click.option('--no_tst', is_flag=True,
+              help='Disable display of Test column')
+@click.option('--no_sub', is_flag=True,
+              help='Disable display of Sub column')
 @click.option('--no_date', is_flag=True,
-              help='Control whether to display run date and time')
+              help='Disable display of Date column')
 @click.option('--no_status', is_flag=True,
-              help='Control whether to display run status')
+              help='Disbale display of Status column')
 @click.option('--no_score', is_flag=True,
-              help='Control whether to display run score')
+              help='Control whether to display Score Column')
 @click.pass_obj
 @auth_required
 def util_show_results(obj, asn_list, tst_list, sub_list, run_list,
                       usr_uid_list, usr_name_list,
                       sort_by, line_limit, full_uuid, full_name, timing,
+                      no_usr, no_asn, no_tst, no_sub,
                       no_date, no_status, no_score):
 
     # Table Objects
-    headings = ["User", "Assignment", "Test", "Submission", "Run"]
+    headings = ["Run"]
     if not no_date:
         headings.append("Date")
+    if not no_usr:
+        headings.append("User")
+    if not no_asn:
+        headings.append("Assignment")
+    if not no_tst:
+        headings.append("Test")
+    if not no_sub:
+        headings.append("Submission")
     if not no_status:
         headings.append("Status")
     if not no_score:
@@ -1238,9 +1255,17 @@ def util_show_results(obj, asn_list, tst_list, sub_list, run_list,
         score_str = run["score"]
 
         # Add row
-        row = [usr_str, asn_str, tst_str, sub_str, run_str]
+        row = [run_str]
         if not no_date:
             row.append(date_str)
+        if not no_usr:
+            row.append(usr_str)
+        if not no_asn:
+            row.append(asn_str)
+        if not no_tst:
+            row.append(tst_str)
+        if not no_sub:
+            row.append(sub_str)
         if not no_status:
             row.append(stat_str)
         if not no_score:
