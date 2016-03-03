@@ -369,7 +369,7 @@ class COGFileAttachedObject(COGObject):
         # HTTP Call
         res = self._conn.http_put(endpoint=ep, json=data)
         uuid_list = res[_KEY_FILES]
-        return [uuid.UUID(uuid) for uid in uuid_list]
+        return [uuid.UUID(uid) for uid in uuid_list]
 
     def detach_files(self, uid, fle_uids):
 
