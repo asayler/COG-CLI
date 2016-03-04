@@ -77,6 +77,27 @@ produces will be necessary in subsequent commands.
 You can add the option `--activate` option to activate the assignment
 immediately, thus avoiding the next step.
 
+There are also a number of extra Moodle reporter parameters that can
+be used to enable additional Moodle reporter functionality:
+
++ `moodle_late_penalty`: points to deduct per `moodle_late_period`
+  past due date
++ `moodle_late_period`: late period in seconds (e.g. 86400 = 1 day)
++ `moodle_prereq_cm_id`: Moodle cmid of prereq assignment
++ `moodle_prereq_min`: Minimum grade stunt must receive on prereq
+  assignment before being graded on this assignment.
+
+The `moodle_late_*` parameters can be used to setup a linear late
+penalty that is applied for any COG submission that occurred after the
+Moodle assignment due date but before the Moodle assignment cutoff
+date.
+
+The `moodle_prereq_*` parameters can be used to specify a prerequisite
+assignment on which the student must receive a threshold grade before
+being graded on the current assingmnt.
+
+To use these parameters, specify them as key:value pairs following an
+`--rptmod_opt` option as shown in the example above.
 
 ### Activating/Deactivating an Assignment ###
 
