@@ -535,7 +535,7 @@ def test_attach_reporters(obj, uid, rpt_uid):
 @click.option('--rpt_uid', multiple=True, type=click.UUID, help='Reporter UUID')
 @click.pass_obj
 @auth_required
-def test_detach_reporters(obj, uid, fle_uid):
+def test_detach_reporters(obj, uid, rpt_uid):
 
     tst = obj['tests'].detach_reporters(uid, rpt_uid)
     click.echo("{}".format(tst))

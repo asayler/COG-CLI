@@ -676,7 +676,7 @@ class Tests(COGFileAttachedObject):
         uuid_list = res[_KEY_REPORTERS]
         return [uuid.UUID(uid) for uid in uuid_list]
 
-    def detach_reporters(self, uid, fle_uids):
+    def detach_reporters(self, uid, rpt_uids):
 
         # Check Args
         if not rpt_uids:
