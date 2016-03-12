@@ -926,7 +926,7 @@ def util_setup_assignment(obj, asn_name, env, tst_name, maxscore, tester,
     if activate:
 
         click.echo("Activating Assignment...")
-        obj['assignments'].update(asn_uid, accpeting_runs=True, accepting_subs=True)
+        obj['assignments'].update(asn_uid, accepting_runs=True, accepting_subs=True)
         click.echo("Assignment Activated")
 
 @util.command(name='setup-assignment-test')
