@@ -303,6 +303,18 @@ def fle_list(obj, tst_uid, sub_uid):
     fle_list = obj['files'].list(tst_uid=tst_uid, sub_uid=sub_uid)
     click.echo("{}".format(fle_list))
 
+@fle.command(name='count')
+@click.option('--tst_uid', default=None, type=click.UUID,
+              help='Only count files attached to a specific test')
+@click.option('--sub_uid', default=None, type=click.UUID,
+              help='Only count files attached to a specific submission')
+@click.pass_obj
+@auth_required
+def fle_count(obj, tst_uid, sub_uid):
+
+    fle_list = obj['files'].list(tst_uid=tst_uid, sub_uid=sub_uid)
+    click.echo("{}".format(len(fle_list)))
+
 @fle.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='File UUID')
 @click.pass_obj
@@ -395,6 +407,16 @@ def assignment_list(obj, submitable, runable):
     asn_list = obj['assignments'].list(submitable=submitable, runable=runable)
     click.echo("{}".format(asn_list))
 
+@assignment.command(name='count')
+@click.option('--submitable', is_flag=True, help='Limit to submitable assignments')
+@click.option('--runable', is_flag=True, help='Limit to runable assignments')
+@click.pass_obj
+@auth_required
+def assignment_count(obj, submitable, runable):
+
+    asn_list = obj['assignments'].list(submitable=submitable, runable=runable)
+    click.echo("{}".format(len(asn_list)))
+
 @assignment.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='Assignment UUID')
 @click.pass_obj
@@ -482,6 +504,15 @@ def test_list(obj, asn_uid):
     tst_list = obj['tests'].list(asn_uid=asn_uid)
     click.echo("{}".format(tst_list))
 
+@test.command(name='count')
+@click.option('--asn_uid', default=None, type=click.UUID, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def test_count(obj, asn_uid):
+
+    tst_list = obj['tests'].list(asn_uid=asn_uid)
+    click.echo("{}".format(len(tst_list)))
+
 @test.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='Test UUID')
 @click.pass_obj
@@ -568,6 +599,15 @@ def submission_list(obj, asn_uid):
     tst_list = obj['submissions'].list(asn_uid=asn_uid)
     click.echo("{}".format(tst_list))
 
+@submission.command(name='count')
+@click.option('--asn_uid', default=None, type=click.UUID, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def submission_count(obj, asn_uid):
+
+    tst_list = obj['submissions'].list(asn_uid=asn_uid)
+    click.echo("{}".format(len(tst_list)))
+
 @submission.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
 @click.pass_obj
@@ -635,6 +675,15 @@ def run_list(obj, sub_uid):
     tst_list = obj['runs'].list(sub_uid=sub_uid)
     click.echo("{}".format(tst_list))
 
+@run.command(name='count')
+@click.option('--sub_uid', default=None, type=click.UUID, help='Submission UUID')
+@click.pass_obj
+@auth_required
+def run_count(obj, sub_uid):
+
+    tst_list = obj['runs'].list(sub_uid=sub_uid)
+    click.echo("{}".format(len(tst_list)))
+
 @run.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='Run UUID')
 @click.pass_obj
@@ -694,6 +743,15 @@ def reporter_list(obj, tst_uid):
     rpt_list = obj['reporters'].list(tst_uid=tst_uid)
     click.echo("{}".format(rpt_list))
 
+@reporter.command(name='count')
+@click.option('--tst_uid', default=None, type=click.UUID, help='Test UUID')
+@click.pass_obj
+@auth_required
+def reporter_count(obj, tst_uid):
+
+    rpt_list = obj['reporters'].list(tst_uid=tst_uid)
+    click.echo("{}".format(len(rpt_list)))
+
 @reporter.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='Reporter UUID')
 @click.pass_obj
@@ -728,6 +786,14 @@ def user_list(obj):
 
     usr_list = obj['users'].list()
     click.echo("{}".format(usr_list))
+
+@user.command(name='count')
+@click.pass_obj
+@auth_required
+def user_count(obj):
+
+    usr_list = obj['users'].list()
+    click.echo("{}".format(len(usr_list)))
 
 @user.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='User UUID')
