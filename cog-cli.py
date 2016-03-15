@@ -24,6 +24,8 @@ import util_cli
 
 _APP_NAME = 'cog-cli'
 _PATH_SERVER_CONF = os.path.join(click.get_app_dir(_APP_NAME), 'servers')
+_SLEEP_INTERVAL = 5 #seconds
+_STATUS_COMPLETE = "complete"
 
 
 ### Auth Functions ###
@@ -873,6 +875,51 @@ def util_show_token(obj):
 
     click.echo("WARNING: 'util show-token' is deprecated. Use 'my token' instead.", err=True)
     click.echo("'{}'".format(obj['connection'].get_token()))
+
+@util.command(name='submit')
+@click.option('--asn_uid', default=None, type=click.UUID, help='Assignment UUID')
+@click.option('--tst_uid', prompt=True, type=click.UUID, help='Test UUID')
+@click.option('--path', default=None, prompt=True,
+              type=click.Path(exists=True, readable=True, resolve_path=True),
+              help='Files to Upload Path')
+@click.option('--noextract', is_flag=True, help='Control whether file is extracted')
+@click.pass_obj
+@auth_required
+def util_submit(obj, asn_uid, tst_uid, path, noextract):
+
+    click.echo("Creating submission...")
+    sub_list = obj['submissions'].create(asn_uid)
+    click.echo("{}".format(sub_list))
+    sub_uid = sub_list[0]
+
+    click.echo("Uploading files...")
+    extract = not noextract
+    new_fle_list = obj['files'].create(path, extract)
+    click.echo("{}".format(new_fle_list))
+
+    click.echo("Attaching files...")
+    sub_fle_list = obj['submissions'].attach_files(sub_uid, new_fle_list)
+    click.echo("{}".format(sub_fle_list))
+
+    click.echo("Launching test run...")
+    run_list = obj['runs'].create(sub_uid, tst_uid)
+    click.echo("{}".format(run_list))
+    run_uid = run_list[0]
+
+    click.echo("Fetching run results...")
+    complete = False
+    while not complete:
+        run = obj['runs'].show(run_uid)
+        click.echo("status: {}".format(run['status']))
+        complete = run['status'].startswith(_STATUS_COMPLETE)
+        if complete:
+            break
+        time.sleep(_SLEEP_INTERVAL)
+    click.echo("assignment: {}".format(run['assignment']))
+    click.echo("test: {}".format(run['test']))
+    click.echo("retcode: {}".format(run['retcode']))
+    click.echo("score: {}".format(run['score']))
+    click.echo("output:\n{}".format(run['output']))
 
 @util.command(name='replace-test-files')
 @click.option('--path', default=None, prompt=True,
