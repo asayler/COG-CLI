@@ -589,8 +589,8 @@ def submission(obj):
 @auth_required
 def submission_create(obj, asn_uid):
 
-    tst_list = obj['submissions'].create(asn_uid)
-    click.echo("{}".format(tst_list))
+    sub_list = obj['submissions'].create(asn_uid)
+    click.echo("{}".format(sub_list))
 
 @submission.command(name='list')
 @click.option('--asn_uid', default=None, type=click.UUID, help='Assignment UUID')
@@ -598,8 +598,8 @@ def submission_create(obj, asn_uid):
 @auth_required
 def submission_list(obj, asn_uid):
 
-    tst_list = obj['submissions'].list(asn_uid=asn_uid)
-    click.echo("{}".format(tst_list))
+    sub_list = obj['submissions'].list(asn_uid=asn_uid)
+    click.echo("{}".format(sub_list))
 
 @submission.command(name='count')
 @click.option('--asn_uid', default=None, type=click.UUID, help='Assignment UUID')
@@ -607,8 +607,8 @@ def submission_list(obj, asn_uid):
 @auth_required
 def submission_count(obj, asn_uid):
 
-    tst_list = obj['submissions'].list(asn_uid=asn_uid)
-    click.echo("{}".format(len(tst_list)))
+    sub_list = obj['submissions'].list(asn_uid=asn_uid)
+    click.echo("{}".format(len(sub_list)))
 
 @submission.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
@@ -616,8 +616,8 @@ def submission_count(obj, asn_uid):
 @auth_required
 def submission_show(obj, uid):
 
-    tst = obj['submissions'].show(uid)
-    click.echo("{}".format(tst))
+    sub = obj['submissions'].show(uid)
+    click.echo("{}".format(sub))
 
 @submission.command(name='delete')
 @click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
@@ -625,8 +625,8 @@ def submission_show(obj, uid):
 @auth_required
 def submission_delete(obj, uid):
 
-    tst = obj['submissions'].delete(uid)
-    click.echo("{}".format(tst))
+    sub = obj['submissions'].delete(uid)
+    click.echo("{}".format(sub))
 
 @submission.command(name='attach_files')
 @click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
@@ -635,8 +635,8 @@ def submission_delete(obj, uid):
 @auth_required
 def submission_attach_files(obj, uid, fle_uid):
 
-    tst = obj['submissions'].attach_files(uid, fle_uid)
-    click.echo("{}".format(tst))
+    sub = obj['submissions'].attach_files(uid, fle_uid)
+    click.echo("{}".format(sub))
 
 @submission.command(name='detach_files')
 @click.option('--uid', prompt=True, type=click.UUID, help='Submission UUID')
@@ -645,8 +645,8 @@ def submission_attach_files(obj, uid, fle_uid):
 @auth_required
 def submission_detach_files(obj, uid, fle_uid):
 
-    tst = obj['submissions'].detach_files(uid, fle_uid)
-    click.echo("{}".format(tst))
+    sub = obj['submissions'].detach_files(uid, fle_uid)
+    click.echo("{}".format(sub))
 
 
 ### Run Commands ###
@@ -665,8 +665,8 @@ def run(obj):
 @auth_required
 def run_create(obj, sub_uid, tst_uid):
 
-    tst_list = obj['runs'].create(sub_uid, tst_uid)
-    click.echo("{}".format(tst_list))
+    run_list = obj['runs'].create(sub_uid, tst_uid)
+    click.echo("{}".format(run_list))
 
 @run.command(name='list')
 @click.option('--sub_uid', default=None, type=click.UUID, help='Submission UUID')
@@ -674,8 +674,8 @@ def run_create(obj, sub_uid, tst_uid):
 @auth_required
 def run_list(obj, sub_uid):
 
-    tst_list = obj['runs'].list(sub_uid=sub_uid)
-    click.echo("{}".format(tst_list))
+    run_list = obj['runs'].list(sub_uid=sub_uid)
+    click.echo("{}".format(run_list))
 
 @run.command(name='count')
 @click.option('--sub_uid', default=None, type=click.UUID, help='Submission UUID')
@@ -683,8 +683,8 @@ def run_list(obj, sub_uid):
 @auth_required
 def run_count(obj, sub_uid):
 
-    tst_list = obj['runs'].list(sub_uid=sub_uid)
-    click.echo("{}".format(len(tst_list)))
+    run_list = obj['runs'].list(sub_uid=sub_uid)
+    click.echo("{}".format(len(run_list)))
 
 @run.command(name='show')
 @click.option('--uid', prompt=True, type=click.UUID, help='Run UUID')
@@ -692,8 +692,8 @@ def run_count(obj, sub_uid):
 @auth_required
 def run_show(obj, uid):
 
-    tst = obj['runs'].show(uid)
-    click.echo("{}".format(tst))
+    run = obj['runs'].show(uid)
+    click.echo("{}".format(run))
 
 @run.command(name='delete')
 @click.option('--uid', prompt=True, type=click.UUID, help='Run UUID')
@@ -701,8 +701,8 @@ def run_show(obj, uid):
 @auth_required
 def run_delete(obj, uid):
 
-    tst = obj['runs'].delete(uid)
-    click.echo("{}".format(tst))
+    run = obj['runs'].delete(uid)
+    click.echo("{}".format(run))
 
 
 ### Reporter Commands ###
