@@ -868,14 +868,6 @@ def util_save_config(obj, name, conf_path):
         click.echo("Writing new config to '{}'".format(conf_path))
         conf_obj.write(conf_file)
 
-@util.command(name='show-token')
-@click.pass_obj
-@auth_required
-def util_show_token(obj):
-
-    click.echo("WARNING: 'util show-token' is deprecated. Use 'my token' instead.", err=True)
-    click.echo("'{}'".format(obj['connection'].get_token()))
-
 @util.command(name='submit')
 @click.option('--asn_uid', default=None, type=click.UUID, help='Assignment UUID')
 @click.option('--tst_uid', prompt=True, type=click.UUID, help='Test UUID')
