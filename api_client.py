@@ -231,7 +231,7 @@ class AsyncConnection(Connection):
     def async_http_download(self, *args, **kwargs):
         return self.submit(self.http_download, *args, **kwargs)
 
-class MyInfo(object):
+class My(object):
 
     def __init__(self, connection):
         """ Constructor"""
@@ -252,7 +252,7 @@ class MyInfo(object):
         ret = self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_USERUUID))
         return uuid.UUID(ret[_KEY_MY_USERUUID])
 
-class AsyncMyInfo(MyInfo):
+class AsyncMy(My):
 
     def __init__(self, async_connection):
         """ Constructor"""

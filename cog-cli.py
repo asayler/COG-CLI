@@ -245,14 +245,14 @@ def cli(ctx, server, url, username, password, token, conf_path):
 def my(obj):
 
     # Setup Client Class
-    obj['myinfo'] = api_client.MyInfo(obj['connection'])
+    obj['my'] = api_client.My(obj['connection'])
 
 @my.command(name='token')
 @click.pass_obj
 @auth_required
 def my_token(obj):
 
-    token = obj['myinfo'].token()
+    token = obj['my'].token()
     click.echo("{}".format(token))
 
 @my.command(name='username')
@@ -260,7 +260,7 @@ def my_token(obj):
 @auth_required
 def my_username(obj):
 
-    username = obj['myinfo'].username()
+    username = obj['my'].username()
     click.echo("{}".format(username))
 
 @my.command(name='useruuid')
@@ -268,7 +268,6 @@ def my_username(obj):
 @auth_required
 def my_useruuid(obj):
 
-    useruuid = obj['myinfo'].useruuid()
     click.echo("{}".format(useruuid))
 
 
