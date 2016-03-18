@@ -252,6 +252,20 @@ class My(object):
         ret = self._conn.http_get("{}/{}".format(_EP_MY, _EP_MY_USERUUID))
         return uuid.UUID(ret[_KEY_MY_USERUUID])
 
+    def submissions(self, asn_uid=None):
+
+        # Setup Endpoint
+        if asn_uid:
+            ep = "{:s}/{:s}/{:s}/{:s}".format(self._ep, _EP_ASSIGNMENTS, str(asn_uid), _EP_SUBMISSIONS)
+        else:
+            ep = "{:s}/{:s}".format(self._ep, _EP_SUBMISSIONS)
+
+        # List Submissions
+        res = self._conn.http_get(ep)
+        uuid_list = res[_KEY_SUBMISSIONS]
+        return [uuid.UUID(uid) for uid in uuid_list]
+
+
 class AsyncMy(My):
 
     def __init__(self, async_connection):
@@ -272,6 +286,9 @@ class AsyncMy(My):
 
     def async_useruuid(self, *args, **kwargs):
         return self._conn.submit(self.useruuid, *args, **kwargs)
+
+    def async_submissions(self, *args, **kwargs):
+        return self._conn.submit(self.submissions, *args, **kwargs)
 
 class COGObject(object):
 

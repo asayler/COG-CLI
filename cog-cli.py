@@ -268,6 +268,16 @@ def my_username(obj):
 @auth_required
 def my_useruuid(obj):
 
+    useruuid = obj['my'].useruuid()
+    click.echo("{}".format(useruuid))
+
+@my.command(name='submissions')
+@click.option('--asn_uid', default=None, prompt=True, help='Assignment UUID')
+@click.pass_obj
+@auth_required
+def my_submissions(obj, asn_uid):
+
+    useruuid = obj['my'].submissions(asn_uid=asn_uid)
     click.echo("{}".format(useruuid))
 
 
